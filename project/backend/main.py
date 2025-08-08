@@ -1,58 +1,78 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+from datetime import timedelta
 import os
 from dotenv import load_dotenv
 from config import config
 from models import db, User
+from auth.routes import auth_bp
 
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
-
-# Configure the app
-env = os.getenv('FLASK_ENV')
-app.config.from_object(config[env])
-config[env].init_app(app)
-
-# Set secret key
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-
-# Configure CORS
-CORS(
-    app,
-    resources={
-        r"/*": {
-            "origins": os.getenv('ALLOWED_ORIGINS').split(',')
-        }
-    }
-)
-
-# Initialize database
-db.init_app(app)
-
-# Create tables
-with app.app_context():
-    db.create_all()
-    # Create admin user if it doesn't exist
-    admin = User.query.filter_by(email='admin@example.com').first()
-    if not admin and env == 'development':
-        admin = User(
-            first_name='Admin',
-            last_name='User',
-            email='admin@example.com',
-            is_admin=True,
-            password="1234"
-        )
-        db.session.add(admin)
-        db.session.commit()
-
-
-@app.route('/')
-def home():
-    return jsonify({"message": "Hello, World!"})
+def create_app():
+    app = Flask(__name__)
+    
+    # Load configuration
+    env = os.getenv('FLASK_ENV', 'development')
+    app.config.from_object(config[env])
+    config[env].init_app(app)
+    
+    # JWT Configuration
+    app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+    app.config['JWT_TOKEN_LOCATION'] = ['headers']
+    app.config['JWT_HEADER_NAME'] = 'Authorization'
+    app.config['JWT_HEADER_TYPE'] = 'Bearer'
+    
+    # Initialize extensions
+    db.init_app(app)
+    jwt = JWTManager(app)
+    CORS(app, resources={r"/*": {"origins": os.getenv('ALLOWED_ORIGINS').split(',')}})
+    
+    # Register blueprints
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    
+    # Create database tables
+    with app.app_context():
+        db.create_all()
+        
+        # Create admin user if it doesn't exist (for development)
+        if env == 'development':
+            admin = User.query.filter_by(email='admin@example.com').first()
+            if not admin:
+                admin = User(
+                    first_name='Admin',
+                    last_name='User',
+                    email='admin@example.com',
+                    is_admin=True,
+                    is_employee=True,
+                    position='System Administrator',
+                    password="1234"
+                )
+                
+                db.session.add(admin)
+                db.session.commit()
+    
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({'message': 'Resource not found'}), 404
+    
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({'message': 'Internal server error'}), 500
+    
+    # Home route
+    @app.route('/')
+    def home():
+        return jsonify({"message": "Welcome to the API"})
+    
+    return app
 
 if __name__ == '__main__':
+    app = create_app()
     app.run(
         host=os.getenv('HOST'),
         port=int(os.getenv('PORT')),
