@@ -25,6 +25,9 @@ class Company(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
     user = db.relationship('User', back_populates='company', uselist=False)
     
+    # Relationship with Proposals (one-to-many)
+    proposals = db.relationship('Proposal', back_populates='company', cascade='all, delete-orphan')
+    
     def to_dict(self):
         """Convert company object to dictionary."""
         return {
