@@ -5,6 +5,11 @@ This document outlines the available authentication endpoints and how to use the
 ## Base URL
 All endpoints are prefixed with `/api/auth`
 
+## Authentication
+- All authenticated endpoints require a JWT token in the `Authorization` header
+- Format: `Authorization: Bearer <token>`
+- Tokens expire after 1 hour (configurable via environment variable)
+
 ## Endpoints
 
 ### 1. Register a New User
@@ -28,11 +33,12 @@ Creates a new user account and returns an access token.
 {
   "message": "User registered successfully",
   "user": {
-    "id": 1,
+    "id": "1",
     "email": "john.doe@example.com",
     "first_name": "John",
     "last_name": "Doe",
-    "position": "Software Developer"
+    "position": "Software Developer",
+    "is_admin": false
   },
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
