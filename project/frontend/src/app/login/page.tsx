@@ -1,14 +1,21 @@
 'use client';
 import React, { useState } from 'react';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { MouseEvent } from "react";
 
 export default function LoginPage() {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>): void => {
+  const router = useRouter();
+
+  const handleSubmit = (e: MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
-    console.log('Login attempt:', { username, password });
+    console.log("Login attempt:", { username, password });
+
+    // Navigate to collabhome.tsx
+    router.push("/collabhome");
   };
 
   return (
