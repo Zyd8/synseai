@@ -5,8 +5,9 @@ from datetime import timedelta
 import os
 from dotenv import load_dotenv
 from config import config
-from models import db, User
+from models import db, User, Company
 from auth.routes import auth_bp
+from routes.company import company_bp
 
 # Load environment variables
 load_dotenv()
@@ -21,7 +22,7 @@ def create_app():
     
     # JWT Configuration
     app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = os.getenv('JWT_ACCESS_TOKEN_EXPIRES', timedelta(hours=1))
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES')))
     app.config['JWT_TOKEN_LOCATION'] = ['headers']
     app.config['JWT_HEADER_NAME'] = 'Authorization'
     app.config['JWT_HEADER_TYPE'] = 'Bearer'
@@ -33,6 +34,7 @@ def create_app():
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(company_bp, url_prefix='/api/company')
     
     # Create database tables
     with app.app_context():

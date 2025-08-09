@@ -2,9 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
-import os
 from models import db, User
-from .utils import token_required
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -29,8 +27,8 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        # Generate access token (convert user.id to string for JWT identity)
-        access_token = create_access_token(identity=str(user.id), expires_delta=timedelta(hours=1))
+        # Generate access token
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             'message': 'User registered successfully',
@@ -60,8 +58,8 @@ def login():
     if not user or not user.check_password(data.get('password')):
         return jsonify({'message': 'Invalid email or password'}), 401
     
-    # Generate access token (convert user.id to string for JWT identity)
-    access_token = create_access_token(identity=str(user.id), expires_delta=timedelta(hours=1))
+    # Generate access token
+    access_token = create_access_token(identity=str(user.id))
     
     return jsonify({
         'message': 'Login successful',
@@ -83,6 +81,9 @@ def protected():
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
     
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+        
     return jsonify({
         'message': 'Protected route',
         'user': {

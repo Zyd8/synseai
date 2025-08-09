@@ -22,12 +22,16 @@ class User(db.Model):
     is_employee = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
 
+    # One-to-one relationship with Company
+    company = db.relationship('Company', back_populates='user', uselist=False)
+
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
 
     def __init__(self, **kwargs):
-        """Remove password from kwargs if it exists so that User constructor 
+        """
+        Remove password from kwargs if it exists so that User constructor 
         won't find the corresponding password property as we only store password_hash
         """
         password = kwargs.pop('password', None)
