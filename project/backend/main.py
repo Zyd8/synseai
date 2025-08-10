@@ -9,6 +9,7 @@ from models import db, User, Company
 from auth.routes import auth_bp
 from routes.company import company_bp
 from routes.proposal import proposal_bp
+from routes.department import department_bp
 
 # Load environment variables
 load_dotenv()
@@ -37,6 +38,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(company_bp, url_prefix='/api/company')
     app.register_blueprint(proposal_bp, url_prefix='/api/proposal')
+    app.register_blueprint(department_bp, url_prefix='/api/department')
     
     # Create database tables
     with app.app_context():
