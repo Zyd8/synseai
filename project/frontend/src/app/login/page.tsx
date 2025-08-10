@@ -5,22 +5,46 @@ import { useRouter } from "next/navigation";
 import { MouseEvent } from "react";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
   const router = useRouter();
 
-  const handleSubmit = (e: MouseEvent<HTMLButtonElement>): void => {
+  const handleSubmit = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log("Login attempt:", { username, password });
 
-    // Navigate to collabhome.tsx
-    router.push("/collabhome");
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,  
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      // console.log("Login response data:", data);
+
+      if (response.ok && data.access_token) {
+
+        localStorage.setItem("access_token", data.access_token);
+
+        router.push("/collabhome");
+      } else {
+        console.error("Login failed:", data.message || "Unknown error");
+      }
+
+    } catch (error) {
+      console.error("Error logging in:", error);
+    }
   };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 py-6 sm:py-8">
-      {/* Logo Centered on Top */}
       <div className="mb-6 sm:mb-8">
         <img
           src="/logo/main_logo.png"
@@ -31,7 +55,7 @@ export default function LoginPage() {
 
       {/* Main content */}
       <div className="w-full max-w-6xl flex flex-col lg:flex-row justify-between items-center gap-6 lg:gap-8">
-        
+
         {/* Banner - Shows above form on mobile, right side on desktop */}
         <div className="w-full lg:w-1/2 order-1 lg:order-2">
           <img
@@ -44,8 +68,8 @@ export default function LoginPage() {
         {/* Login Form - Shows below banner on mobile, left side on desktop */}
         <div className="w-full lg:w-1/2 max-w-md lg:max-w-lg order-2 lg:order-1 px-6 sm:px-10 lg:px-8 py-2 ">
           <div className="space-y-6">
-            
-            {/* Username */}
+
+            {/* Email */}
             <div>
               <label className="block text-sm sm:text-base font-medium text-red-600 mb-2">
                 EMAIL
@@ -53,8 +77,8 @@ export default function LoginPage() {
               <div className="relative w-full group">
                 <input
                   type="text"
-                  value={username}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   className="appearance-none w-full px-0 py-3 border-0 
                     placeholder-gray-400 text-gray-900 bg-transparent 
