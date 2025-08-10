@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from "next/link";
+import { access } from 'fs';
 
 export default function SignupPage() {
   const [firstName, setFirstName] = useState<string>('');
@@ -9,10 +10,63 @@ export default function SignupPage() {
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>): void => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log('Signup attempt:', { firstName, lastName, email, password, confirmPassword });
+
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          password,
+        }),
+      });
+
+      const rawText = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        console.error("Non-JSON response received:", rawText);
+        throw new Error("Server did not return JSON. Check the API endpoint.");
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed.");
+      }
+
+      if (data.access_token) {
+        sessionStorage.setItem("access_token", data.access_token);
+        alert("Registration successful!");
+      } else {
+        alert("Registration succeeded, but no token received.");
+      }
+
+    } catch (err: any) {
+      console.error("Registration error:", err);
+      alert(err.message || "An error occurred during registration.");
+    }
+
+
+
   };
+
+
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 py-6 sm:py-8">
@@ -27,7 +81,7 @@ export default function SignupPage() {
 
       {/* Main content */}
       <div className="w-full max-w-6xl flex flex-col lg:flex-row justify-between items-center gap-6 lg:gap-8">
-        
+
         {/* Banner - Shows above form on mobile, right side on desktop */}
         <div className="w-full lg:w-1/2 order-1 lg:order-2">
           <img
@@ -40,7 +94,7 @@ export default function SignupPage() {
         {/* Signup Form - Shows below banner on mobile, left side on desktop */}
         <div className="w-full lg:w-1/2 max-w-md lg:max-w-lg order-2 lg:order-1 px-6 sm:px-10 lg:px-8 py-2 ">
           <div className="space-y-6">
-            
+
             {/* First Name and Last Name in one row */}
             <div className="grid grid-cols-2 gap-4">
               {/* First Name */}

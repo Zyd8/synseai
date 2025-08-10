@@ -42,6 +42,25 @@ export default function ProposalForm() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!salutation.trim() ||
+            !gender.trim() ||
+            !fullname.trim() ||
+            !email.trim() ||
+            !position.trim() ||
+            !proposalTitle.trim() ||
+            !companyName.trim() ||
+            !companyWebsite.trim() ||
+            !location.trim() ||
+            !industry.trim() ||
+            !companySize.trim() ||
+            !collaborationType.trim() ||
+            !expectedSupport.trim() ||
+            !contactNumber.trim()
+        ) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
         if (!fullname.trim() || !email.trim()) {
             alert('Please provide your full name and email.');
             return;
@@ -551,16 +570,8 @@ export default function ProposalForm() {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="
-    mt-6 w-full bg-red-600 
-    hover:bg-red-700 
-    active:bg-red-800 
-    text-white py-3 rounded-xl font-bold 
-    shadow-lg shadow-red-500/30
-    transform transition-all duration-200 
-    hover:scale-[1.02] active:scale-95
-    focus:outline-none focus:ring-4 focus:ring-red-300
-  "
+                        className="mt-2 sm:mt-4 w-full flex justify-center py-3 sm:py-3 px-3 border border-transparent 
+                rounded-md text-sm font-bold text-white bg-[#B11016] hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg"
                     >
                         SUBMIT PROPOSAL
                     </button>
