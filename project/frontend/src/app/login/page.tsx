@@ -31,7 +31,7 @@ export default function LoginPage() {
 
       if (response.ok && data.access_token) {
 
-        localStorage.setItem("access_token", data.access_token);
+        sessionStorage.setItem("access_token", data.access_token);
 
         router.push("/collabhome");
       } else {
