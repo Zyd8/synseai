@@ -348,9 +348,9 @@ export default function proposalform() {
 
             <div className="w-full mb-5">
                 <div className="w-full text-red-700 text-xl font-normal">
-                    COMPANY NAME
+                    PROPOSAL TITLE
                 </div>
-                {/* COMPANY NAME INPUT */}
+                {/* PROPOSAL TITLE INPUT */}
                 <div className="w-full relative group mb-5">
                     <input
                         type="text"
@@ -369,10 +369,10 @@ export default function proposalform() {
                 </div>
 
                 <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-8 ">
-                    {/* POSITION/TITLE */}
+                    {/* TYPE OF COLLABORATION */}
                     <div className="w-full">
                         <div className="w-full text-red-700 text-xl font-normal">
-                            POSITION/TITLE
+                            TYPE OF COLLABORATION
                         </div>
                         <div className="w-full relative group mb-5">
                             <input
@@ -398,10 +398,10 @@ export default function proposalform() {
                         </div>
                     </div>
 
-                    {/* CONTACT NUMBER */}
+                    {/* EXPECTED SUPPORT FROM BPI */}
                     <div className="w-full">
                         <div className="w-full text-red-700 text-xl font-normal">
-                            CONTACT NUMBER
+                            EXPECTED SUPPORT FROM BPI
                         </div>
                         <div className="w-full relative group mb-5">
                             <input
