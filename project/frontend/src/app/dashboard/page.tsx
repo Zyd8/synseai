@@ -1,3 +1,5 @@
+import ProposalReportChart from '@/components/DonutChart';
+
 export default function Dashboard() {
     const summary = [
         { label: "Submitted", count: 2, img: "/images/db_submitted.png" },
@@ -57,7 +59,7 @@ export default function Dashboard() {
                         {summary.map((item, i) => (
                             <div
                                 key={i}
-                                className="bg-white rounded-lg flex items-center gap-4 shadow-md"
+                                className="bg-white rounded-lg flex items-center gap-4 drop-shadow-lg border border-gray-500"
                             >
                                 <img
                                     src={item.img}
@@ -72,7 +74,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Activities */}
-                    <div className="bg-white rounded-lg shadow-sm sm:p-8 p-6">
+                    <div className="bg-white rounded-lg drop-shadow-lg sm:p-8 p-6 border border-gray-500">
                         <h3 className="text-red-700 font-bold text-xl mb-4 border-b border-black pb-2 sm:pb-4">
                             Recent Activities
                         </h3>
@@ -117,9 +119,9 @@ export default function Dashboard() {
                 </div>
 
                 {/* Bottom grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5">
+                <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5 items-stretch">
                     {/* Table */}
-                    <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5">
+                    <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl">
                         <table className="w-full text-sm rounded-lg overflow-hidden">
                             <thead>
                                 <tr>
@@ -140,6 +142,10 @@ export default function Dashboard() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    <div className="sm:col-span-1 h-full border border-gray-500 rounded-lg drop-shadow-lg">
+                        <ProposalReportChart />
                     </div>
 
                 </div>
