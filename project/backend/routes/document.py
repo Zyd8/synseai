@@ -1,6 +1,9 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, Document
+from flask_jwt_extended import jwt_required
+from werkzeug.utils import secure_filename
+import os
+
+from models import db, Document
 
 document_bp = Blueprint('document', __name__)
 
@@ -8,27 +11,37 @@ document_bp = Blueprint('document', __name__)
 @jwt_required()
 def create_document():
     try:
-       
-        current_user_id = str(get_jwt_identity())
-        user = User.query.get(current_user_id)
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-    
-        if not user.is_admin:
-            return jsonify({"error": "User is not an admin"}), 403
-        
-        # Create new department
-        department = Department(
-            name=request.json['name']
-        )
+        name = request.form.get("name")
+        if not name:
+            return jsonify({"error": "Name is required"}), 400
 
-        db.session.add(department)
-        db.session.commit()
+        if "file" not in request.files:
+            return jsonify({"error": "No file part"}), 400
         
+        file = request.files["file"]
+        if file.filename == "":
+            return jsonify({"error": "No selected file"}), 400
+
+        folder_name = "Documents_New"
+        os.makedirs(folder_name, exist_ok=True)
+
+        safe_filename = secure_filename(file.filename)
+        new_filename = f"{name}_{safe_filename}"
+        file_path = os.path.join(folder_name, new_filename)
+
+        file.save(file_path)
+
+        document = Document(
+            name=name,      
+            file=file_path  
+        )
+        db.session.add(document)
+        db.session.commit()
+
         return jsonify({
             "message": "Document saved successfully",
-            "department": department.to_dict()
+            "file": document.to_dict()
         }), 201
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
