@@ -21,7 +21,7 @@ interface ProposalData {
 
 
 
-export default function ProposalTracking() {
+export default function CollabProposalTracking() {
     const [proposalTitle, setproposalTitle] = useState<string>('');
     const [typeOfCollaboration, settypeOfCollaboration] = useState<string>('');
     const [expectedSupport, setexpectedSupport] = useState<string>('');
