@@ -5,40 +5,40 @@ import { usePathname } from "next/navigation";
 export default function DashboardSidebar() {
   const pathname = usePathname();
 
+  const menuItems = [
+    { href: "/dashboard", icon: "/images/Sidebar_home.png", label: "Home" },
+    { href: "/approvedpage", icon: "/images/Folder_check.png", label: "Approved" },
+    { href: "/deletedpage", icon: "/images/Folder_del.png", label: "Deleted" },
+  ];
+
   return (
-    <aside className="w-20 bg-white border-r flex flex-col items-center py-4 space-y-6 h-screen">
+    <aside
+      className="group relative bg-white border-r flex flex-col items-center hover:items-start py-4 space-y-6 h-screen w-20 hover:w-56 transition-all duration-300 overflow-hidden"
+    >
       {/* Logo */}
-      <img src="/logo/synsei_icon.png" alt="Logo" className="w-10" />
+      <div className="flex items-center gap-3 px-4">
+        <img src="/logo/synsei_icon.png" alt="Logo" className="w-10" />
+        <span className="text-lg font-bold text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          Synsei
+        </span>
+      </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col space-y-4">
-        <button
-          className={`p-2 rounded-lg ${
-            pathname === "/dashboard" ? "bg-[#FEC2C5]" : ""
-          }`}
-        >
-          <img src="/images/Sidebar_home.png" alt="Home" className="w-8 h-8" />
-        </button>
-
-        <button
-          className={`p-2 rounded-lg ${
-            pathname === "/approvedpage" ? "bg-[#FEC2C5]" : ""
-          }`}
-        >
-          <img
-            src="/images/Folder_check.png"
-            alt="Proposals"
-            className="w-8 h-8"
-          />
-        </button>
-
-        <button className="p-2 rounded-lg">
-          <img
-            src="/images/Folder_del.png"
-            alt="Deleted"
-            className="w-8 h-8"
-          />
-        </button>
+      <nav className="flex flex-col space-y-2 w-full">
+        {menuItems.map((item, index) => (
+          <a
+            key={index}
+            href={item.href}
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors duration-200 ${
+              pathname === item.href ? "bg-[#FEC2C5]" : "hover:bg-gray-100"
+            }`}
+          >
+            <img src={item.icon} alt={item.label} className="w-8 h-8" />
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+              {item.label}
+            </span>
+          </a>
+        ))}
       </nav>
     </aside>
   );
