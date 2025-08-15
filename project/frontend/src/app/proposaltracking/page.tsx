@@ -41,16 +41,16 @@ export default function ProposalTracking() {
     
   return (
     <>
-      <div className="min-h-screen bg-white flex flex-col items-center sm:px-[20%] px-[15%] py-6 sm:py-8">
+      <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
         {/* Header */}
        <div className="text-center mt-2 w-full">
-        <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
-            Track Your Proposals
-        </h1>
-        <p className="text-md text-black mb-6">
-            View the status of your submitted collaboration proposal with BPI.
-        </p>
-        <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+          <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
+              Track Your Proposals
+          </h1>
+          <p className="text-md text-black mb-6">
+              View the status of your submitted collaboration proposal with BPI.
+          </p>
+          <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
         </div>
         
          {/* Status Timeline */}

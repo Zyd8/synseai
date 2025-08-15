@@ -1,5 +1,6 @@
 import { FaProjectDiagram, FaRocket, FaChartLine, FaLeaf, FaLightbulb } from "react-icons/fa";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { Link } from "lucide-react";
 
 export default function CollabHome() {
 
@@ -192,9 +193,11 @@ export default function CollabHome() {
             </p>
           </div>
           <div className="w-full flex justify-center">
+            <Link href="/companysetup">
             <button className="bg-[#B11016] text-white font-semibold px-30 py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300">
               PROPOSE TO BPI
             </button>
+            </Link>
           </div>
 
         </div>

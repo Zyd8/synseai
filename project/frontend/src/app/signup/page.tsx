@@ -99,7 +99,7 @@ export default function SignupPage() {
             <div className="grid grid-cols-2 gap-4">
               {/* First Name */}
               <div>
-                <label className="block text-sm sm:text-base font-medium text-red-600 mb-2">
+                <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                   FIRST NAME
                 </label>
                 <div className="relative w-full group">
@@ -117,7 +117,7 @@ export default function SignupPage() {
                   <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
 
                   {/* Red animated underline */}
-                  <div className="absolute left-0 bottom-0 h-[2px] bg-red-600 
+                  <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
                     transition-transform duration-300 ease-in-out 
                     origin-center scale-x-0 w-full 
                     group-focus-within:scale-x-100" />
@@ -126,7 +126,7 @@ export default function SignupPage() {
 
               {/* Last Name */}
               <div>
-                <label className="block text-sm sm:text-base font-medium text-red-600 mb-2">
+                <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                   LAST NAME
                 </label>
                 <div className="relative w-full group">
@@ -144,7 +144,7 @@ export default function SignupPage() {
                   <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
 
                   {/* Red animated underline */}
-                  <div className="absolute left-0 bottom-0 h-[2px] bg-red-600 
+                  <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
                     transition-transform duration-300 ease-in-out 
                     origin-center scale-x-0 w-full 
                     group-focus-within:scale-x-100" />
@@ -154,7 +154,7 @@ export default function SignupPage() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm sm:text-base font-medium text-red-600 mb-2">
+              <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                 EMAIL
               </label>
               <div className="relative w-full group">
@@ -172,7 +172,7 @@ export default function SignupPage() {
                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
 
                 {/* Red animated underline */}
-                <div className="absolute left-0 bottom-0 h-[2px] bg-red-600 
+                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
                   transition-transform duration-300 ease-in-out 
                   origin-center scale-x-0 w-full 
                   group-focus-within:scale-x-100" />
@@ -181,7 +181,7 @@ export default function SignupPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm sm:text-base font-medium text-red-600 mb-2">
+              <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                 PASSWORD
               </label>
               <div className="relative w-full group">
@@ -199,7 +199,7 @@ export default function SignupPage() {
                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
 
                 {/* Red animated underline */}
-                <div className="absolute left-0 bottom-0 h-[2px] bg-red-600 
+                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
                   transition-transform duration-300 ease-in-out 
                   origin-center scale-x-0 w-full 
                   group-focus-within:scale-x-100" />
@@ -208,7 +208,7 @@ export default function SignupPage() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm sm:text-base font-medium text-red-600 mb-2">
+              <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                 CONFIRM PASSWORD
               </label>
               <div className="relative w-full group">
@@ -226,7 +226,7 @@ export default function SignupPage() {
                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
 
                 {/* Red animated underline */}
-                <div className="absolute left-0 bottom-0 h-[2px] bg-red-600 
+                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
                   transition-transform duration-300 ease-in-out 
                   origin-center scale-x-0 w-full 
                   group-focus-within:scale-x-100" />
@@ -247,7 +247,7 @@ export default function SignupPage() {
             <div className="text-center pt-0">
               <span className="text-sm sm:text-md text-gray-600">
                 Already have an account?{' '}
-                <span className="font-medium text-red-600 hover:text-red-500 underline cursor-pointer transition-colors duration-200">
+                <span className="font-medium text-[#B11016] hover:text-red-500 underline cursor-pointer transition-colors duration-200">
                   <Link href="/login">Log In</Link>
                 </span>
               </span>
