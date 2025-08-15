@@ -20,7 +20,11 @@ export default function DashboardSidebar() {
           <img src="/images/Sidebar_home.png" alt="Home" className="w-8 h-8" />
         </button>
 
-        <button className="p-2 rounded-lg">
+        <button
+          className={`p-2 rounded-lg ${
+            pathname === "/approvedpage" ? "bg-[#FEC2C5]" : ""
+          }`}
+        >
           <img
             src="/images/Folder_check.png"
             alt="Proposals"
