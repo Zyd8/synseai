@@ -36,6 +36,8 @@ def create_company():
             address=data.get('address'),
             logo=data.get('logo'),  # base64 string
             bio=data.get('bio'),
+            industry=data.get('industry'),
+            size=data.get('size'),
             user_id=current_user_id
         )
         
@@ -89,6 +91,10 @@ def update_company():
             company.logo = data['logo']
         if 'bio' in data:
             company.bio = data['bio']
+        if 'industry' in data:
+            company.industry = data['industry']
+        if 'size' in data:
+            company.size = data['size']
             
         db.session.commit()
         

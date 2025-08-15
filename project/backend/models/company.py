@@ -19,6 +19,8 @@ class Company(db.Model):
     address = db.Column(db.Text, nullable=True)
     logo = db.Column(db.Text, nullable=True)  
     bio = db.Column(db.Text, nullable=True)
+    industry = db.Column(db.String(100), nullable=True)
+    size = db.Column(db.Integer, nullable=True)  
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
     
     # One-to-one relationship with User
@@ -41,6 +43,8 @@ class Company(db.Model):
             'address': self.address,
             'logo': self.logo,
             'bio': self.bio,
+            'industry': self.industry,
+            'size': self.size,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
     

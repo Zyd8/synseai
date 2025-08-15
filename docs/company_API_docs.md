@@ -30,7 +30,9 @@ Content-Type: application/json
   "contact_email": "contact@acme.com",
   "address": "123 Business St, Metro City",
   "logo": "data:image/png;base64,...",
-  "bio": "Leading provider of innovative solutions"
+  "bio": "Leading provider of innovative solutions",
+  "industry": "Technology",
+  "size": 150
 }
 ```
 
@@ -42,6 +44,8 @@ Content-Type: application/json
 - `address`: Company address
 - `logo`: Base64 encoded image string
 - `bio`: Company description
+- `industry`: Company's industry sector (string)
+- `size`: Number of employees (integer)
 
 **Response (Success - 201)**:
 ```json
@@ -54,6 +58,8 @@ Content-Type: application/json
     "address": "123 Business St, Metro City",
     "logo": "data:image/png;base64,...",
     "bio": "Leading provider of innovative solutions",
+  "industry": "Technology",
+  "size": 150,
     "created_at": "2023-08-09T08:00:00Z"
   }
 }
@@ -87,6 +93,8 @@ Authorization: Bearer <token>
   "address": "123 Business St, Metro City",
   "logo": "data:image/png;base64,...",
   "bio": "Leading provider of innovative solutions",
+  "industry": "Technology",
+  "size": 150,
   "created_at": "2023-08-09T08:00:00Z"
 }
 ```
@@ -137,6 +145,8 @@ Content-Type: application/json
     "address": "123 Business St, Metro City",
     "logo": "data:image/png;base64,...",
     "bio": "Global leader in innovative solutions",
+    "industry": "Finance",
+    "size": 200,
     "created_at": "2023-08-09T08:00:00Z"
   }
 }
