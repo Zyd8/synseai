@@ -2,23 +2,40 @@
 import React, { useState, useRef } from "react";
 
 export default function CompanySetup() {
-    // Company Information
+    // Company Information - mapped to backend fields
     const [companyName, setCompanyName] = useState("");
     const [companyWebsite, setCompanyWebsite] = useState("");
-    const [location, setLocation] = useState("");
+    const [address, setAddress] = useState(""); // mapped to location in original
     const [industry, setIndustry] = useState("");
     const [companySize, setCompanySize] = useState("");
     const [customCompanySize, setCustomCompanySize] = useState("");
     const [customIndustry, setCustomIndustry] = useState("");
     const [companyColor, setCompanyColor] = useState("#000000");
     const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+    const [bio, setBio] = useState("");
+    const [collabType, setCollabType] = useState("");
     const logoInputRef = useRef<HTMLInputElement>(null);
 
-    // Point of Contact
+    // Point of Contact - this will be the contact_email for the company
     const [fullname, setFullname] = useState("");
-    const [email, setEmail] = useState("");
+    const [contactEmail, setContactEmail] = useState(""); // mapped from email
     const [position, setPosition] = useState("");
     const [contactNumber, setContactNumber] = useState("");
+
+    // Loading and error states
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    // Convert file to base64
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+        });
+    };
 
     // Handle Logo Upload
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,6 +43,7 @@ export default function CompanySetup() {
             setCompanyLogo(e.target.files[0]);
         }
     };
+    
     const handleLogoDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
@@ -33,56 +51,135 @@ export default function CompanySetup() {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError("");
+        setSuccess("");
 
-        if (
-            !companyName.trim() ||
-            !companyWebsite.trim() ||
-            !location.trim() ||
-            !industry.trim() ||
-            !companySize.trim() ||
-            !fullname.trim() ||
-            !email.trim() ||
-            !position.trim() ||
-            !contactNumber.trim()
-        ) {
-            alert("Please fill in all required fields.");
+        if (!companyName.trim() || !contactEmail.trim()) {
+            setError("Company name and contact email are required fields.");
             return;
         }
 
-        const payload = {
-            companyName,
-            companyWebsite,
-            location,
-            companySize,
-            industry,
-            companyColor,
-            logoName: companyLogo?.name ?? null,
-            fullname,
-            email,
-            position,
-            contactNumber
-        };
+        setIsLoading(true);
 
-        console.log("Company Setup Payload", payload);
-        alert("Company setup submitted (demo). Check console for payload.");
+        try {
+            let logoBase64 = "";
+            if (companyLogo) {
+                logoBase64 = await fileToBase64(companyLogo);
+            }
+
+            const finalIndustry = industry === "Other" ? customIndustry : industry;
+            const finalSizeString = companySize === "Other" ? customCompanySize : companySize;
+
+            let finalSize: number | undefined;
+            if (finalSizeString) {
+                if (finalSizeString.includes("-")) {
+                    const parts = finalSizeString.split("-");
+                    finalSize = parseInt(parts[1]) || parseInt(parts[0]);
+                } else if (finalSizeString.includes("+")) {
+                    finalSize = parseInt(finalSizeString.replace("+", ""));
+                } else {
+                    finalSize = parseInt(finalSizeString);
+                }
+                if (isNaN(finalSize)) finalSize = undefined;
+            }
+
+            const payload: any = {
+                name: companyName,
+                contact_email: contactEmail,
+            };
+
+            if (address.trim()) payload.address = address;
+            if (logoBase64) payload.logo = logoBase64;
+            if (bio.trim()) payload.bio = bio;
+            if (finalIndustry && finalIndustry.trim()) payload.industry = finalIndustry;
+            if (finalSize !== undefined) payload.size = finalSize;
+            if (collabType && collabType.trim()) payload.collab_type = collabType;
+
+            // FIX 1: Use sessionStorage to match login page
+            const token = sessionStorage.getItem("access_token");
+            if (!token) {
+                setError("Authentication required. Please log in first.");
+                return;
+            }
+
+            console.log("Token being sent:", token);
+            console.log("Payload being sent:", payload);
+
+            const response = await fetch("http://127.0.0.1:5000/api/company", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+            console.log("Response:", response.status, data);
+
+            if (response.ok) {
+                setSuccess(`Company "${data.company.name}" created successfully!`);
+                // Optionally reset form after success
+                // resetForm();
+            } else {
+                setError(data.error || `Failed to create company (${response.status})`);
+            }
+        } catch (err) {
+            console.error("Error creating company:", err);
+            setError("An unexpected error occurred while creating the company.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Optional: Function to reset form
+    const resetForm = () => {
+        setCompanyName("");
+        setCompanyWebsite("");
+        setAddress("");
+        setIndustry("");
+        setCompanySize("");
+        setCustomCompanySize("");
+        setCustomIndustry("");
+        setCompanyColor("#000000");
+        setCompanyLogo(null);
+        setBio("");
+        setCollabType("");
+        setFullname("");
+        setContactEmail("");
+        setPosition("");
+        setContactNumber("");
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
-                {/* Header */}
-                <div className="text-center mt-2 w-full mb-10">
-                    <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
-                        Company Setup Form
-                    </h1>
-                    <p className="text-md text-black mb-6">
-                        Set up your company that's aiming to partner with BPI
-                    </p>
-                    <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
-                </div>
+        <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
+            {/* Header */}
+            <div className="text-center mt-2 w-full mb-10">
+                <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
+                    Company Setup Form
+                </h1>
+                <p className="text-md text-black mb-6">
+                    Set up your company that's aiming to partner with BPI
+                </p>
+                <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+            </div>
 
+            {/* Error/Success Messages */}
+            {error && (
+                <div className="w-full mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {error}
+                </div>
+            )}
+            {success && (
+                <div className="w-full mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                    {success}
+                </div>
+            )}
+
+            {/* FIX 2: Wrap everything in a proper form element */}
+            <form onSubmit={handleSubmit} className="w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
                     {/* LEFT COLUMN - COMPANY INFO */}
                     <div className="space-y-6">
@@ -93,34 +190,29 @@ export default function CompanySetup() {
                             <span>Company Information</span>
                         </h2>
 
-
                         {/* Company Name */}
                         <div>
                             <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                COMPANY NAME
+                                COMPANY NAME *
                             </label>
                             <div className="relative w-full group">
-                            <input
-                                type="text"
-                                value={companyName}
-                                onChange={(e) => setCompanyName(e.target.value)}
-                                placeholder="Enter Company Name"
-                                className="appearance-none w-full px-0 py-3 border-0 
-                                placeholder-gray-400 text-gray-900 bg-transparent 
-                                focus:outline-none text-sm sm:text-base"
-                            />
-            
-                            {/* Base underline */}
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-            
-                            {/* Red animated underline */}
-                            <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
-                                transition-transform duration-300 ease-in-out 
-                                origin-center scale-x-0 w-full 
-                                group-focus-within:scale-x-100" />
+                                <input
+                                    type="text"
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
+                                    placeholder="Enter Company Name"
+                                    className="appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-transparent 
+                                    focus:outline-none text-sm sm:text-base"
+                                    required
+                                />
+                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
                             </div>
                         </div>
-                       
 
                         {/* Website */}
                         <div>
@@ -128,60 +220,64 @@ export default function CompanySetup() {
                                 COMPANY WEBSITE LINK
                             </label>
                             <div className="relative w-full group">
-                            <input
-                                type="text"
-                                value={companyWebsite}
-                                onChange={(e) => setCompanyWebsite(e.target.value)}
-                                placeholder="Enter Website Link (https://...)"
-                                className="appearance-none w-full px-0 py-3 border-0 
-                                placeholder-gray-400 text-gray-900 bg-transparent 
-                                focus:outline-none text-sm sm:text-base"
-                            />
-            
-                            {/* Base underline */}
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-            
-                            {/* Red animated underline */}
-                            <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
-                                transition-transform duration-300 ease-in-out 
-                                origin-center scale-x-0 w-full 
-                                group-focus-within:scale-x-100" />
+                                <input
+                                    type="url"
+                                    value={companyWebsite}
+                                    onChange={(e) => setCompanyWebsite(e.target.value)}
+                                    placeholder="Enter Website Link (https://...)"
+                                    className="appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-transparent 
+                                    focus:outline-none text-sm sm:text-base"
+                                />
+                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
                             </div>
                         </div>
-                        
 
-                        {/* Location */}
+                        {/* Address */}
                         <div>
                             <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                                 COMPANY ADDRESS
                             </label>
                             <div className="relative w-full group">
-                            <input
-                                type="text"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                placeholder="Enter Company Address"
-                                className="appearance-none w-full px-0 py-3 border-0 
-                                placeholder-gray-400 text-gray-900 bg-transparent 
-                                focus:outline-none text-sm sm:text-base"
-                            />
-            
-                            {/* Base underline */}
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-            
-                            {/* Red animated underline */}
-                            <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
-                                transition-transform duration-300 ease-in-out 
-                                origin-center scale-x-0 w-full 
-                                group-focus-within:scale-x-100" />
+                                <input
+                                    type="text"
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    placeholder="Enter Company Address"
+                                    className="appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-transparent 
+                                    focus:outline-none text-sm sm:text-base"
+                                />
+                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
                             </div>
                         </div>
-                        
+
+                        {/* Company Bio */}
+                        <div>
+                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                COMPANY BIO
+                            </label>
+                            <textarea
+                                value={bio}
+                                onChange={(e) => setBio(e.target.value)}
+                                placeholder="Brief description of your company..."
+                                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none resize-vertical"
+                                rows={3}
+                            />
+                        </div>
 
                         {/* Company Size */}
                         <div>
                             <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
-                                COMPANY SIZE
+                                COMPANY SIZE (Number of Employees)
                             </label>
                             <select
                                 value={companySize}
@@ -189,23 +285,23 @@ export default function CompanySetup() {
                                 className="border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full"
                             >
                                 <option value="">Select Company Size</option>
-                                <option>1-10</option>
-                                <option>11-50</option>
-                                <option>51-200</option>
-                                <option>201-500</option>
-                                <option>501-1000</option>
-                                <option>1000+</option>
-                                <option value="Other">Other</option>
+                                <option value="1-10">1-10 employees</option>
+                                <option value="11-50">11-50 employees</option>
+                                <option value="51-200">51-200 employees</option>
+                                <option value="201-500">201-500 employees</option>
+                                <option value="501-1000">501-1000 employees</option>
+                                <option value="1000+">1000+ employees</option>
+                                <option value="Other">Other (specify number)</option>
                             </select>
                             
                             {companySize === "Other" && (
-                                
                                 <input
-                                    type="text"
+                                    type="number"
                                     value={customCompanySize}
                                     onChange={(e) => setCustomCompanySize(e.target.value)}
-                                    placeholder="Enter company size"
+                                    placeholder="Enter exact number of employees"
                                     className="w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2"
+                                    min="1"
                                 />
                             )}
                         </div>
@@ -227,6 +323,10 @@ export default function CompanySetup() {
                                 <option>Technology</option>
                                 <option>Manufacturing</option>
                                 <option>Retail</option>
+                                <option>Finance</option>
+                                <option>Consulting</option>
+                                <option>Real Estate</option>
+                                <option>Media & Entertainment</option>
                                 <option value="Other">Other</option>
                             </select>
                             {industry === "Other" && (
@@ -240,8 +340,8 @@ export default function CompanySetup() {
                             )}
                         </div>
 
-
                         
+
                         {/* Logo & Color Picker in 1 Row */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {/* Company Logo */}
@@ -295,7 +395,6 @@ export default function CompanySetup() {
                                 </div>
                             </div>
                         </div>
-
                     </div>
 
                     {/* RIGHT COLUMN - POINT OF CONTACT */}
@@ -313,63 +412,69 @@ export default function CompanySetup() {
                                 FULL NAME
                             </label>
                             <div className="relative w-full group">
-                            <input
-                                type="text"
-                                value={fullname}
-                                onChange={(e) => setFullname(e.target.value)}
-                                readOnly
-                                className="w-full px-3 py-3 border-0 
-                                            bg-[#E7E7E7] text-gray-900
-                                            focus:outline-none text-sm sm:text-base"
-                                placeholder=""
-                            />
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-[#B11016]" />
-            
-                          
-                            
+                                <input
+                                    type="text"
+                                    value={fullname}
+                                    onChange={(e) => setFullname(e.target.value)}
+                                    placeholder="Enter Full Name"
+                                    className="appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-transparent 
+                                    focus:outline-none text-sm sm:text-base"
+                                />
+                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
                             </div>
                         </div>
                         
-                        {/* Email */}
+                        {/* Contact Email */}
                         <div>
                             <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                EMAIL
+                                CONTACT EMAIL *
                             </label>
                             <div className="relative w-full group">
-                            <input
-                                type="text"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                readOnly
-                                className="w-full px-3 py-3 border-0 
-                                            bg-[#E7E7E7] text-gray-900
-                                            focus:outline-none text-sm sm:text-base"
-                                placeholder=""
-                            />
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-[#B11016]" />
+                                <input
+                                    type="email"
+                                    value={contactEmail}
+                                    onChange={(e) => setContactEmail(e.target.value)}
+                                    placeholder="Enter Contact Email"
+                                    className="appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-transparent 
+                                    focus:outline-none text-sm sm:text-base"
+                                    required
+                                />
+                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
                             </div>
                         </div>
                        
-                       {/* Position/Title */}
+                        {/* Position/Title */}
                         <div>
                             <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                                 POSITION/TITLE
                             </label>
                             <div className="relative w-full group">
-                            <input
-                                type="text"
-                                value={position}
-                                onChange={(e) => setPosition(e.target.value)}
-                                readOnly
-                                className="w-full px-3 py-3 border-0 
-                                            bg-[#E7E7E7] text-gray-900
-                                            focus:outline-none text-sm sm:text-base"
-                                placeholder=""
-                            />
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-[#B11016]" />
+                                <input
+                                    type="text"
+                                    value={position}
+                                    onChange={(e) => setPosition(e.target.value)}
+                                    placeholder="Enter Position/Title"
+                                    className="appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-transparent 
+                                    focus:outline-none text-sm sm:text-base"
+                                />
+                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
                             </div>
                         </div>
-
                        
                         {/* Contact Number */}
                         <div>
@@ -377,37 +482,37 @@ export default function CompanySetup() {
                                 CONTACT NUMBER
                             </label>
                             <div className="relative w-full group">
-                            <input
-                                type="tel"
-                                value={contactNumber}
-                                onChange={(e) => setContactNumber(e.target.value)}
-                                placeholder="Enter your Contact Number"
-                                className="appearance-none w-full px-0 py-3 border-0 
-                                placeholder-gray-400 text-gray-900 bg-transparent 
-                                focus:outline-none text-sm sm:text-base"
-                            />
-            
-                            {/* Base underline */}
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-            
-                            {/* Red animated underline */}
-                            <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
-                                transition-transform duration-300 ease-in-out 
-                                origin-center scale-x-0 w-full 
-                                group-focus-within:scale-x-100" />
+                                <input
+                                    type="tel"
+                                    value={contactNumber}
+                                    onChange={(e) => setContactNumber(e.target.value)}
+                                    placeholder="Enter your Contact Number"
+                                    className="appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-transparent 
+                                    focus:outline-none text-sm sm:text-base"
+                                />
+                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
                             </div>
                         </div>
-                        
                     </div>
                 </div>
 
                 {/* Submit */}
                 <div className="w-full mt-10">
-                    <button className="w-full bg-[#B11016] border-2 border-transparent  text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors">
-                        SETUP COMPANY
+                    {/* FIX 3: Change button type to submit */}
+                    <button 
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? "SETTING UP COMPANY..." : "SETUP COMPANY"}
                     </button>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     );
 }
