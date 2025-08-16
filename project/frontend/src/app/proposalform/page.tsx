@@ -6,15 +6,9 @@ export default function ProposalForm() {
     const [gender, setGender] = useState<string>('');
     const [fullname, setFullname] = useState<string>('');
     const [email, setEmail] = useState<string>('');
-    const [position, setPosition] = useState<string>('');
-    const [contactNumber, setContactNumber] = useState<string>('');
 
     // Company Information
     const [companyName, setCompanyName] = useState<string>('');
-    const [companyWebsite, setCompanyWebsite] = useState<string>('');
-    const [location, setLocation] = useState<string>('');
-    const [industry, setIndustry] = useState<string>('');
-    const [companySize, setCompanySize] = useState<string>('');
 
     // Collaboration Request
     const [proposalTitle, setProposalTitle] = useState<string>('');
@@ -46,16 +40,10 @@ export default function ProposalForm() {
             !gender.trim() ||
             !fullname.trim() ||
             !email.trim() ||
-            !position.trim() ||
             !proposalTitle.trim() ||
             !companyName.trim() ||
-            !companyWebsite.trim() ||
-            !location.trim() ||
-            !industry.trim() ||
-            !companySize.trim() ||
             !collaborationType.trim() ||
-            !expectedSupport.trim() ||
-            !contactNumber.trim()
+            !expectedSupport.trim() 
         ) {
             alert('Please fill in all required fields.');
             return;
@@ -76,13 +64,7 @@ export default function ProposalForm() {
             gender,
             fullname,
             email,
-            position,
-            contactNumber,
             companyName,
-            companyWebsite,
-            location,
-            industry,
-            companySize,
             proposalTitle,
             collaborationType,
             expectedSupport,
@@ -231,66 +213,6 @@ export default function ProposalForm() {
 
                 </div>
 
-                <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-8 ">
-                    {/* POSITION/TITLE */}
-                    <div className="w-full">
-                        <div className="w-full text-red-700 text-base font-normal">
-                            POSITION/TITLE
-                        </div>
-                        <div className="w-full relative group mb-5">
-                            <input
-                                type="text"
-                                value={position}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                    setPosition(e.target.value)
-                                }
-                                placeholder="Enter your Name"
-                                className="appearance-none w-full px-0 py-3 border-0 
-                   placeholder-gray-400 text-gray-900 bg-transparent 
-                   focus:outline-none text-sm sm:text-base"
-                            />
-                            {/* Base underline */}
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                            {/* Red animated underline */}
-                            <div
-                                className="absolute left-0 bottom-0 h-[2px] bg-red-700 
-                   transition-transform duration-300 ease-in-out 
-                   origin-center scale-x-0 w-full 
-                   group-focus-within:scale-x-100"
-                            />
-                        </div>
-                    </div>
-
-                    {/* CONTACT NUMBER */}
-                    <div className="w-full">
-                        <div className="w-full text-red-700 text-base font-normal">
-                            CONTACT NUMBER
-                        </div>
-                        <div className="w-full relative group mb-5">
-                            <input
-                                type="text"
-                                value={contactNumber}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                    setContactNumber(e.target.value)
-                                }
-                                placeholder="Enter your Email"
-                                className="appearance-none w-full px-0 py-3 border-0 
-                   placeholder-gray-400 text-gray-900 bg-transparent 
-                   focus:outline-none text-sm sm:text-base"
-                            />
-                            {/* Base underline */}
-                            <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                            {/* Red animated underline */}
-                            <div
-                                className="absolute left-0 bottom-0 h-[2px] bg-red-700 
-                   transition-transform duration-300 ease-in-out 
-                   origin-center scale-x-0 w-full 
-                   group-focus-within:scale-x-100"
-                            />
-                        </div>
-                    </div>
-                </div>
-
                 <div className="block w-full flex items-center space-x-3 mb-3">
                     <div className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-red-700 bg-white text-red-700 font-bold text-base p-4">
                         2
@@ -319,115 +241,6 @@ export default function ProposalForm() {
                         transition-transform duration-300 ease-in-out 
                         origin-center scale-x-0 w-full 
                         group-focus-within:scale-x-100" />
-                    </div>
-
-                    <div className="w-full text-red-700 text-base font-normal">
-                        COMPANY WEBSITE LINK
-                    </div>
-                    {/* COMPANY WEBSITE LINK INPUT */}
-                    <div className="w-full relative group mb-5">
-                        <input
-                            type="text"
-                            value={companyWebsite}
-                            onChange={(e) => setCompanyWebsite(e.target.value)}
-                            placeholder="Enter your company website (https://...)"
-                            className="appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
-                            aria-label="Company website"
-                        />
-                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                        <div className="absolute left-0 bottom-0 h-[2px] bg-red-700 
-                        transition-transform duration-300 ease-in-out 
-                        origin-center scale-x-0 w-full 
-                        group-focus-within:scale-x-100" />
-                    </div>
-
-                    <div className="w-full text-red-700 text-base font-normal">
-                        LOCATION
-                    </div>
-                    {/* LOCATION INPUT */}
-                    <div className="w-full relative group mb-5">
-                        <input
-                            type="text"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="Enter company location"
-                            className="appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
-                            aria-label="Company location"
-                        />
-                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                        <div className="absolute left-0 bottom-0 h-[2px] bg-red-700 
-                        transition-transform duration-300 ease-in-out 
-                        origin-center scale-x-0 w-full 
-                        group-focus-within:scale-x-100" />
-                    </div>
-
-                    {/* 2-COLUMN DROPDOWNS */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-                        {/* INDUSTRY */}
-                        <div>
-                            <label className="block text-red-700 text-sm font-medium mb-1">
-                                INDUSTRY
-                            </label>
-                            <div className="relative">
-                                <select
-                                    value={industry}
-                                    onChange={(e) => setIndustry(e.target.value)}
-                                    className="appearance-none w-full border border-gray-300 rounded-sm py-3 px-4 pr-8 focus:outline-none focus:border-red-700 text-gray-900 text-sm"
-                                    aria-label="Industry"
-                                >
-                                    <option value="">Select Industry</option>
-                                    <option value="Financial Technology">Financial Technology</option>
-                                    <option value="Healthcare">Healthcare</option>
-                                    <option value="Education">Education</option>
-                                </select>
-                                {/* Custom arrow */}
-                                <svg
-                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none text-red-700"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
-
-                        {/* Company Size */}
-                        <div>
-                            <label className="block text-red-700 text-sm font-medium mb-1">
-                                COMPANY SIZE
-                            </label>
-                            <div className="relative">
-                                <select
-                                    value={companySize}
-                                    onChange={(e) => setCompanySize(e.target.value)}
-                                    className="appearance-none w-full border border-gray-300 rounded-sm py-3 px-4 pr-8 focus:outline-none focus:border-red-700 text-gray-900 text-sm"
-                                    aria-label="Company size"
-                                >
-                                    <option value="">Select Company Size</option>
-                                    <option value="200-300">200-300</option>
-                                    <option value="300-500">300-500</option>
-                                    <option value="500+">500+</option>
-                                </select>
-                                {/* Custom arrow */}
-                                <svg
-                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none text-red-700"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
