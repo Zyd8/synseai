@@ -8,7 +8,7 @@ export default function DashboardSidebar() {
   const menuItems = [
     { href: "/dashboard", icon: "/images/Sidebar_home.png", label: "Home" },
     { href: "/collabapproved", icon: "/images/Folder_check.png", label: "Approved" },
-    { href: "/deletedpage", icon: "/images/Folder_del.png", label: "Deleted" },
+    { href: "/collabrejected", icon: "/images/Folder_del.png", label: "Deleted" },
   ];
 
   return (
@@ -24,7 +24,7 @@ export default function DashboardSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col space-y-2 w-full">
+      <nav className="flex flex-col space-y-2 w-[92%]">
         {menuItems.map((item, index) => (
           <a
             key={index}
