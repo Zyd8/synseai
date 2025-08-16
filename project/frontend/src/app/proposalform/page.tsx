@@ -5,35 +5,49 @@ import { useEffect } from "react";
 
 export default function ProposalForm() {
     const API = process.env.NEXT_PUBLIC_API_URL;
+
     useEffect(() => {
-        const fetchUser = async () => {
-            const token = sessionStorage.getItem("access_token"); 
+        const fetchData = async () => {
+            const token = sessionStorage.getItem("access_token");
             if (!token) return;
 
             try {
-                const res = await fetch(`${API}/api/auth/protected`, {
+                // 1. Fetch user
+                const resUser = await fetch(`${API}/api/auth/protected`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
                 });
 
-                if (res.ok) {
-                    const data = await res.json();
+                if (resUser.ok) {
+                    const data = await resUser.json();
                     const user = data.user;
 
                     setFullname(`${user.first_name} ${user.last_name}`);
                     setEmail(user.email);
-                } else if (res.status === 401) {
-                    sessionStorage.removeItem("access_token");
-                    window.location.href = "/login";
+                }
+
+                // 2. Fetch company
+                const resCompany = await fetch(`${API}/api/company`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (resCompany.ok) {
+                    const company = await resCompany.json();
+
+                    setCompanyName(company.name);
+                    setCompanyId(company.id);
                 }
             } catch (err) {
-                console.error("Error fetching user:", err);
+                console.error("Error fetching data:", err);
             }
         };
 
-        fetchUser();
+        fetchData();
     }, []);
 
     const [salutation, setSalutation] = useState<string>("");
@@ -42,15 +56,13 @@ export default function ProposalForm() {
     const [fullname, setFullname] = useState<string>("");
     const [email, setEmail] = useState<string>("");
 
-    // Company Information
     const [companyName, setCompanyName] = useState<string>('');
+    const [companyId, setCompanyId] = useState<string>("");
 
-    // Collaboration Request
-    const [proposalTitle, setProposalTitle] = useState<string>('');
-    const [collaborationType, setCollaborationType] = useState<string>('');
+    const [title, setTitle] = useState<string>('');
+    const [collabType, setCollabType] = useState<string>('');
     const [description, setDescription] = useState<string>('');
 
-    // File Upload
     const [confirm, setConfirm] = useState<boolean>(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,46 +80,45 @@ export default function ProposalForm() {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!salutation.trim() ||
-            !gender.trim() ||
-            !fullname.trim() ||
-            !email.trim() ||
-            !proposalTitle.trim() ||
-            !companyName.trim() ||
-            !collaborationType.trim() ||
-            !description.trim()
-        ) {
-            alert('Please fill in all required fields.');
+        const token = sessionStorage.getItem("access_token");
+        if (!token) {
+            alert("You must be logged in to submit a proposal.");
             return;
         }
 
-        if (!fullname.trim() || !email.trim()) {
-            alert('Please provide your full name and email.');
-            return;
+        try {
+            const res = await fetch(`${API}/api/proposal`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    title,
+                    description,
+                    collab_type: collabType, 
+                }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                alert("Proposal submitted successfully!");
+                console.log("Created proposal:", data.proposal);
+
+                setTitle("");
+                setDescription("");
+                setCollabType("");
+            } else {
+                const error = await res.json();
+                alert(error.error || "Failed to submit proposal.");
+            }
+        } catch (err) {
+            console.error("Error submitting proposal:", err);
+            alert("Something went wrong. Please try again.");
         }
-
-        if (!confirm) {
-            alert('Please confirm that your information is accurate.');
-            return;
-        }
-
-        const payload = {
-            salutation,
-            gender,
-            fullname,
-            email,
-            companyName,
-            proposalTitle,
-            collaborationType,
-            description,
-            uploadedFileName: uploadedFile?.name ?? null,
-        };
-
-        console.log('Proposal payload', payload);
-        alert('Proposal submitted (demo). Check the console for payload.');
     };
 
     return (
@@ -266,10 +277,10 @@ export default function ProposalForm() {
                         <div className="w-full relative group mb-5">
                             <input
                                 type="text"
+                                readOnly
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
-                                placeholder="Enter your company name"
-                                className="appearance-none w-full px-2 py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
+                                className="cursor-not-allowed appearance-none w-full px-2 py-3 placeholder-gray-400 focus:outline-none text-sm sm:text-base bg-gray-100"
                                 aria-label="Company name"
                             />
                             <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
@@ -298,8 +309,8 @@ export default function ProposalForm() {
                         <div className="w-full relative group mb-5">
                             <input
                                 type="text"
-                                value={proposalTitle}
-                                onChange={(e) => setProposalTitle(e.target.value)}
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Enter proposal title"
                                 className="px-2 appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
                                 aria-label="Proposal title"
@@ -320,8 +331,8 @@ export default function ProposalForm() {
                                 <div className="w-full relative group mb-5">
                                     <input
                                         type="text"
-                                        value={collaborationType}
-                                        onChange={(e) => setCollaborationType(e.target.value)}
+                                        value={collabType}
+                                        onChange={(e) => setCollabType(e.target.value)}
                                         placeholder="Enter type of collaboration"
                                         className="px-2 appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
                                         aria-label="Type of collaboration"
