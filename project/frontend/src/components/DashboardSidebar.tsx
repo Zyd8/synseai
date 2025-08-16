@@ -7,16 +7,16 @@ export default function DashboardSidebar() {
 
   const menuItems = [
     { href: "/dashboard", icon: "/images/Sidebar_home.png", label: "Home" },
-    { href: "/approvedpage", icon: "/images/Folder_check.png", label: "Approved" },
+    { href: "/collabapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/deletedpage", icon: "/images/Folder_del.png", label: "Deleted" },
   ];
 
   return (
     <aside
-      className="group relative bg-white border-r flex flex-col items-center hover:items-start py-4 space-y-6 h-screen w-20 hover:w-56 transition-all duration-300 overflow-hidden"
+      className="pl-4 group relative bg-white border-r flex flex-col items-center items-start py-4 space-y-6 h-screen w-20 hover:w-56 transition-all duration-300 overflow-hidden"
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4">
+      <div className="flex items-center gap-3 pl-1">
         <img src="/logo/synsei_icon.png" alt="Logo" className="w-10" />
         <span className="text-lg font-bold text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           Synsei
@@ -29,9 +29,9 @@ export default function DashboardSidebar() {
           <a
             key={index}
             href={item.href}
-            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors duration-200 ${
-              pathname === item.href ? "bg-[#FEC2C5]" : "hover:bg-gray-100"
-            }`}
+            className={`flex items-center gap-3 rounded-lg transition-all duration-200
+    ${pathname === item.href ? "bg-[#FEC2C5]" : "hover:bg-gray-100"}
+    px-2 py-2 w-12 group-hover:w-full`}
           >
             <img src={item.icon} alt={item.label} className="w-8 h-8" />
             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
