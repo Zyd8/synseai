@@ -55,6 +55,9 @@ def fetch_url(url, timeout):
 
 def extract_clean_text(soup):
     """Extract and clean text content from BeautifulSoup object."""
+    # Remove script and style elements
+    for script in soup(["script", "style", "noscript", "meta", "link"]):
+        script.decompose()
     
     # Get text and clean it up
     text = soup.get_text(separator=' ', strip=True)
@@ -62,6 +65,20 @@ def extract_clean_text(soup):
     # Remove excessive whitespace and newlines
     text = ' '.join(text.split())
     
+    # Check if the text contains too many non-ASCII characters (potential garbage)
+    non_ascii_ratio = sum(1 for char in text if ord(char) > 127) / len(text) if text else 0
+    if non_ascii_ratio > 0.5:  # If more than 50% of characters are non-ASCII
+        return "[Content not available: Unreadable or encrypted content]"
+        
+    # Check for common error messages or placeholders
+    error_phrases = ["enable javascript", "please wait", "cloudflare", "captcha", "access denied"]
+    if any(phrase in text.lower() for phrase in error_phrases):
+        return "[Content not available: JavaScript or CAPTCHA required]"
+    
+    # If the text is too short after cleaning, it might be a SPA
+    if len(text) < 100 and not any(tag.name == 'div' for tag in soup.find_all()):
+        return "[Content not available: Single Page Application detected]"
+        
     return text
 
 def company_webscraper(company):
@@ -93,6 +110,7 @@ def company_webscraper(company):
                         )
 
                         response.encoding = response.apparent_encoding
+                        
                         soup = BeautifulSoup(response.text, 'html.parser')
                         clean_text = extract_clean_text(soup)
                         title = soup.title.string.strip() if soup.title else "No title found"

@@ -29,11 +29,13 @@ def scrape():
                 referential_scores.append(referential_score)
                 print(referential_score)
 
-        credibility_score = sum(credibility_scores) / len(credibility_scores)
-        referential_score = sum(referential_scores) / len(referential_scores)
+        # Calculate average scores only if we have scores
+        credibility_score = sum(credibility_scores) / len(credibility_scores) if credibility_scores else 0.0
+        referential_score = sum(referential_scores) / len(referential_scores) if referential_scores else 0.0
 
-        credibility_reasoning = synsai_llm.company_score_reasoning('credibility')
-        referential_reasoning = synsai_llm.company_score_reasoning('referential')
+        # Only get reasonings if we have scores for that criteria
+        credibility_reasoning = synsai_llm.company_score_reasoning('credibility') if credibility_scores else 'No credibility data available'
+        referential_reasoning = synsai_llm.company_score_reasoning('referential') if referential_scores else 'No referential data available'
 
 
         return jsonify({
