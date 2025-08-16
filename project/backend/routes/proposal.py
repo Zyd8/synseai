@@ -32,6 +32,7 @@ def create_proposal():
         proposal = Proposal(
             title=data['title'],
             description=data['description'],
+            collab_type=data.get('collab_type'),
             company_id=user.company.id
         )
         
@@ -118,6 +119,8 @@ def update_proposal(proposal_id):
             proposal.title = data['title']
         if 'description' in data:
             proposal.description = data['description']
+        if 'collab_type' in data:
+            proposal.collab_type = data['collab_type']
             
         db.session.commit()
         

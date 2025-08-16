@@ -12,6 +12,7 @@ class Proposal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
+    collab_type = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
     
     # Foreign key to Company
@@ -25,9 +26,9 @@ class Proposal(db.Model):
             "id": self.id,
             "title": self.title,
             "description": self.description,
+            "collab_type": self.collab_type,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
     
     def __repr__(self):
         return f'<Proposal {self.title}>'
-    

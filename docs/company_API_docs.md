@@ -47,7 +47,6 @@ Content-Type: application/json
 - `bio`: Company description
 - `industry`: Company's industry sector (string)
 - `size`: Number of employees (integer)
-- `collab_type`: Type of collaboration/partnership (string)
 
 **Response (Success - 201)**:
 ```json
@@ -62,7 +61,6 @@ Content-Type: application/json
     "bio": "Leading provider of innovative solutions",
     "industry": "Technology",
     "size": 150,
-    "collab_type": "Technology Partner",
     "created_at": "2023-08-09T08:00:00Z"
   }
 }
@@ -98,7 +96,6 @@ Authorization: Bearer <token>
   "bio": "Leading provider of innovative solutions",
   "industry": "Technology",
   "size": 150,
-  "collab_type": "Technology Partner",
   "created_at": "2023-08-09T08:00:00Z"
 }
 ```
@@ -137,7 +134,8 @@ Content-Type: application/json
 - `address`
 - `logo`
 - `bio`
-- `collab_type`
+- `industry`
+- `size`
 
 **Response (Success - 200)**:
 ```json
@@ -152,7 +150,6 @@ Content-Type: application/json
     "bio": "Global leader in innovative solutions",
     "industry": "Finance",
     "size": 200,
-    "collab_type": "Strategic Partner",
     "created_at": "2023-08-09T08:00:00Z"
   }
 }

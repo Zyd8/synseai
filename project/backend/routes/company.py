@@ -38,7 +38,6 @@ def create_company():
             bio=data.get('bio'),
             industry=data.get('industry'),
             size=data.get('size'),
-            collab_type=data.get('collab_type'),
             user_id=current_user_id
         )
         
@@ -96,8 +95,6 @@ def update_company():
             company.industry = data['industry']
         if 'size' in data:
             company.size = data['size']
-        if 'collab_type' in data:
-            company.collab_type = data['collab_type']
             
         db.session.commit()
         
