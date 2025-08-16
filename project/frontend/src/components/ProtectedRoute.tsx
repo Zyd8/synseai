@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const API = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +21,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/auth/protected", {
+        const res = await fetch(`${API}/api/auth/protected`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
