@@ -1,13 +1,46 @@
 'use client';
 import React, { useState, useRef } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useEffect } from "react";
 
 export default function ProposalForm() {
-    // Point of Contact
-    const [salutation, setSalutation] = useState<string>('');
-    const [gender, setGender] = useState<string>('');
-    const [fullname, setFullname] = useState<string>('');
-    const [email, setEmail] = useState<string>('');
+    const API = process.env.NEXT_PUBLIC_API_URL;
+    useEffect(() => {
+        const fetchUser = async () => {
+            const token = sessionStorage.getItem("access_token"); 
+            if (!token) return;
+
+            try {
+                const res = await fetch(`${API}/api/auth/protected`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const user = data.user;
+
+                    setFullname(`${user.first_name} ${user.last_name}`);
+                    setEmail(user.email);
+                } else if (res.status === 401) {
+                    sessionStorage.removeItem("access_token");
+                    window.location.href = "/login";
+                }
+            } catch (err) {
+                console.error("Error fetching user:", err);
+            }
+        };
+
+        fetchUser();
+    }, []);
+
+    const [salutation, setSalutation] = useState<string>("");
+    const [gender, setGender] = useState<string>("");
+
+    const [fullname, setFullname] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
 
     // Company Information
     const [companyName, setCompanyName] = useState<string>('');
@@ -171,11 +204,11 @@ export default function ProposalForm() {
                             <input
                                 type="text"
                                 value={fullname}
+                                readOnly
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullname(e.target.value)}
-                                placeholder="Enter your Name"
-                                className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                className="appearance-none w-full px-2 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base bg-gray-100 cursor-not-allowed"
                             />
 
                             {/* Base underline */}
@@ -197,11 +230,11 @@ export default function ProposalForm() {
                             <input
                                 type="text"
                                 value={email}
+                                readOnly
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                                placeholder="Enter your Name"
-                                className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                className="appearance-none w-full px-2 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base bg-gray-100 cursor-not-allowed"
                             />
 
                             {/* Base underline */}
@@ -236,7 +269,7 @@ export default function ProposalForm() {
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
                                 placeholder="Enter your company name"
-                                className="appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
+                                className="appearance-none w-full px-2 py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
                                 aria-label="Company name"
                             />
                             <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
@@ -268,7 +301,7 @@ export default function ProposalForm() {
                                 value={proposalTitle}
                                 onChange={(e) => setProposalTitle(e.target.value)}
                                 placeholder="Enter proposal title"
-                                className="appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
+                                className="px-2 appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
                                 aria-label="Proposal title"
                             />
                             <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
@@ -290,7 +323,7 @@ export default function ProposalForm() {
                                         value={collaborationType}
                                         onChange={(e) => setCollaborationType(e.target.value)}
                                         placeholder="Enter type of collaboration"
-                                        className="appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
+                                        className="px-2 appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
                                         aria-label="Type of collaboration"
                                     />
                                     {/* Base underline */}
@@ -316,7 +349,7 @@ export default function ProposalForm() {
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder="Write a description"
-                                        className="appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
+                                        className="px-2 appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
                                         aria-label="Description"
                                     />
                                     {/* Base underline */}
