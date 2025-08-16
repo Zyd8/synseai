@@ -1,4 +1,5 @@
 import ProposalReportChart from '@/components/DonutChart';
+import Sidebar from "@/components/DashboardSidebar";
 
 export default function Dashboard() {
     const summary = [
@@ -38,14 +39,7 @@ export default function Dashboard() {
 
         <div className="flex min-h-screen bg-gray-50">
             {/* Sidebar */}
-            <aside className="w-20 bg-white border-r flex flex-col items-center py-4 space-y-6">
-                <img src="/logo/synsei_icon.png" alt="Logo" className="w-10" />
-                <nav className="flex flex-col space-y-4">
-                    <button className="text-xl">🏠</button>
-                    <button className="text-xl">📄</button>
-                    <button className="text-xl">⚙️</button>
-                </nav>
-            </aside>
+            <Sidebar />
 
             {/* Main content */}
             <main className="flex-1 py-3 sm:py-6 pl-[2%] sm:pl-[3%] pr-[3%] sm:pr-[5%]">
