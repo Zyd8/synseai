@@ -32,7 +32,8 @@ Content-Type: application/json
   "logo": "data:image/png;base64,...",
   "bio": "Leading provider of innovative solutions",
   "industry": "Technology",
-  "size": 150
+  "size": 150,
+  "collab_type": "Technology Partner"
 }
 ```
 
