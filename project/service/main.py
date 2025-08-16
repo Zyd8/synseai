@@ -32,8 +32,8 @@ def scrape():
         credibility_score = sum(credibility_scores) / len(credibility_scores)
         referential_score = sum(referential_scores) / len(referential_scores)
 
-        # credibility_reasoning = synsai_llm.company_score_reasoning(result, 'credibility')
-        # referential_reasoning = synsai_llm.company_score_reasoning(result, 'referential')
+        credibility_reasoning = synsai_llm.company_score_reasoning('credibility')
+        referential_reasoning = synsai_llm.company_score_reasoning('referential')
 
 
         return jsonify({
@@ -41,8 +41,8 @@ def scrape():
             'data': {
                 'credibility_score': credibility_score,
                 'referential_score': referential_score,
-                # 'credibility_reasoning': credibility_reasoning,
-                # 'referential_reasoning': referential_reasoning
+                'credibility_reasoning': credibility_reasoning,
+                'referential_reasoning': referential_reasoning
             }
         })
     except Exception as e:

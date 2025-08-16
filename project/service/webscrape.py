@@ -74,7 +74,7 @@ def company_webscraper(company):
         for term in terms:
             try:
                 links = search(
-                    f"{company} {term}",
+                    f"{term} {company}",
                     num_results=config.get('search_settings').get('num_results'),
                     advanced=True
                 )
