@@ -4,6 +4,8 @@ from urllib.parse import urlparse, urljoin
 from googlesearch import search
 import time
 import random
+import yaml
+import os
 
 # Set up headers to mimic a browser
 HEADERS = {
@@ -14,19 +16,32 @@ HEADERS = {
     'Connection': 'keep-alive',
 }
 
-company = "Gcash"
+# Load configuration
+config_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
+with open(config_path, 'r') as f:
+    config = yaml.safe_load(f)
 
-credibility_terms = ["Review", "Rating", "Feedback"]
-compliance_terms = ["DTI", "BIR", "SEC"]
-referential_terms = ["Partners", "Clients"]
+# Extract configuration
+company = config.get('company', 'Gcash')
+search_settings = config.get('search_settings', {})
 
-scoring = [credibility_terms, compliance_terms, referential_terms]
+# Set up search criteria
+scoring = [
+    config.get('criteria', {}).get('credibility', []),
+    config.get('criteria', {}).get('compliance', []),
+    config.get('criteria', {}).get('referential', [])
+]
 
 for criteria in scoring:
     for term in criteria:
         try:
-            links = search(company + " " + term, num_results=1, advanced=True)
+            links = search(
+                f"{company} {term}",
+                num_results=search_settings.get('num_results', 1),
+                advanced=True
+            )
             for result in links:
+                
                 url = result.url
                 # Ensure URL has a scheme
                 if not urlparse(url).scheme:
@@ -34,11 +49,18 @@ for criteria in scoring:
                 
                 try:
                     # Add a random delay between requests to avoid being blocked
-                    time.sleep(random.uniform(1, 3))
+                    time.sleep(random.uniform(
+                        search_settings.get('min_delay', 1),
+                        search_settings.get('max_delay', 3)
+                    ))
                     
                     # Make the request with headers
                     session = requests.Session()
-                    response = session.get(url, headers=HEADERS, timeout=15)
+                    response = session.get(
+                        url,
+                        headers=HEADERS,
+                        timeout=search_settings.get('timeout', 15)
+                    )
                     response.raise_for_status()
                     
                     # Try different encodings if the default one fails
