@@ -10,6 +10,7 @@ from auth.routes import auth_bp
 from routes.company import company_bp
 from routes.proposal import proposal_bp
 from routes.department import department_bp
+from routes.document import document_bp
 from routes.synergy import synergy_bp
 
 # Load environment variables
@@ -24,6 +25,7 @@ def create_app():
     config[env].init_app(app)
     
     # JWT Configuration
+    app.config['JSON_SORT_KEYS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES')))
     app.config['JWT_TOKEN_LOCATION'] = ['headers']
@@ -40,6 +42,7 @@ def create_app():
     app.register_blueprint(company_bp, url_prefix='/api/company')
     app.register_blueprint(proposal_bp, url_prefix='/api/proposal')
     app.register_blueprint(department_bp, url_prefix='/api/department')
+    app.register_blueprint(document_bp, url_prefix='/api/document')
     app.register_blueprint(synergy_bp, url_prefix='/api/synergy')
     
     # Create database tables
