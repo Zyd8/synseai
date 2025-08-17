@@ -34,6 +34,9 @@ class Company(db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), unique=True, nullable=True)
     department = db.relationship('Department', back_populates='company', uselist=False)
     
+    # One-to-one relationship with Synergy
+    synergy = db.relationship('Synergy', back_populates='company', uselist=False, cascade='all, delete-orphan')
+    
     def to_dict(self):
         """Convert company object to dictionary."""
         return {
