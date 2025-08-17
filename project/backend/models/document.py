@@ -11,7 +11,8 @@ class Document(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
-    file = db.Column(db.String(255), nullable=False)  # store file path or filename
+    type = db.Column(db.String(255), nullable=False)
+    file = db.Column(db.String(255), nullable=False)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(
@@ -23,6 +24,7 @@ class Document(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "type": self.type,
             "file": self.file,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }

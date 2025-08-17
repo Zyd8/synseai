@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Document Service API – HTML Docs</title>
+  <style>
+    :root{
+      --bg:#0b1220;--panel:#0f172a;--muted:#94a3b8;--text:#e2e8f0;--brand:#22d3ee;--accent:#a78bfa;--ok:#10b981;--warn:#f59e0b;--bad:#ef4444;
+      --mono:"SFMono-Regular","Consolas","Liberation Mono","Menlo","Courier New",monospace;
+      --sans: ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial,Apple Color Emoji,Segoe UI Emoji;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#0b1220 40%,#111827);color:var(--text);font:16px/1.6 var(--sans)}
+    .container{max-width:1100px;margin:0 auto;padding:40px 20px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:28px}
+    .badge{background:linear-gradient(135deg,var(--brand),var(--accent));color:#0b1220;font-weight:700;padding:8px 12px;border-radius:999px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+    h1{font-size:38px;margin:.2em 0 .1em}
+    p.lead{color:var(--muted);max-width:70ch;margin:0 0 28px}
+
+    /* layout */
+    .grid{display:grid;grid-template-columns:280px 1fr;gap:24px}
+    nav{position:sticky;top:20px;align-self:start;background:rgba(17,24,39,.6);backdrop-filter: blur(6px);border:1px solid #1f2937;border-radius:16px;padding:16px}
+    nav a{display:block;color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:10px}
+    nav a:hover{color:var(--text);background:#111827}
+
+    section{background:rgba(15,23,42,.7);border:1px solid #1f2937;border-radius:16px;padding:22px;margin-bottom:18px}
+    section h2{font-size:22px;margin:0 0 8px}
+    section h3{font-size:18px;margin:18px 0 8px}
+
+    .kbd{font-family:var(--mono);background:#0b1020;border:1px solid #1f2438;border-radius:8px;padding:2px 6px;color:#cbd5e1}
+    .tag{display:inline-flex;align-items:center;gap:8px;border:1px solid #243047;background:#0b1020;border-radius:999px;padding:5px 10px;color:#cbd5e1;font-size:12px;margin-right:6px}
+    .method{font-weight:800;letter-spacing:.04em}
+    .GET{color:#60a5fa}.POST{color:#34d399}.PUT{color:#f59e0b}.DELETE{color:#f87171}
+    .code{position:relative;background:#0b1020;border:1px solid #1f2937;border-radius:12px;padding:14px;overflow:auto}
+    pre,code{font-family:var(--mono);font-size:13px;color:#e5e7eb}
+    .pill{display:inline-block;font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;background:#0b1020;border:1px solid #23304a;color:#cbd5e1}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #243047;text-align:left}
+    th{color:#cbd5e1;font-weight:700}
+    td small{color:var(--muted)}
+
+    .status{font-weight:700}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+    footer{color:var(--muted);margin-top:24px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">API Docs</span>
+      <h1>Document Service</h1>
+    </header>
+    <p class="lead">Endpoints for uploading, listing metadata, viewing, and downloading files. All routes below require a valid JWT (<span class="kbd">Authorization: Bearer &lt;token&gt;</span>). Adjust the <strong>base URL</strong> to match how you registered the blueprint. These docs assume a URL prefix of <span class="kbd">/api/document</span>.</p>
+
+    <div class="grid">
+      <nav>
+        <a href="#overview">Overview</a>
+        <a href="#auth">Auth</a>
+        <a href="#model">Data Model</a>
+        <a href="#upload">POST /upload_file</a>
+        <a href="#get-file">GET /get_file/:id</a>
+        <a href="#view-file">GET /view_file/:id</a>
+        <a href="#download-file">GET /download_file/:id</a>
+        <a href="#errors">Errors</a>
+        <a href="#postman">Testing in Postman</a>
+        <a href="#react">React snippets</a>
+      </nav>
+
+      <main>
+        <section id="overview">
+          <h2>Overview</h2>
+          <p>The service stores files under a type-based folder structure and records metadata in the <span class="kbd">Document</span> table. Files are saved with the pattern <span class="kbd">&lt;id&gt;_&lt;original_filename&gt;</span> to avoid collisions.</p>
+          <div class="code"><pre><code>Base URL: http://localhost:5000/api/document
+Folders:
+  uploaded_files/
+    ├─ team_files/
+    ├─ proposal_files/
+    └─ others/
+          </code></pre></div>
+        </section>
+
+        <section id="auth">
+          <h2>Authentication</h2>
+          <p>All routes are protected with <span class="kbd">@jwt_required()</span>. Send a Bearer token:</p>
+          <div class="code"><pre><code>Authorization: Bearer &lt;your_jwt_access_token&gt;</code></pre></div>
+        </section>
+
+        <section id="model">
+          <h2>Data Model: Document</h2>
+          <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td>id</td><td>integer</td><td>Primary key, used in filenames and routes.</td></tr>
+              <tr><td>name</td><td>string</td><td>Logical name shown to users / used for downloads.</td></tr>
+              <tr><td>type</td><td>string</td><td>Determines destination folder: <span class="pill">team</span>, <span class="pill">proposal</span>, or <span class="pill">others</span>.</td></tr>
+              <tr><td>file</td><td>string</td><td>Saved file path (relative or absolute on server).</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="upload">
+          <h2><span class="method POST">POST</span> /upload_file</h2>
+          <p>Upload a single file with metadata. Content type must be <span class="kbd">multipart/form-data</span>.</p>
+
+          <h3>Form fields</h3>
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>name</td><td>text</td><td>Yes</td><td>Friendly name for the document.</td></tr>
+              <tr><td>type</td><td>text</td><td>Yes</td><td>One of: <span class="pill">team</span>, <span class="pill">proposal</span>, or any other string (goes to <em>others</em>).</td></tr>
+              <tr><td>file</td><td>file</td><td>Yes</td><td>The file to upload.</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Response (201)</h3>
+          <div class="code"><pre><code>{
+  "message": "Document saved successfully in uploaded_files/team_files",
+  "file": {
+    "id": 5,
+    "name": "Sheens_Resume.pdf",
+    "type": "team",
+    "file": "uploaded_files/team_files/5_Sheens_Resume.pdf"
+  }
+}</code></pre></div>
+
+          <h3>cURL</h3>
+          <div class="code"><pre><code>curl -X POST "http://localhost:5000/api/document/upload_file" \
+  -H "Authorization: Bearer &lt;TOKEN&gt;" \
+  -F "name=Sheens_Resume.pdf" \
+  -F "type=team" \
+  -F "file=@/path/to/Sheens_Resume.pdf"</code></pre></div>
+        </section>
+
+        <section id="get-file">
+          <h2><span class="method GET">GET</span> /get_file/&lt;id&gt;</h2>
+          <p>Returns metadata + actionable URLs; doesn’t return file bytes.</p>
+          <h3>Response (200)</h3>
+          <div class="code"><pre><code>{
+  "id": 5,
+  "name": "Sheens_Resume.pdf",
+  "file_url": "uploaded_files/team_files/5_Sheens_Resume.pdf",
+  "type": "team",
+  "dowload_url": "/api/document/download_file/5",
+  "view_url": "/api/document/view_file/5"
+}</code></pre></div>
+
+          <h3>cURL</h3>
+          <div class="code"><pre><code>curl -H "Authorization: Bearer &lt;TOKEN&gt;" \
+  "http://localhost:5000/api/document/get_file/5"</code></pre></div>
+        </section>
+
+        <section id="view-file">
+          <h2><span class="method GET">GET</span> /view_file/&lt;id&gt;</h2>
+          <p>Streams the file inline (lets the browser preview PDFs/images). No forced download.</p>
+          <p class="tag"><span class="GET method">GET</span> Inline</p>
+          <div class="code"><pre><code>curl -L -H "Authorization: Bearer &lt;TOKEN&gt;" \
+  "http://localhost:5000/api/document/view_file/5" \
+  -o preview.pdf</code></pre></div>
+        </section>
+
+        <section id="download-file">
+          <h2><span class="method GET">GET</span> /download_file/&lt;id&gt;</h2>
+          <p>Forces a browser download using <code>send_file(..., as_attachment=True)</code>.</p>
+          <div class="code"><pre><code>curl -L -H "Authorization: Bearer &lt;TOKEN&gt;" \
+  "http://localhost:5000/api/document/download_file/5" \
+  -o Sheens_Resume.pdf</code></pre></div>
+        </section>
+
+        <section id="errors">
+          <h2>Error Responses</h2>
+          <table>
+            <thead><tr><th>Status</th><th>When</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td class="status bad">400</td><td>Missing form fields (name/type/file)</td><td><code>{"error":"Name is required"}</code></td></tr>
+              <tr><td class="status bad">401</td><td>No or invalid JWT</td><td><code>{"msg":"Missing Authorization Header"}</code></td></tr>
+              <tr><td class="status bad">404</td><td>Document not found / File missing (download/view)</td><td><code>{"error":"File not found"}</code></td></tr>
+              <tr><td class="status bad">500</td><td>Unhandled exceptions</td><td><code>{"error":"&lt;details&gt;"}</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="postman">
+          <h2>Testing in Postman</h2>
+          <ol>
+            <li>Create a <strong>POST</strong> request to <span class="kbd">/api/document/upload_file</span>.</li>
+            <li>Authorization tab → Type: <strong>Bearer Token</strong> → paste JWT.</li>
+            <li>Body → <strong>form-data</strong>:
+              <ul>
+                <li><span class="pill">name</span> = <em>Sheens_Resume.pdf</em></li>
+                <li><span class="pill">type</span> = <em>team</em></li>
+                <li><span class="pill">file</span> = <em>(choose file)</em></li>
+              </ul>
+            </li>
+            <li>Send. Copy the returned <span class="kbd">id</span>.</li>
+            <li>Create a <strong>GET</strong> to <span class="kbd">/api/document/get_file/&lt;id&gt;</span> to fetch metadata & URLs.</li>
+            <li>To download in Postman, call <span class="kbd">/download_file/&lt;id&gt;</span> then click <strong>Save Response</strong> in the response panel.</li>
+            <li>To preview in a browser, open <span class="kbd">/view_file/&lt;id&gt;</span> in a new tab with the token (or test via a frontend).</li>
+          </ol>
+        </section>
+
+        <section id="react">
+          <h2>React snippets</h2>
+          <h3>View link</h3>
+          <div class="code"><pre><code>{`&lt;a href=\"http://localhost:5000/api/document/view_file/${'{id}'}\" target=\"_blank\" rel=\"noopener noreferrer\"&gt;View&lt;/a&gt;`}</code></pre></div>
+          <h3>Download button (Axios + Blob)</h3>
+          <div class="code"><pre><code>{`import axios from 'axios';
+
+async function downloadFile(id){
+  const token = localStorage.getItem('token');
+  const res = await axios.get(
+    \
+    \'http://localhost:5000/api/document/download_file/' + id,\
+    { responseType: 'blob', headers: { Authorization: 'Bearer ' + token } }
+  );
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const link = document.createElement('a');
+  link.href = url; link.setAttribute('download', 'document_' + id);
+  document.body.appendChild(link); link.click(); link.remove();
+}`}</code></pre></div>
+        </section>
+
+        <footer>
+          <p>Tip: If you want the JSON key order preserved, set <span class="kbd">app.config['JSON_SORT_KEYS'] = False</span> in your Flask app.</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

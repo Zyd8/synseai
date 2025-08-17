@@ -24,6 +24,7 @@ def create_app():
     config[env].init_app(app)
     
     # JWT Configuration
+    app.config['JSON_SORT_KEYS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES')))
     app.config['JWT_TOKEN_LOCATION'] = ['headers']
