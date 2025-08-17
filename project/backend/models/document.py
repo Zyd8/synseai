@@ -13,12 +13,7 @@ class Document(db.Model):
     name = db.Column(db.String(255), nullable=False)
     type = db.Column(db.String(255), nullable=False)
     file = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(
-        db.DateTime,
-        default=lambda: datetime.now(
-            pytz.timezone(os.getenv("TIMEZONE", "UTC"))
-        )
-    )
+    created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
 
     def to_dict(self):
         return {
