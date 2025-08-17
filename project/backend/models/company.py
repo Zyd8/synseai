@@ -20,7 +20,7 @@ class Company(db.Model):
     logo = db.Column(db.Text, nullable=True)  
     bio = db.Column(db.Text, nullable=True)
     industry = db.Column(db.String(100), nullable=True)
-    size = db.Column(db.Integer, nullable=True)  
+    size = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
     
     # One-to-one relationship with User
@@ -33,6 +33,9 @@ class Company(db.Model):
     # One-to-one relationship with Department
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), unique=True, nullable=True)
     department = db.relationship('Department', back_populates='company', uselist=False)
+    
+    # One-to-one relationship with Synergy
+    synergy = db.relationship('Synergy', back_populates='company', uselist=False, cascade='all, delete-orphan')
     
     def to_dict(self):
         """Convert company object to dictionary."""

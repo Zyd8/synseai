@@ -27,13 +27,17 @@ Content-Type: application/json
 ```json
 {
   "title": "Website Redesign Project",
-  "description": "Complete redesign of company website with modern UI/UX"
+  "description": "Complete redesign of company website with modern UI/UX",
+  "collab_type": "Technology Partner"
 }
 ```
 
 **Required Fields**:
 - `title`: Proposal title
 - `description`: Detailed description of the proposal
+
+**Optional Fields**:
+- `collab_type`: Type of collaboration/partnership (string)
 
 **Response (Success - 201)**:
 ```json
@@ -43,6 +47,7 @@ Content-Type: application/json
     "id": 1,
     "title": "Website Redesign Project",
     "description": "Complete redesign of company website with modern UI/UX",
+    "collab_type": "Technology Partner",
     "created_at": "2023-08-09T10:30:00Z"
   }
 }
@@ -75,12 +80,14 @@ Authorization: Bearer <token>
       "id": 1,
       "title": "Website Redesign Project",
       "description": "Complete redesign of company website with modern UI/UX",
+      "collab_type": "Technology Partner",
       "created_at": "2023-08-09T10:30:00Z"
     },
     {
       "id": 2,
       "title": "Mobile App Development",
       "description": "Development of cross-platform mobile application",
+      "collab_type": "",
       "created_at": "2023-08-10T14:15:00Z"
     }
   ]
@@ -108,6 +115,7 @@ Authorization: Bearer <token>
   "id": 1,
   "title": "Website Redesign Project",
   "description": "Complete redesign of company website with modern UI/UX",
+  "collab_type": "Technology Partner",
   "created_at": "2023-08-09T10:30:00Z"
 }
 ```
@@ -139,13 +147,15 @@ Content-Type: application/json
 ```json
 {
   "title": "Updated Website Redesign",
-  "description": "Complete redesign with additional e-commerce features"
+  "description": "Complete redesign with additional e-commerce features",
+  "collab_type": "Strategic Partner"
 }
 ```
 
 **Optional Fields**:
 - `title`
 - `description`
+- `collab_type`
 
 **Response (Success - 200)**:
 ```json
@@ -155,6 +165,7 @@ Content-Type: application/json
     "id": 1,
     "title": "Updated Website Redesign",
     "description": "Complete redesign with additional e-commerce features",
+    "collab_type": "Strategic Partner",
     "created_at": "2023-08-09T10:30:00Z"
   }
 }

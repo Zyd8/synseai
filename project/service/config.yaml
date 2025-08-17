@@ -1,0 +1,14 @@
+search_settings:
+  num_results: 5
+  min_delay: 1
+  max_delay: 3
+  timeout: 10
+
+criteria:
+  credibility:
+    - What are the reviews of
+    # - Rating
+    # - Feedback
+  referential:
+    - What are the partners of
+    # - Clients

@@ -8,3 +8,4 @@ from .company import Company  # noqa
 from .proposal import Proposal  # noqa
 from .department import Department  # noqa
 from .document import Document  # noqa
+from .synergy import Synergy  # noqa

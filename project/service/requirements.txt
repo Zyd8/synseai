@@ -4,3 +4,5 @@ Flask-Cors==4.0.0
 requests 
 beautifulsoup4
 googlesearch-python
+pyyaml
+ollama

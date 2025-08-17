@@ -1,5 +1,6 @@
 import { FaProjectDiagram, FaRocket, FaChartLine, FaLeaf, FaLightbulb } from "react-icons/fa";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Link from "next/link";
 
 export default function CollabHome() {
 
@@ -25,7 +26,7 @@ export default function CollabHome() {
                 Let’s create smart, sustainable solutions together across industries, platforms, and people.
               </p>
               <div className="mt-4">
-                <button className="w-full bg-[#B11016] text-white font-semibold py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300">
+                <button  className="w-full bg-[#B11016] text-white font-semibold py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300">
                   EXPLORE PARTNERSHIP
                 </button>
               </div>
@@ -191,11 +192,13 @@ export default function CollabHome() {
               Submit your idea, product, or platform for evaluation by BPI’s partnership team.
             </p>
           </div>
-          <div className="w-full flex justify-center">
-            <button className="bg-[#B11016] text-white font-semibold px-30 py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300">
-              PROPOSE TO BPI
-            </button>
-          </div>
+         <div className="w-full flex justify-center">
+      <Link href="/companysetup">
+        <button className="bg-[#B11016] text-white font-semibold px-30 py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300">
+          PROPOSE TO BPI
+        </button>
+      </Link>
+    </div>
 
         </div>
 

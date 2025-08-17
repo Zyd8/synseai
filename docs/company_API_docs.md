@@ -32,7 +32,8 @@ Content-Type: application/json
   "logo": "data:image/png;base64,...",
   "bio": "Leading provider of innovative solutions",
   "industry": "Technology",
-  "size": 150
+  "size": 150,
+  "collab_type": "Technology Partner"
 }
 ```
 
@@ -58,8 +59,8 @@ Content-Type: application/json
     "address": "123 Business St, Metro City",
     "logo": "data:image/png;base64,...",
     "bio": "Leading provider of innovative solutions",
-  "industry": "Technology",
-  "size": 150,
+    "industry": "Technology",
+    "size": 150,
     "created_at": "2023-08-09T08:00:00Z"
   }
 }
@@ -133,6 +134,8 @@ Content-Type: application/json
 - `address`
 - `logo`
 - `bio`
+- `industry`
+- `size`
 
 **Response (Success - 200)**:
 ```json
