@@ -15,6 +15,7 @@ export default function CompanySetup() {
     const [customIndustry, setCustomIndustry] = useState("");
     const [color, setColor] = useState("#000000");
     const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+    const [existingLogoUrl, setExistingLogoUrl] = useState("");
     const [bio, setBio] = useState("");
     const [collabType, setCollabType] = useState("");
     const logoInputRef = useRef<HTMLInputElement>(null);
@@ -30,14 +31,31 @@ export default function CompanySetup() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    // Fetch user data on component mount
+    // New states for company management
+    const [hasExistingCompany, setHasExistingCompany] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [originalCompanyData, setOriginalCompanyData] = useState<any>(null);
+    const [companyId, setCompanyId] = useState("");
+
+    // Convert company size number to display string
+    const sizeToString = (size: number): string => {
+        if (size <= 10) return "1-10";
+        if (size <= 50) return "11-50";
+        if (size <= 200) return "51-200";
+        if (size <= 500) return "201-500";
+        if (size <= 1000) return "501-1000";
+        if (size > 1000) return "1000+";
+        return "Other";
+    };
+
+    // Fetch user data and company data on component mount
     useEffect(() => {
         const fetchData = async () => {
             const token = sessionStorage.getItem("access_token");
             if (!token) return;
 
             try {
-                // Fetch user data
+                // Fetch user data first
                 const resUser = await fetch(`${API}/api/auth/protected`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -46,14 +64,98 @@ export default function CompanySetup() {
                 });
 
                 if (resUser.ok) {
-                    const data = await resUser.json();
-                    const user = data.user;
+                    const userData = await resUser.json();
+                    const user = userData.user;
 
                     setFullname(`${user.first_name} ${user.last_name}`);
                     setContactEmail(user.email);
+                    setPosition(user.position || ""); // Fetch position from user data
+                }
+
+                // Try to fetch existing company data
+                const resCompany = await fetch(`${API}/api/company`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (resCompany.ok) {
+                    const companyData = await resCompany.json();
+                    
+                    // Pre-fill all company fields
+                    setCompanyName(companyData.name || "");
+                    setCompanyWebsite(companyData.website || "");
+                    setAddress(companyData.address || "");
+                    setIndustry(companyData.industry || "");
+                    setBio(companyData.bio || "");
+                    setColor(companyData.color || "#000000");
+                    setCollabType(companyData.collab_type || "");
+                    
+                    // Handle company size
+                    if (companyData.size) {
+                        const sizeString = sizeToString(companyData.size);
+                        if (sizeString === "Other") {
+                            setCompanySize("Other");
+                            setCustomCompanySize(companyData.size.toString());
+                        } else {
+                            setCompanySize(sizeString);
+                        }
+                    }
+
+                    // Handle industry
+                    const predefinedIndustries = [
+                        "Financial Technology", "Healthcare", "Education", "Technology", 
+                        "Manufacturing", "Retail", "Finance", "Consulting", "Real Estate", 
+                        "Media & Entertainment"
+                    ];
+                    if (companyData.industry && !predefinedIndustries.includes(companyData.industry)) {
+                        setIndustry("Other");
+                        setCustomIndustry(companyData.industry);
+                    }
+
+                    // Store existing logo URL
+                    if (companyData.logo) {
+                        setExistingLogoUrl(companyData.logo);
+                    }
+                    
+                    setHasExistingCompany(true);
+                    setCompanyId(companyData.id);
+                    
+                    // Store original data for cancel functionality
+                    setOriginalCompanyData({
+                        name: companyData.name || "",
+                        website: companyData.website || "",
+                        address: companyData.address || "",
+                        industry: companyData.industry || "",
+                        size: companyData.size,
+                        bio: companyData.bio || "",
+                        color: companyData.color || "#000000",
+                        collab_type: companyData.collab_type || "",
+                        logo: companyData.logo || "",
+                        // Store user data for cancel functionality
+                        // user_position: user.position || ""
+                    });
+                } else if (resCompany.status === 404) {
+                    // No company exists, user can create one
+                    setHasExistingCompany(false);
+                    
+                    // Store user data for cancel functionality even when no company exists
+                    setOriginalCompanyData({
+                        name: "",
+                        website: "",
+                        address: "",
+                        industry: "",
+                        size: null,
+                        bio: "",
+                        color: "#000000",
+                        collab_type: "",
+                        logo: "",
+                        // user_position: user.position || ""
+                    });
                 }
             } catch (err) {
-                console.error("Error fetching user data:", err);
+                console.error("Error fetching data:", err);
             }
         };
 
@@ -74,6 +176,7 @@ export default function CompanySetup() {
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setCompanyLogo(e.target.files[0]);
+            setExistingLogoUrl(""); // Clear existing logo when new one is uploaded
         }
     };
     
@@ -81,7 +184,63 @@ export default function CompanySetup() {
         e.preventDefault();
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             setCompanyLogo(e.dataTransfer.files[0]);
+            setExistingLogoUrl(""); // Clear existing logo when new one is uploaded
         }
+    };
+
+    // Handle edit mode toggle
+    const handleEditClick = () => {
+        setIsEditMode(true);
+        setError("");
+        setSuccess("");
+    };
+
+    // Handle cancel edit
+    const handleCancelEdit = () => {
+        if (originalCompanyData) {
+            // Restore original values
+            setCompanyName(originalCompanyData.name);
+            setCompanyWebsite(originalCompanyData.website);
+            setAddress(originalCompanyData.address);
+            setBio(originalCompanyData.bio);
+            setColor(originalCompanyData.color);
+            setCollabType(originalCompanyData.collab_type);
+            setExistingLogoUrl(originalCompanyData.logo);
+            setCompanyLogo(null);
+            setPosition(originalCompanyData.user_position || ""); // Restore position
+
+            // Handle industry restoration
+            const predefinedIndustries = [
+                "Financial Technology", "Healthcare", "Education", "Technology", 
+                "Manufacturing", "Retail", "Finance", "Consulting", "Real Estate", 
+                "Media & Entertainment"
+            ];
+            if (originalCompanyData.industry && !predefinedIndustries.includes(originalCompanyData.industry)) {
+                setIndustry("Other");
+                setCustomIndustry(originalCompanyData.industry);
+            } else {
+                setIndustry(originalCompanyData.industry);
+                setCustomIndustry("");
+            }
+
+            // Handle size restoration
+            if (originalCompanyData.size) {
+                const sizeString = sizeToString(originalCompanyData.size);
+                if (sizeString === "Other") {
+                    setCompanySize("Other");
+                    setCustomCompanySize(originalCompanyData.size.toString());
+                } else {
+                    setCompanySize(sizeString);
+                    setCustomCompanySize("");
+                }
+            } else {
+                setCompanySize("");
+                setCustomCompanySize("");
+            }
+        }
+        setIsEditMode(false);
+        setError("");
+        setSuccess("");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -100,6 +259,9 @@ export default function CompanySetup() {
             let logoBase64 = "";
             if (companyLogo) {
                 logoBase64 = await fileToBase64(companyLogo);
+            } else if (existingLogoUrl && !companyLogo) {
+                // Keep existing logo if no new logo is uploaded
+                logoBase64 = existingLogoUrl;
             }
 
             const finalIndustry = industry === "Other" ? customIndustry : industry;
@@ -141,8 +303,27 @@ export default function CompanySetup() {
             console.log("Token being sent:", token);
             console.log("Payload being sent:", payload);
 
+            // Update user position if it has changed (since position is stored in User model)
+            const originalPosition = originalCompanyData?.user_position || "";
+            if (position !== originalPosition) {
+                const userUpdateResponse = await fetch(`${API}/api/user/profile`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ position: position }),
+                });
+
+                if (!userUpdateResponse.ok) {
+                    console.warn("Failed to update user position, but continuing with company update");
+                }
+            }
+
+            // Use PUT for existing company, POST for new company
+            const method = hasExistingCompany ? "PUT" : "POST";
             const response = await fetch(`${API}/api/company`, {
-                method: "POST",
+                method: method,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
@@ -154,37 +335,85 @@ export default function CompanySetup() {
             console.log("Response:", response.status, data);
 
             if (response.ok) {
-                setSuccess(`Company "${data.company.name}" created successfully!`);
-                // Optionally reset form after success
-                // resetForm();
+                if (hasExistingCompany) {
+                    setSuccess(`Company "${data.company.name}" updated successfully!`);
+                    setIsEditMode(false);
+                    
+                    // Update original data with new values for future cancellations
+                    setOriginalCompanyData({
+                        name: data.company.name,
+                        website: data.company.website || "",
+                        address: data.company.address || "",
+                        industry: data.company.industry || "",
+                        size: data.company.size,
+                        bio: data.company.bio || "",
+                        color: data.company.color || "#000000",
+                        collab_type: data.company.collab_type || "",
+                        logo: data.company.logo || "",
+                        user_position: position // Store updated position
+                    });
+                } else {
+                    setSuccess(`Company "${data.company.name}" created successfully!`);
+                    setHasExistingCompany(true);
+                    setCompanyId(data.company.id);
+                    
+                    // Store the newly created company data
+                    setOriginalCompanyData({
+                        name: data.company.name,
+                        website: data.company.website || "",
+                        address: data.company.address || "",
+                        industry: data.company.industry || "",
+                        size: data.company.size,
+                        bio: data.company.bio || "",
+                        color: data.company.color || "#000000",
+                        collab_type: data.company.collab_type || "",
+                        logo: data.company.logo || "",
+                        user_position: position // Store position
+                    });
+
+                    // Redirect to Proposal Form page after successful creation
+                    setTimeout(() => {
+                        window.location.href = "/proposal-form"; // Adjust this path as needed
+                    }, 2000);
+                }
             } else {
-                setError(data.error || `Failed to create company (${response.status})`);
+                setError(data.error || `Failed to ${hasExistingCompany ? 'update' : 'create'} company (${response.status})`);
             }
         } catch (err) {
-            console.error("Error creating company:", err);
-            setError("An unexpected error occurred while creating the company.");
+            console.error("Error with company operation:", err);
+            setError(`An unexpected error occurred while ${hasExistingCompany ? 'updating' : 'creating'} the company.`);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Optional: Function to reset form
-    const resetForm = () => {
-        setCompanyName("");
-        setCompanyWebsite("");
-        setAddress("");
-        setIndustry("");
-        setCompanySize("");
-        setCustomCompanySize("");
-        setCustomIndustry("");
-        setColor("#000000");
-        setCompanyLogo(null);
-        setBio("");
-        setCollabType("");
-        setFullname("");
-        setContactEmail("");
-        setPosition("");
-        setContactNumber("");
+    // Check if fields should be read-only
+    const isReadOnly = hasExistingCompany && !isEditMode;
+
+    // Get button text based on state
+    const getButtonText = () => {
+        if (isLoading) {
+            if (hasExistingCompany) {
+                return isEditMode ? "SAVING..." : "LOADING...";
+            }
+            return "SETTING UP COMPANY...";
+        }
+        
+        if (hasExistingCompany) {
+            return isEditMode ? "SAVE CHANGES" : "EDIT COMPANY";
+        }
+        
+        return "SETUP COMPANY";
+    };
+
+    // Handle button click
+    const handleButtonClick = (e: React.FormEvent) => {
+        if (hasExistingCompany && !isEditMode) {
+            e.preventDefault();
+            handleEditClick();
+        } else {
+            handleSubmit(e);
+        }
     };
 
     return (
@@ -195,7 +424,10 @@ export default function CompanySetup() {
                     Company Setup Form
                 </h1>
                 <p className="text-md text-black mb-6">
-                    Set up your company that's aiming to partner with BPI
+                    {hasExistingCompany 
+                        ? "Manage your company information" 
+                        : "Set up your company that's aiming to partner with BPI"
+                    }
                 </p>
                 <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
             </div>
@@ -212,7 +444,7 @@ export default function CompanySetup() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="w-full">
+            <form onSubmit={handleButtonClick} className="w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
                     {/* LEFT COLUMN - COMPANY INFO */}
                     <div className="space-y-6">
@@ -234,9 +466,11 @@ export default function CompanySetup() {
                                     value={companyName}
                                     onChange={(e) => setCompanyName(e.target.value)}
                                     placeholder="Enter Company Name"
-                                    className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                    readOnly={isReadOnly}
+                                    className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
                                     required
                                 />
                                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
@@ -258,9 +492,11 @@ export default function CompanySetup() {
                                     value={companyWebsite}
                                     onChange={(e) => setCompanyWebsite(e.target.value)}
                                     placeholder="Enter Website Link (https://...)"
-                                    className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                    readOnly={isReadOnly}
+                                    className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
                                 />
                                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
                                 <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
@@ -281,9 +517,11 @@ export default function CompanySetup() {
                                     value={address}
                                     onChange={(e) => setAddress(e.target.value)}
                                     placeholder="Enter Company Address"
-                                    className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                    readOnly={isReadOnly}
+                                    className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
                                 />
                                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
                                 <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
@@ -302,7 +540,9 @@ export default function CompanySetup() {
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 placeholder="Brief description of your company..."
-                                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none resize-vertical"
+                                readOnly={isReadOnly}
+                                className={`w-full border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none resize-vertical
+                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                 rows={3}
                             />
                         </div>
@@ -315,7 +555,9 @@ export default function CompanySetup() {
                             <select
                                 value={companySize}
                                 onChange={(e) => setCompanySize(e.target.value)}
-                                className="border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full"
+                                disabled={isReadOnly}
+                                className={`border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full
+                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                             >
                                 <option value="">Select Company Size</option>
                                 <option value="1-10">1-10 employees</option>
@@ -333,7 +575,9 @@ export default function CompanySetup() {
                                     value={customCompanySize}
                                     onChange={(e) => setCustomCompanySize(e.target.value)}
                                     placeholder="Enter exact number of employees"
-                                    className="w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2"
+                                    readOnly={isReadOnly}
+                                    className={`w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                     min="1"
                                 />
                             )}
@@ -347,7 +591,9 @@ export default function CompanySetup() {
                             <select
                                 value={industry}
                                 onChange={(e) => setIndustry(e.target.value)}
-                                className="border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full"
+                                disabled={isReadOnly}
+                                className={`border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full
+                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                             >
                                 <option value="">Select Industry</option>
                                 <option>Financial Technology</option>
@@ -368,7 +614,9 @@ export default function CompanySetup() {
                                     value={customIndustry}
                                     onChange={(e) => setCustomIndustry(e.target.value)}
                                     placeholder="Enter industry"
-                                    className="w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2"
+                                    readOnly={isReadOnly}
+                                    className={`w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                 />
                             )}
                         </div>
@@ -381,26 +629,40 @@ export default function CompanySetup() {
                                     COMPANY LOGO
                                 </label>
                                 <div
-                                    onDrop={handleLogoDrop}
-                                    onDragOver={(e) => e.preventDefault()}
-                                    className="border-2 border-dashed border-[#B11016] rounded-lg p-6 text-center cursor-pointer hover:border-[#B11016]"
-                                    onClick={() => logoInputRef.current?.click()}
+                                    onDrop={!isReadOnly ? handleLogoDrop : undefined}
+                                    onDragOver={!isReadOnly ? (e) => e.preventDefault() : undefined}
+                                    className={`border-2 border-dashed border-[#B11016] rounded-lg p-6 text-center
+                                    ${!isReadOnly ? 'cursor-pointer hover:border-[#B11016]' : 'cursor-not-allowed bg-gray-100'}`}
+                                    onClick={!isReadOnly ? () => logoInputRef.current?.click() : undefined}
                                 >
-                                    <p className="text-gray-500">
-                                        Drag & drop logo or{" "}
-                                        <span className="underline text-[#B11016]">Browse</span>
-                                    </p>
+                                    {existingLogoUrl && !companyLogo ? (
+                                        <div>
+                                            <img 
+                                                src={existingLogoUrl} 
+                                                alt="Company Logo" 
+                                                className="max-w-full max-h-24 mx-auto mb-2"
+                                            />
+                                            <p className="text-gray-500 text-sm">Current logo</p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-500">
+                                            {isReadOnly ? "Logo upload disabled" : 
+                                            "Drag & drop logo or "} 
+                                            {!isReadOnly && <span className="underline text-[#B11016]">Browse</span>}
+                                        </p>
+                                    )}
                                     <input
                                         type="file"
                                         accept=".jpeg,.jpg,.png"
                                         ref={logoInputRef}
                                         className="hidden"
                                         onChange={handleLogoChange}
+                                        disabled={isReadOnly}
                                     />
                                 </div>
                                 {companyLogo && (
                                     <p className="text-green-700 mt-2 text-sm">
-                                        Uploaded: {companyLogo.name}
+                                        New upload: {companyLogo.name}
                                     </p>
                                 )}
                             </div>
@@ -415,13 +677,17 @@ export default function CompanySetup() {
                                         type="color"
                                         value={color}
                                         onChange={(e) => setColor(e.target.value)}
-                                        className="w-12 h-12 border rounded"
+                                        disabled={isReadOnly}
+                                        className={`w-12 h-12 border rounded
+                                        ${isReadOnly ? 'cursor-not-allowed' : ''}`}
                                     />
                                     <input
                                         type="text"
                                         value={color}
                                         onChange={(e) => setColor(e.target.value)}
-                                        className="border border-gray-300 rounded px-3 py-2 font-mono"
+                                        readOnly={isReadOnly}
+                                        className={`border border-gray-300 rounded px-3 py-2 font-mono
+                                        ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                             </div>
@@ -495,9 +761,11 @@ export default function CompanySetup() {
                                     value={position}
                                     onChange={(e) => setPosition(e.target.value)}
                                     placeholder="Enter Position/Title"
-                                    className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                    readOnly={isReadOnly}
+                                    className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
                                 />
                                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
                                 <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
@@ -511,6 +779,7 @@ export default function CompanySetup() {
                         <div>
                             <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                                 CONTACT NUMBER
+                               
                             </label>
                             <div className="relative w-full group">
                                 <input
@@ -518,9 +787,11 @@ export default function CompanySetup() {
                                     value={contactNumber}
                                     onChange={(e) => setContactNumber(e.target.value)}
                                     placeholder="Enter your Contact Number"
-                                    className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                    readOnly={isReadOnly}
+                                    className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
                                 />
                                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
                                 <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
@@ -528,19 +799,40 @@ export default function CompanySetup() {
                                     origin-center scale-x-0 w-full 
                                     group-focus-within:scale-x-100" />
                             </div>
+                            
                         </div>
                     </div>
                 </div>
 
-                {/* Submit */}
+                {/* Submit and Cancel Buttons */}
                 <div className="w-full mt-10">
-                    <button 
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? "SETTING UP COMPANY..." : "SETUP COMPANY"}
-                    </button>
+                    {hasExistingCompany && isEditMode ? (
+                        <div className="flex space-x-4">
+                            <button 
+                                type="submit"
+                                disabled={isLoading}
+                                className="flex-1 bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {getButtonText()}
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={handleCancelEdit}
+                                disabled={isLoading}
+                                className="flex-1 bg-white border-2 border-[#B11016] text-[#B11016] py-3 px-6 font-bold text-lg hover:bg-[#B11016] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                CANCEL
+                            </button>
+                        </div>
+                    ) : (
+                        <button 
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {getButtonText()}
+                        </button>
+                    )}
                 </div>
             </form>
         </div>
