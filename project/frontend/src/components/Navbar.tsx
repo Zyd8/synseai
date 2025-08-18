@@ -36,14 +36,12 @@ export default function Navbar() {
       if (response.ok) {
         setIsLoggedIn(true);
       } else {
-        // Token is invalid, remove it
-        sessionStorage.removeItem("access_token");
+        // Mark as logged out, but keep token until CompanyProtectedRoute checks
         setIsLoggedIn(false);
       }
     } catch (error) {
       console.error("Error checking auth status:", error);
       // On error, assume not logged in and remove potentially invalid token
-      sessionStorage.removeItem("access_token");
       setIsLoggedIn(false);
     } finally {
       setIsLoading(false);
@@ -92,7 +90,7 @@ export default function Navbar() {
   const handleLogout = () => {
     sessionStorage.removeItem("access_token");
     setIsLoggedIn(false);
-    router.push("/login"); 
+    router.push("/login");
   };
 
   useEffect(() => {
@@ -179,9 +177,8 @@ export default function Navbar() {
       {/* Slide-out Drawer */}
       <div
         ref={drawerRef}
-        className={`fixed top-0 right-0 h-full w-3/5 bg-[#B11016] p-6 transform transition-transform duration-300 ease-in-out z-40 shadow-2xl ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 h-full w-3/5 bg-[#B11016] p-6 transform transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         <div className="flex flex-col gap-6 mt-16">
           <Link href="/home" className="text-white font-bold" onClick={closeMenu}>
