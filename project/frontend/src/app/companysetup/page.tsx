@@ -1,7 +1,10 @@
 'use client';
 import React, { useState, useRef } from "react";
+import { useEffect } from "react";
 
 export default function CompanySetup() {
+    const API = process.env.NEXT_PUBLIC_API_URL;
+
     // Company Information - mapped to backend fields
     const [companyName, setCompanyName] = useState("");
     const [companyWebsite, setCompanyWebsite] = useState("");
@@ -10,7 +13,7 @@ export default function CompanySetup() {
     const [companySize, setCompanySize] = useState("");
     const [customCompanySize, setCustomCompanySize] = useState("");
     const [customIndustry, setCustomIndustry] = useState("");
-    const [companyColor, setCompanyColor] = useState("#000000");
+    const [color, setColor] = useState("#000000");
     const [companyLogo, setCompanyLogo] = useState<File | null>(null);
     const [bio, setBio] = useState("");
     const [collabType, setCollabType] = useState("");
@@ -26,6 +29,36 @@ export default function CompanySetup() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    // Fetch user data on component mount
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = sessionStorage.getItem("access_token");
+            if (!token) return;
+
+            try {
+                // Fetch user data
+                const resUser = await fetch(`${API}/api/auth/protected`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (resUser.ok) {
+                    const data = await resUser.json();
+                    const user = data.user;
+
+                    setFullname(`${user.first_name} ${user.last_name}`);
+                    setContactEmail(user.email);
+                }
+            } catch (err) {
+                console.error("Error fetching user data:", err);
+            }
+        };
+
+        fetchData();
+    }, [API]);
 
     // Convert file to base64
     const fileToBase64 = (file: File): Promise<string> => {
@@ -91,13 +124,14 @@ export default function CompanySetup() {
             };
 
             if (address.trim()) payload.address = address;
+            if (companyWebsite.trim()) payload.website = companyWebsite;
+            if (color.trim()) payload.color = color;
             if (logoBase64) payload.logo = logoBase64;
             if (bio.trim()) payload.bio = bio;
             if (finalIndustry && finalIndustry.trim()) payload.industry = finalIndustry;
             if (finalSize !== undefined) payload.size = finalSize;
             if (collabType && collabType.trim()) payload.collab_type = collabType;
 
-            // FIX 1: Use sessionStorage to match login page
             const token = sessionStorage.getItem("access_token");
             if (!token) {
                 setError("Authentication required. Please log in first.");
@@ -107,7 +141,7 @@ export default function CompanySetup() {
             console.log("Token being sent:", token);
             console.log("Payload being sent:", payload);
 
-            const response = await fetch("http://127.0.0.1:5000/api/company", {
+            const response = await fetch(`${API}/api/company`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -143,7 +177,7 @@ export default function CompanySetup() {
         setCompanySize("");
         setCustomCompanySize("");
         setCustomIndustry("");
-        setCompanyColor("#000000");
+        setColor("#000000");
         setCompanyLogo(null);
         setBio("");
         setCollabType("");
@@ -178,7 +212,6 @@ export default function CompanySetup() {
                 </div>
             )}
 
-            {/* FIX 2: Wrap everything in a proper form element */}
             <form onSubmit={handleSubmit} className="w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
                     {/* LEFT COLUMN - COMPANY INFO */}
@@ -340,8 +373,6 @@ export default function CompanySetup() {
                             )}
                         </div>
 
-                        
-
                         {/* Logo & Color Picker in 1 Row */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {/* Company Logo */}
@@ -382,14 +413,14 @@ export default function CompanySetup() {
                                 <div className="flex items-center space-x-3">
                                     <input
                                         type="color"
-                                        value={companyColor}
-                                        onChange={(e) => setCompanyColor(e.target.value)}
+                                        value={color}
+                                        onChange={(e) => setColor(e.target.value)}
                                         className="w-12 h-12 border rounded"
                                     />
                                     <input
                                         type="text"
-                                        value={companyColor}
-                                        onChange={(e) => setCompanyColor(e.target.value)}
+                                        value={color}
+                                        onChange={(e) => setColor(e.target.value)}
                                         className="border border-gray-300 rounded px-3 py-2 font-mono"
                                     />
                                 </div>
@@ -415,11 +446,11 @@ export default function CompanySetup() {
                                 <input
                                     type="text"
                                     value={fullname}
-                                    onChange={(e) => setFullname(e.target.value)}
-                                    placeholder="Enter Full Name"
-                                    className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                    readOnly
+                                    placeholder="Loading..."
+                                    className="appearance-none w-full px-2 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-gray-100 
+                                    focus:outline-none text-sm sm:text-base cursor-not-allowed"
                                 />
                                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
                                 <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
@@ -438,11 +469,11 @@ export default function CompanySetup() {
                                 <input
                                     type="email"
                                     value={contactEmail}
-                                    onChange={(e) => setContactEmail(e.target.value)}
-                                    placeholder="Enter Contact Email"
-                                    className="appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-transparent 
-                                    focus:outline-none text-sm sm:text-base"
+                                    readOnly
+                                    placeholder="Loading..."
+                                    className="appearance-none w-full px-2 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-gray-100 
+                                    focus:outline-none text-sm sm:text-base cursor-not-allowed"
                                     required
                                 />
                                 <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
@@ -503,7 +534,6 @@ export default function CompanySetup() {
 
                 {/* Submit */}
                 <div className="w-full mt-10">
-                    {/* FIX 3: Change button type to submit */}
                     <button 
                         type="submit"
                         disabled={isLoading}
