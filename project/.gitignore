@@ -4,3 +4,4 @@ frontend/.env
 *__pycache__/
 *.db
 .env.local
+backend/uploaded_files/
