@@ -33,7 +33,7 @@ Content-Type: application/json
   "logo": "data:image/png;base64,...",
   "bio": "Leading provider of innovative solutions",
   "industry": "Technology",
-  "size": 150,
+  "size": "101-500",
   "collab_type": "Technology Partner"
 }
 ```
@@ -48,7 +48,7 @@ Content-Type: application/json
 - `logo`: Base64 encoded image string
 - `bio`: Company description
 - `industry`: Company's industry sector (string)
-- `size`: Number of employees (integer)
+- `size`: Company size range (string, e.g., '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+')
 
 **Response (Success - 201)**:
 ```json
@@ -99,7 +99,7 @@ Authorization: Bearer <token>
   "logo": "data:image/png;base64,...",
   "bio": "Leading provider of innovative solutions",
   "industry": "Technology",
-  "size": 150,
+  "size": "101-500",
   "created_at": "2023-08-09T08:00:00Z"
 }
 ```

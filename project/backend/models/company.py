@@ -21,7 +21,7 @@ class Company(db.Model):
     logo = db.Column(db.Text, nullable=True)  
     bio = db.Column(db.Text, nullable=True)
     industry = db.Column(db.String(100), nullable=True)
-    size = db.Column(db.Integer, nullable=True)
+    size = db.Column(db.String(20), nullable=True)  # Stored as text, e.g., '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
     
     # One-to-one relationship with User
@@ -44,6 +44,7 @@ class Company(db.Model):
             'id': self.id,
             'name': self.name,
             'contact_email': self.contact_email,
+            'website': self.website,
             'address': self.address,
             'logo': self.logo,
             'bio': self.bio,
