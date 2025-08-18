@@ -24,7 +24,8 @@ Creates a new user account and returns an access token.
   "last_name": "Doe",
   "email": "john.doe@example.com",
   "password": "SecurePass123!",
-  "position": "Software Developer"
+  "position": "Software Developer",
+  "role": "user"
 }
 ```
 
@@ -38,7 +39,7 @@ Creates a new user account and returns an access token.
     "first_name": "John",
     "last_name": "Doe",
     "position": "Software Developer",
-    "is_admin": false
+    "role": "user"
   },
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
@@ -77,7 +78,7 @@ Authenticates a user and returns an access token.
     "first_name": "John",
     "last_name": "Doe",
     "position": "Software Developer",
-    "is_admin": false
+    "role": "user"
   }
 }
 ```
