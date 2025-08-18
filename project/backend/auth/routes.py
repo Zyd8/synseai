@@ -27,6 +27,7 @@ def register():
             first_name=data['first_name'],
             last_name=data['last_name'],
             email=data['email'],
+            contact_number=data.get('contact_number'),
             password=data['password'],  # Will be hashed in the model
             position=data.get('position', ''),
             role=role_enum
@@ -45,6 +46,7 @@ def register():
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
+                'contact_number': user.contact_number,
                 'position': user.position
             },
             'access_token': access_token
@@ -77,6 +79,7 @@ def login():
             'email': user.email,
             'first_name': user.first_name,
             'last_name': user.last_name,
+            'contact_number': user.contact_number,
             'position': user.position,
             'role': user.role.value
         }
