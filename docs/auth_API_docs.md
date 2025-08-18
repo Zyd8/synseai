@@ -23,6 +23,7 @@ Creates a new user account and returns an access token.
   "first_name": "John",
   "last_name": "Doe",
   "email": "john.doe@example.com",
+  "contact_number": "+1234567890",
   "password": "SecurePass123!",
   "position": "Software Developer",
   "role": "user"
@@ -38,6 +39,7 @@ Creates a new user account and returns an access token.
     "email": "john.doe@example.com",
     "first_name": "John",
     "last_name": "Doe",
+    "contact_number": "+1234567890",
     "position": "Software Developer",
     "role": "user"
   },
