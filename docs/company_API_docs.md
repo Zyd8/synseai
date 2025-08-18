@@ -34,6 +34,7 @@ Content-Type: application/json
   "bio": "Leading provider of innovative solutions",
   "industry": "Technology",
   "size": "101-500",
+  "color": "#3b82f6",
   "collab_type": "Technology Partner"
 }
 ```
@@ -49,6 +50,7 @@ Content-Type: application/json
 - `bio`: Company description
 - `industry`: Company's industry sector (string)
 - `size`: Company size range (string, e.g., '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+')
+- `color`: Company color in hex format (string, e.g., '#3b82f6')
 
 **Response (Success - 201)**:
 ```json

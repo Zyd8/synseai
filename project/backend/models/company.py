@@ -22,6 +22,7 @@ class Company(db.Model):
     bio = db.Column(db.Text, nullable=True)
     industry = db.Column(db.String(100), nullable=True)
     size = db.Column(db.String(20), nullable=True)  # Stored as text, e.g., '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'
+    color = db.Column(db.String(7), nullable=True)  # Hex color code (e.g., '#FF5733')
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
     
     # One-to-one relationship with User
@@ -50,6 +51,7 @@ class Company(db.Model):
             'bio': self.bio,
             'industry': self.industry,
             'size': self.size,
+            'color': self.color,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
     

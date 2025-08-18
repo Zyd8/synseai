@@ -39,6 +39,7 @@ def create_company():
             bio=data.get('bio'),
             industry=data.get('industry'),
             size=data.get('size'),
+            color=data.get('color'),
             user_id=current_user_id
         )
         
@@ -98,6 +99,8 @@ def update_company():
             company.industry = data['industry']
         if 'size' in data:
             company.size = data['size']
+        if 'color' in data:
+            company.color = data['color']
             
         db.session.commit()
         
