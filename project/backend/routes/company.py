@@ -33,6 +33,7 @@ def create_company():
         company = Company(
             name=data['name'],
             contact_email=data['contact_email'],
+            website=data.get('website'),
             address=data.get('address'),
             logo=data.get('logo'),  # base64 string
             bio=data.get('bio'),
@@ -85,6 +86,8 @@ def update_company():
             company.name = data['name']
         if 'contact_email' in data:
             company.contact_email = data['contact_email']
+        if 'website' in data:
+            company.website = data['website']
         if 'address' in data:
             company.address = data['address']
         if 'logo' in data:

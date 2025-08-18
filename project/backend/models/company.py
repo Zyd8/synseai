@@ -16,6 +16,7 @@ class Company(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     contact_email = db.Column(db.String(120), unique=True, nullable=False)
+    website = db.Column(db.String(255), nullable=True) 
     address = db.Column(db.Text, nullable=True)
     logo = db.Column(db.Text, nullable=True)  
     bio = db.Column(db.Text, nullable=True)

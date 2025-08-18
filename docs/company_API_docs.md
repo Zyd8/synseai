@@ -28,6 +28,7 @@ Content-Type: application/json
 {
   "name": "Acme Inc.",
   "contact_email": "contact@acme.com",
+  "website": "https://acme.com",
   "address": "123 Business St, Metro City",
   "logo": "data:image/png;base64,...",
   "bio": "Leading provider of innovative solutions",
@@ -42,6 +43,7 @@ Content-Type: application/json
 - `contact_email`: Contact email address
 
 **Optional Fields**:
+- `website`: Company website URL (e.g., https://company.com)
 - `address`: Company address
 - `logo`: Base64 encoded image string
 - `bio`: Company description
@@ -56,6 +58,7 @@ Content-Type: application/json
     "id": 1,
     "name": "Acme Inc.",
     "contact_email": "contact@acme.com",
+    "website": "https://acme.com",
     "address": "123 Business St, Metro City",
     "logo": "data:image/png;base64,...",
     "bio": "Leading provider of innovative solutions",
