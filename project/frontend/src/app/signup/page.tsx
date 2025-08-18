@@ -1,9 +1,11 @@
 'use client';
 import React, { useState } from 'react';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { access } from 'fs';
 
 export default function SignupPage() {
+  const router = useRouter();
   const API = process.env.NEXT_PUBLIC_API_URL;
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
@@ -53,6 +55,7 @@ export default function SignupPage() {
       if (data.access_token) {
         sessionStorage.setItem("access_token", data.access_token);
         alert("Registration successful!");
+        router.push("/collabhome");
       } else {
         alert("Registration succeeded, but no token received.");
       }
