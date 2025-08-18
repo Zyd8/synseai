@@ -16,7 +16,7 @@ Creates a new department in the system.
 
 - **URL**: `/`
 - **Method**: `POST`
-- **Permissions**: Admin only
+- **Permissions**: Requires 'admin' role
 - **Request Body**:
   ```json
   {
@@ -84,7 +84,7 @@ Updates an existing department.
 - **Method**: `PUT`
 - **URL Parameters**:
   - `department_id` (required): The ID of the department to update
-- **Permissions**: Admin only
+- **Permissions**: Requires 'admin' role
 - **Request Body**:
   ```json
   {
@@ -107,13 +107,13 @@ Updates an existing department.
   - `500 Internal Server Error`: Server error
 
 ### Delete Department
-Deletes a specific department.
+Deletes a department.
 
 - **URL**: `/{department_id}`
 - **Method**: `DELETE`
 - **URL Parameters**:
   - `department_id` (required): The ID of the department to delete
-- **Permissions**: Admin only
+- **Permissions**: Requires 'admin' role
 - **Success Response (200 OK)**:
   ```json
   {

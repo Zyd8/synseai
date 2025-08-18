@@ -61,7 +61,8 @@ Content-Type: application/json
     "bio": "Leading provider of innovative solutions",
     "industry": "Technology",
     "size": 150,
-    "created_at": "2023-08-09T08:00:00Z"
+    "created_at": "2023-08-09T08:00:00Z",
+    "user_role": "user"
   }
 }
 ```
@@ -150,7 +151,13 @@ Content-Type: application/json
     "bio": "Global leader in innovative solutions",
     "industry": "Finance",
     "size": 200,
-    "created_at": "2023-08-09T08:00:00Z"
+    "created_at": "2023-08-09T08:00:00Z",
+    "user": {
+      "first_name": "John",
+      "last_name": "Doe",
+      "position": "Software Developer",
+      "role": "user"
+    }
   }
 }
 ```
