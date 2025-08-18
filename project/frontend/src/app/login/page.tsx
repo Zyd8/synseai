@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MouseEvent } from "react";
 
 export default function LoginPage() {
+  const API = process.env.NEXT_PUBLIC_API_URL;
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
@@ -14,7 +15,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${API}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

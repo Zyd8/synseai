@@ -4,12 +4,25 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { Menu, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
 
-  // Close menu if clicked outside the drawer
+  useEffect(() => {
+    const token = sessionStorage.getItem("access_token");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("access_token");
+    setIsLoggedIn(false);
+    router.push("/login"); 
+  };
+
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
@@ -54,12 +67,23 @@ export default function Navbar() {
           <Link href="/partners" className="text-white hover:underline ">
             Partners
           </Link>
-          <Link
-            href="/login"
-            className="bg-white text-[#B11016] font-bold px-6 py-1.5 border-1 rounded-md text-md hover:bg-[#B11016] hover:text-white hover:border-white transition"
-          >
-            Login
-          </Link>
+
+          {/* ✅ Conditional Login/Logout */}
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="bg-white text-[#B11016] font-bold px-6 py-1.5 rounded-md text-md hover:bg-[#B11016] hover:text-white hover:border-white transition"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="bg-white text-[#B11016] font-bold px-6 py-1.5 rounded-md text-md hover:bg-[#B11016] hover:text-white hover:border-white transition"
+            >
+              Login
+            </Link>
+          )}
         </div>
 
         {/* Hamburger Button */}
@@ -93,13 +117,27 @@ export default function Navbar() {
           <Link href="/partners" className="text-white font-bold" onClick={closeMenu}>
             Partners
           </Link>
-          <Link
-            href="/login"
-            className="bg-white text-[#B11016] font-bold px-4 py-2 rounded-lg text-[1.05rem]"
-            onClick={closeMenu}
-          >
-            Login
-          </Link>
+
+          {/* ✅ Conditional Login/Logout in mobile menu */}
+          {isLoggedIn ? (
+            <button
+              onClick={() => {
+                handleLogout();
+                closeMenu();
+              }}
+              className="bg-white text-[#B11016] font-bold px-4 py-2 rounded-lg text-[1.05rem]"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="bg-white text-[#B11016] font-bold px-4 py-2 rounded-lg text-[1.05rem]"
+              onClick={closeMenu}
+            >
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </nav>

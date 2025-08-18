@@ -4,6 +4,7 @@ import Link from "next/link";
 import { access } from 'fs';
 
 export default function SignupPage() {
+  const API = process.env.NEXT_PUBLIC_API_URL;
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -24,7 +25,7 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${API}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -61,11 +62,7 @@ export default function SignupPage() {
       alert(err.message || "An error occurred during registration.");
     }
 
-
-
   };
-
-
 
 
   return (
