@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, Department
+from models import db, User, Department, UserRole
 
 department_bp = Blueprint('department', __name__)
 
@@ -14,7 +14,7 @@ def create_department():
         if not user:
             return jsonify({"error": "User not found"}), 404
     
-        if not user.is_admin:
+        if not user.role == UserRole.ADMIN:
             return jsonify({"error": "User is not an admin"}), 403
         
         # Create new department

@@ -1,9 +1,15 @@
 from datetime import datetime
 import pytz
+from enum import Enum
 from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 import os
+
+class UserRole(str, Enum):
+    USER = 'user'
+    EMPLOYEE = 'employee'
+    ADMIN = 'admin'
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,9 +24,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128))
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
-    position = db.Column(db.String(100), nullable=True)  
-    is_employee = db.Column(db.Boolean, default=False)
-    is_admin = db.Column(db.Boolean, default=False)
+    position = db.Column(db.String(100), nullable=True)
+    role = db.Column(db.Enum(UserRole), default=UserRole.USER, nullable=False)
 
     # One-to-one relationship with Company
     company = db.relationship('Company', back_populates='user', uselist=False)
@@ -51,14 +56,13 @@ class User(db.Model):
         """Return user data as a dictionary."""
         return {
             'id': self.id,
+            'email': self.email,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'full_name': self.full_name,
-            'email': self.email,
-            'is_employee': self.is_employee,
-            'is_admin': self.is_admin,
+            'position': self.position,
+            'role': self.role.value,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.email}>'

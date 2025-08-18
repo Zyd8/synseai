@@ -1,11 +1,12 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
 from config import config
-from models import db, User, Company
+from models import db, User, Company, UserRole
 from auth.routes import auth_bp
 from routes.company import company_bp
 from routes.proposal import proposal_bp
@@ -35,6 +36,7 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     jwt = JWTManager(app)
+    migrate = Migrate(app, db)
     CORS(app, resources={r"/*": {"origins": os.getenv('ALLOWED_ORIGINS').split(',')}})
     
     # Register blueprints
@@ -57,8 +59,7 @@ def create_app():
                     first_name='Admin',
                     last_name='User',
                     email='admin@example.com',
-                    is_admin=True,
-                    is_employee=True,
+                    role=UserRole.ADMIN,
                     position='System Administrator',
                     password="1234"
                 )
