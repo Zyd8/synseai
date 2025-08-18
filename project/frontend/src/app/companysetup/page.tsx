@@ -1,9 +1,12 @@
 'use client';
 import React, { useState, useRef } from "react";
 import { useEffect } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 export default function CompanySetup() {
     const API = process.env.NEXT_PUBLIC_API_URL;
+    const router = useRouter();
 
     // Company Information - mapped to backend fields
     const [companyName, setCompanyName] = useState("");
@@ -419,17 +422,28 @@ export default function CompanySetup() {
     return (
         <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
             {/* Header */}
-            <div className="text-center mt-2 w-full mb-10">
-                <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
-                    Company Setup Form
-                </h1>
-                <p className="text-md text-black mb-6">
-                    {hasExistingCompany 
-                        ? "Manage your company information" 
-                        : "Set up your company that's aiming to partner with BPI"
-                    }
-                </p>
-                <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+            <div className="relative flex items-center w-full mt-2 mb-10">
+                {/* Back Button */}
+                <button
+                    onClick={() => router.push("/dashboard")}
+                    className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10]"
+                >
+                    <FaArrowLeft className="mr-2" />
+                    <span className="hidden sm:inline">Back</span>
+                </button>
+
+                {/* Title */}
+                <div className="text-center w-full">
+                    <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
+                        Company Setup Form
+                    </h1>
+                    <p className="text-md text-black mb-6">
+                        {hasExistingCompany
+                        ? "Manage your company information"
+                        : "Set up your company that's aiming to partner with BPI"}
+                    </p>
+                    <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+                </div>
             </div>
 
             {/* Error/Success Messages */}
