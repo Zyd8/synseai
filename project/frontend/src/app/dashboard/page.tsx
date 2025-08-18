@@ -1,9 +1,14 @@
+'use client';
+
 import ProposalReportChart from '@/components/DonutChart';
 import Sidebar from "@/components/DashboardSidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
+    const router = useRouter();
+
     const summary = [
         { label: "Submitted", count: 2, img: "/images/db_submitted.png" },
         { label: "In Progress", count: 1, img: "/images/db_inprogress.png" },
@@ -46,10 +51,24 @@ export default function Dashboard() {
 
                     {/* Main content */}
                     <main className="flex-1 py-3 sm:py-6 pl-[2%] sm:pl-[3%] pr-[3%] sm:pr-[5%]">
-                        <h1 className="text-2xl font-bold text-red-700">Dashboard</h1>
-                        <p className="text-sm text-gray-600 mt-1 border-b-3 border-black pb-2 sm:pb-4 border-red-700">
-                            Track the status of all your submitted collaboration proposals with BPI.
-                        </p>
+                        {/* Header row */}
+                        <div className="flex items-center justify-between border-b-[3px] border-red-700 pb-2 sm:pb-4">
+                            {/* Title + Description */}
+                            <div>
+                            <h1 className="text-2xl font-bold text-red-700">Dashboard</h1>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Track the status of all your submitted collaboration proposals with BPI.
+                            </p>
+                            </div>
+
+                            {/* Edit Company Button */}
+                            <button
+                            onClick={() => router.push("/companysetup")}
+                            className="bg-[#B11016] border-2 text-white px-4 py-2 rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition"
+                            >
+                            Edit Company
+                            </button>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5">
                             {/* Summary cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 m-0 p-0">
