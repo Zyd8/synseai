@@ -90,6 +90,7 @@ export default function ProposalForm() {
         }
 
         try {
+            // STEP 1: Create the proposal
             const res = await fetch(`${API}/api/proposal`, {
                 method: "POST",
                 headers: {
@@ -99,22 +100,52 @@ export default function ProposalForm() {
                 body: JSON.stringify({
                     title,
                     description,
-                    collab_type: collabType, 
+                    collab_type: collabType,
                 }),
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                alert("Proposal submitted successfully!");
-                console.log("Created proposal:", data.proposal);
-
-                setTitle("");
-                setDescription("");
-                setCollabType("");
-            } else {
+            if (!res.ok) {
                 const error = await res.json();
                 alert(error.error || "Failed to submit proposal.");
+                return;
             }
+
+            const data = await res.json();
+            const proposal = data.proposal;
+            console.log("Created proposal:", proposal);
+
+            // STEP 2: Upload file if exists
+            if (uploadedFile) {
+                const formData = new FormData();
+                formData.append("name", uploadedFile.name);
+                formData.append("type", "Proposal"); 
+                formData.append("file", uploadedFile);
+
+                const fileRes = await fetch(`${API}/api/document/upload_file`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: formData,
+                });
+
+                if (!fileRes.ok) {
+                    const error = await fileRes.json();
+                    alert(error.error || "File upload failed.");
+                    return;
+                }
+
+                const fileData = await fileRes.json();
+                console.log("Uploaded file:", fileData);
+            }
+
+            alert("Proposal submitted successfully!");
+            setTitle("");
+            setDescription("");
+            setCollabType("");
+            setUploadedFile(null);
+            setConfirm(false);
+
         } catch (err) {
             console.error("Error submitting proposal:", err);
             alert("Something went wrong. Please try again.");
