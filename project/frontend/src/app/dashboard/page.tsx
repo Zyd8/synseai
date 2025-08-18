@@ -61,13 +61,23 @@ export default function Dashboard() {
                             </p>
                             </div>
 
-                            {/* Edit Company Button */}
-                            <button
-                            onClick={() => router.push("/companysetup")}
-                            className="bg-[#B11016] border-2 text-white px-4 py-2 rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition"
-                            >
-                            Edit Company
-                            </button>
+                            {/* Actions */}
+                            <div className="flex gap-3">
+                                {/* Create Proposal Button */}
+                                <button
+                                    onClick={() => router.push("/proposalform")}
+                                    className="bg-[#B11016] border-2 text-white px-4 py-2 rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition"
+                                    >
+                                    Create Proposal
+                                </button>
+                                {/* Edit Company Button */}
+                                <button
+                                    onClick={() => router.push("/companysetup")}
+                                    className="bg-[#B11016] border-2 text-white px-4 py-2 rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition"
+                                    >
+                                    Edit Company
+                                </button>
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5">
                             {/* Summary cards */}
