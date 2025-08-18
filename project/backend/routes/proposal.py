@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, Proposal
+from models import db, User, Proposal, UserRole, ProposalStatus
 
 proposal_bp = Blueprint('proposal', __name__)
 
@@ -126,6 +126,48 @@ def update_proposal(proposal_id):
         
         return jsonify({
             "message": "Proposal updated successfully",
+            "proposal": proposal.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@proposal_bp.route('/<int:proposal_id>/status', methods=['PATCH'])
+@jwt_required()
+def update_proposal_status(proposal_id):
+    """
+    Update proposal status (Employee only)
+    
+    Required fields: status (must be one of: 'Ongoing', 'Rejected', 'Accepted')
+    """
+    current_user_id = str(get_jwt_identity())
+    data = request.get_json()
+    
+    # Check if user has employee role
+    user = User.query.get(current_user_id)
+    if not user or user.role != UserRole.EMPLOYEE:
+        return jsonify({"error": "Unauthorized: Employee role required"}), 403
+    
+    # Validate required fields
+    status = data.get('status')
+    if not status or status.upper() not in ['ONGOING', 'REJECTED', 'ACCEPTED']:
+        return jsonify({
+            "error": "Status is required and must be one of: 'Ongoing', 'Rejected', 'Accepted'"
+        }), 400
+    
+    # Find the proposal
+    proposal = Proposal.query.get(proposal_id)
+    if not proposal:
+        return jsonify({"error": "Proposal not found"}), 404
+    
+    try:
+        # Update status using the enum
+        proposal.status = ProposalStatus[status.upper()]
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Proposal status updated successfully",
             "proposal": proposal.to_dict()
         }), 200
         

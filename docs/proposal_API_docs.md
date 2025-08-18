@@ -48,6 +48,7 @@ Content-Type: application/json
     "title": "Website Redesign Project",
     "description": "Complete redesign of company website with modern UI/UX",
     "collab_type": "Technology Partner",
+    "status": "Ongoing",
     "created_at": "2023-08-09T10:30:00Z"
   }
 }
@@ -81,6 +82,7 @@ Authorization: Bearer <token>
       "title": "Website Redesign Project",
       "description": "Complete redesign of company website with modern UI/UX",
       "collab_type": "Technology Partner",
+      "status": "Ongoing",
       "created_at": "2023-08-09T10:30:00Z"
     },
     {
@@ -88,6 +90,7 @@ Authorization: Bearer <token>
       "title": "Mobile App Development",
       "description": "Development of cross-platform mobile application",
       "collab_type": "",
+      "status": "Ongoing",
       "created_at": "2023-08-10T14:15:00Z"
     }
   ]
@@ -116,6 +119,7 @@ Authorization: Bearer <token>
   "title": "Website Redesign Project",
   "description": "Complete redesign of company website with modern UI/UX",
   "collab_type": "Technology Partner",
+  "status": "Ongoing",
   "created_at": "2023-08-09T10:30:00Z"
 }
 ```
@@ -156,6 +160,7 @@ Content-Type: application/json
 - `title`
 - `description`
 - `collab_type`
+- `status`: Initial status of the proposal (defaults to 'Ongoing')
 
 **Response (Success - 200)**:
 ```json
@@ -166,6 +171,7 @@ Content-Type: application/json
     "title": "Updated Website Redesign",
     "description": "Complete redesign with additional e-commerce features",
     "collab_type": "Strategic Partner",
+    "status": "Ongoing",
     "created_at": "2023-08-09T10:30:00Z"
   }
 }
@@ -173,7 +179,62 @@ Content-Type: application/json
 
 ---
 
-### 5. Delete Proposal
+### 5. Update Proposal Status (Employee Only)
+Update the status of a specific proposal. Only users with the 'employee' role can perform this action.
+
+**URL**: `PATCH /api/proposal/<proposal_id>/status`
+
+**Request Headers**:
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**URL Parameters**:
+- `proposal_id` (required): The ID of the proposal to update
+
+**Request Body**:
+```json
+{
+  "status": "Accepted"
+}
+```
+
+**Required Fields**:
+- `status`: Must be one of: 'Ongoing', 'Rejected', 'Accepted'
+
+**Response (Success - 200)**:
+```json
+{
+  "message": "Proposal status updated successfully",
+  "proposal": {
+    "id": 1,
+    "title": "Website Redesign Project",
+    "description": "Complete redesign of company website with modern UI/UX",
+    "collab_type": "Technology Partner",
+    "status": "Accepted",
+    "created_at": "2023-08-09T10:30:00Z"
+  }
+}
+```
+
+**Response (Error - 400)**:
+```json
+{
+  "error": "Status is required and must be one of: 'Ongoing', 'Rejected', 'Accepted'"
+}
+```
+
+**Response (Error - 403)**:
+```json
+{
+  "error": "Unauthorized: Employee role required"
+}
+```
+
+---
+
+### 6. Delete Proposal
 Delete a specific proposal.
 
 **URL**: `DELETE /api/proposal/<proposal_id>`

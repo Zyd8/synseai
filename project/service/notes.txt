@@ -1,2 +1,3 @@
 LLM spits high scores with gibberish scraped website. Solution: Do not scrape website if it is gibberish.
 Remove mentioning of scores in LLM response.
+When user creates a company, automatically scrape the company relevance to compute scores
