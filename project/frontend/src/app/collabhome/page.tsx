@@ -1,8 +1,63 @@
+'use client';
+
 import { FaProjectDiagram, FaRocket, FaChartLine, FaLeaf, FaLightbulb } from "react-icons/fa";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CollabHome() {
+  const API = process.env.NEXT_PUBLIC_API_URL;
+  const router = useRouter();
+  const [hasCompany, setHasCompany] = useState(false);
+  const [isCheckingCompany, setIsCheckingCompany] = useState(true);
+
+  // Check if user has a company on component mount
+  useEffect(() => {
+    const checkUserCompany = async () => {
+      const token = sessionStorage.getItem("access_token");
+      if (!token) {
+        setIsCheckingCompany(false);
+        return;
+      }
+
+      try {
+        // Correct API endpoint
+        const response = await fetch(`${API}/api/company`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // If company exists, data will have company info
+          setHasCompany(true);
+        } else if (response.status === 404) {
+          // No company found
+          setHasCompany(false);
+        } else {
+          setHasCompany(false);
+        }
+      } catch (err) {
+        console.error("Error checking user company:", err);
+        setHasCompany(false);
+      } finally {
+        setIsCheckingCompany(false);
+      }
+    };
+
+    checkUserCompany();
+  }, [API]);
+
+  const handleProposeClick = () => {
+    if (hasCompany) {
+      router.push("/dashboard");
+    } else {
+      router.push("/companysetup");
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -23,17 +78,16 @@ export default function CollabHome() {
                 Partner with BPI to Build the Future of Banking
               </h1>
               <p className="text-base sm:text-lg text-gray-800">
-                Let’s create smart, sustainable solutions together across industries, platforms, and people.
+                Let's create smart, sustainable solutions together across industries, platforms, and people.
               </p>
               <div className="mt-4">
-                <button  className="w-full bg-[#B11016] text-white font-semibold py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300">
+                <button className="w-full bg-[#B11016] text-white font-semibold py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300">
                   EXPLORE PARTNERSHIP
                 </button>
               </div>
             </div>
           </div>
         </div>
-
 
         {/* About Section - full width red bg */}
         <section className="mt-16 bg-[#B11016] w-full py-12">
@@ -101,7 +155,6 @@ export default function CollabHome() {
                     ))}
                   </div>
                 </article>
-
               </div>
             </div>
           </div>
@@ -158,7 +211,7 @@ export default function CollabHome() {
               {[
                 {
                   title: "ESG & Sustainability",
-                  desc: "Align with BPI’s commitment to responsible and sustainable finance.",
+                  desc: "Align with BPI's commitment to responsible and sustainable finance.",
                   icon: <FaLeaf className="w-5 h-5 text-white" />,
                 },
                 {
@@ -183,27 +236,25 @@ export default function CollabHome() {
         </div>
 
         {/* Call to Action Section */}
-        <div className="  w-full py-10 mb-8">
+        <div className="w-full py-10 mb-8">
           <div className="px-8 sm:px-12 lg:px-16 max-w-7xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#B11016] text-center mb-4">
               Ready to Propose a Collaboration?
             </h2>
             <p className="text-md text-black text-center max-w-4xl mx-auto leading-relaxed mb-10">
-              Submit your idea, product, or platform for evaluation by BPI’s partnership team.
+              Submit your idea, product, or platform for evaluation by BPI's partnership team.
             </p>
           </div>
-         <div className="w-full flex justify-center">
-      <Link href="/companysetup">
-        <button className="bg-[#B11016] text-white font-semibold px-30 py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300">
-          PROPOSE TO BPI
-        </button>
-      </Link>
-    </div>
-
+          <div className="w-full flex justify-center">
+            <button 
+              onClick={handleProposeClick}
+              disabled={isCheckingCompany}
+              className="bg-[#B11016] text-white font-semibold px-30 py-3 rounded-md text-center hover:bg-white hover:text-[#B11016] border border-[#B11016] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCheckingCompany ? "LOADING..." : "PROPOSE TO BPI"}
+            </button>
+          </div>
         </div>
-
-
-
       </div>
     </ProtectedRoute>
   );

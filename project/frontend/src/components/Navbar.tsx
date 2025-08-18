@@ -10,17 +10,87 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
+  // Replace with your actual API base URL
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+  // Check authentication status by validating token with server
+  const checkAuthStatus = async () => {
     const token = sessionStorage.getItem("access_token");
-    setIsLoggedIn(!!token);
+    if (!token) {
+      setIsLoggedIn(false);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API}/api/auth/protected`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        setIsLoggedIn(true);
+      } else {
+        // Mark as logged out, but keep token until CompanyProtectedRoute checks
+        setIsLoggedIn(false);
+      }
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      // On error, assume not logged in and remove potentially invalid token
+      setIsLoggedIn(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initial auth check
+  useEffect(() => {
+    checkAuthStatus();
+  }, [API]);
+
+  // Listen for storage changes (when user logs in/out in another tab)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'access_token') {
+        checkAuthStatus();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Listen for focus events (when user returns to tab after logging in)
+  useEffect(() => {
+    const handleFocus = () => {
+      checkAuthStatus();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Check auth status periodically (every 30 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const token = sessionStorage.getItem("access_token");
+      if (token) {
+        checkAuthStatus();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
     sessionStorage.removeItem("access_token");
     setIsLoggedIn(false);
-    router.push("/login"); 
+    router.push("/login");
   };
 
   useEffect(() => {
@@ -68,8 +138,12 @@ export default function Navbar() {
             Partners
           </Link>
 
-          {/* ✅ Conditional Login/Logout */}
-          {isLoggedIn ? (
+          {/* Conditional Login/Logout with loading state */}
+          {isLoading ? (
+            <div className="bg-white text-[#B11016] font-bold px-6 py-1.5 rounded-md text-md opacity-50">
+              Loading...
+            </div>
+          ) : isLoggedIn ? (
             <button
               onClick={handleLogout}
               className="bg-white text-[#B11016] font-bold px-6 py-1.5 rounded-md text-md hover:bg-[#B11016] hover:text-white hover:border-white transition"
@@ -103,9 +177,8 @@ export default function Navbar() {
       {/* Slide-out Drawer */}
       <div
         ref={drawerRef}
-        className={`fixed top-0 right-0 h-full w-3/5 bg-[#B11016] p-6 transform transition-transform duration-300 ease-in-out z-40 shadow-2xl ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 h-full w-3/5 bg-[#B11016] p-6 transform transition-transform duration-300 ease-in-out z-40 shadow-2xl ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         <div className="flex flex-col gap-6 mt-16">
           <Link href="/home" className="text-white font-bold" onClick={closeMenu}>
@@ -118,8 +191,12 @@ export default function Navbar() {
             Partners
           </Link>
 
-          {/* ✅ Conditional Login/Logout in mobile menu */}
-          {isLoggedIn ? (
+          {/* Conditional Login/Logout in mobile menu with loading state */}
+          {isLoading ? (
+            <div className="bg-white text-[#B11016] font-bold px-4 py-2 rounded-lg text-[1.05rem] opacity-50">
+              Loading...
+            </div>
+          ) : isLoggedIn ? (
             <button
               onClick={() => {
                 handleLogout();
