@@ -2,6 +2,7 @@
 import React, { useState, useRef } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useEffect } from "react";
+import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
 
 export default function ProposalForm() {
     const API = process.env.NEXT_PUBLIC_API_URL;
@@ -154,6 +155,7 @@ export default function ProposalForm() {
 
     return (
         <ProtectedRoute>
+            <CollabCompanyProtectedRoute>
             <form onSubmit={handleSubmit}>
                 <div className="min-h-screen bg-white flex flex-col items-center sm:px-[30%] px-[15%] py-6 sm:py-8">
                     <div className="block w-full text-2xl sm:text-4xl font-bold text-red-700 border-b-3 border-red-700 mb-2 pb-8 text-center">
@@ -495,6 +497,7 @@ export default function ProposalForm() {
 
                 </div>
             </form>
+            </CollabCompanyProtectedRoute>
         </ProtectedRoute>
     );
 };
