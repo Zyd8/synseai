@@ -1,9 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { access } from 'fs';
 
 export default function SignupPage() {
+  const router = useRouter();
+  const API = process.env.NEXT_PUBLIC_API_URL;
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -24,7 +27,7 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${API}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -52,6 +55,7 @@ export default function SignupPage() {
       if (data.access_token) {
         sessionStorage.setItem("access_token", data.access_token);
         alert("Registration successful!");
+        router.push("/collabhome");
       } else {
         alert("Registration succeeded, but no token received.");
       }
@@ -61,11 +65,7 @@ export default function SignupPage() {
       alert(err.message || "An error occurred during registration.");
     }
 
-
-
   };
-
-
 
 
   return (
