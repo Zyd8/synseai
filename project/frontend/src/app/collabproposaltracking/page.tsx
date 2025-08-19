@@ -3,6 +3,9 @@ import Head from "next/head";
 import React, { useState } from 'react';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
+import { FaArrowLeft } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface TimelineItem {
   id: string;
@@ -30,6 +33,8 @@ export default function CollabProposalTracking() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
 
+  const router = useRouter();
+
   // Replace with useEffect and API call
   // useEffect(() => {
   //     fetchProposalData(proposalId).then((data: ProposalData) => {
@@ -47,15 +52,28 @@ export default function CollabProposalTracking() {
         <>
           <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
             {/* Header */}
-            <div className="text-center mt-2 w-full">
-              <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
-                Track Your Proposals
-              </h1>
-              <p className="text-md text-black mb-6">
-                View the status of your submitted collaboration proposal with BPI.
-              </p>
-              <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+            <div className="relative flex items-center w-full mt-2 mb-10">
+                {/* Back Button */}
+                <button
+                    onClick={() => router.push("/dashboard")}
+                    className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10]"
+                >
+                    <FaArrowLeft className="mr-2" />
+                    <span className="hidden sm:inline">Back</span>
+                </button>
+
+                {/* Title */}
+                <div className="text-center w-full">
+                    <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
+                        Track Your Proposals
+                    </h1>
+                    <p className="text-md text-black mb-6">
+                        View the status of your submitted collaboration proposal with BPI.
+                    </p>
+                    <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+                </div>
             </div>
+            
 
             {/* Status Timeline */}
             <div className="relative flex items-center justify-between w-full mb-10 mt-10">
@@ -192,11 +210,12 @@ export default function CollabProposalTracking() {
                 </div>
               </div>
             </div>
-            {/* View Proposal Document Button */}
             <div className="w-full mt-10">
-              <button className="w-full bg-[#B11016] border-2 border-transparent  text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors">
-                VIEW PROPOSAL DOCUMENT
-              </button>
+              <Link href="/collabfiles">
+                <button className="w-full bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors">
+                  VIEW FILES
+                </button>
+              </Link>
             </div>
           </div>
         </>
