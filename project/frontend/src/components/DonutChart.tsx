@@ -44,24 +44,29 @@ export default function ProposalReportChart({ proposals }: { proposals: any[] })
 
     return (
         <div className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center h-full">
-            <h3 className="text-red-700 font-bold text-xl mb-6 text-center">Proposal Report</h3>
+            <h3 className="text-red-700 font-bold text-xl mb-6 text-center">
+                Proposal Report
+            </h3>
 
-            <div className="flex items-center justify-center gap-8">
+            <div className="flex flex-col 2xl:flex-row items-center justify-center gap-6 2xl:gap-10 w-full">
                 {/* Chart container */}
-                <div className="relative w-48 h-48">
+                <div className="relative w-36 h-36 sm:w-44 sm:h-44 2xl:w-56 2xl:h-56 flex-shrink-0">
                     <Doughnut data={data} options={options} />
-                    <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-gray-900">
+                    <div className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl 2xl:text-4xl font-bold text-gray-900">
                         {total}
                     </div>
                 </div>
 
                 {/* Custom legend */}
-                <div className="flex flex-col space-y-3">
+                <div className="flex flex-col space-y-3 w-full 2xl:w-auto items-center 2xl:items-start">
                     {data.labels.map((label, index) => (
                         <div key={label} className="flex items-center space-x-3">
                             <div
                                 className="w-4 h-4 rounded-full"
-                                style={{ backgroundColor: data.datasets[0].backgroundColor[index] }}
+                                style={{
+                                    backgroundColor:
+                                        data.datasets[0].backgroundColor[index],
+                                }}
                             ></div>
                             <span className="text-sm font-medium text-gray-700">
                                 {label} ({data.datasets[0].data[index]})
@@ -72,4 +77,7 @@ export default function ProposalReportChart({ proposals }: { proposals: any[] })
             </div>
         </div>
     );
+
+
+
 }

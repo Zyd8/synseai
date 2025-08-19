@@ -170,29 +170,32 @@ export default function Dashboard() {
                         <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5 items-stretch">
                             {/* Table */}
                             <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl">
-                                <table className="w-full text-sm rounded-lg overflow-hidden">
-                                    <thead>
-                                        <tr>
-                                            <th className="p-3 text-left text-red-700">Proposal ID</th>
-                                            <th className="p-3 text-left text-red-700">Proposal Title</th>
-                                            <th className="p-3 text-left text-red-700">Status</th>
-                                            <th className="p-3 text-center text-red-700">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {!loading && proposals
-                                            .map((p, i) => (
-                                                <tr key={i} className="border-t">
-                                                    <td className="p-3">{p.id}</td>
-                                                    <td className="p-3">{p.title}</td>
-                                                    <td className="p-3">{mapStatus(p.status)}</td>
-                                                    <td className="p-3 text-center">⋮</td>
-                                                </tr>
-                                            ))}
-                                    </tbody>
-                                </table>
+                                <div className="max-h-64 overflow-y-auto">
+                                    <table className="w-full text-sm rounded-lg overflow-hidden">
+                                        <thead className="sticky top-0 bg-white z-10">
+                                            <tr>
+                                                <th className="p-3 text-left text-red-700">Proposal ID</th>
+                                                <th className="p-3 text-left text-red-700">Proposal Title</th>
+                                                <th className="p-3 text-left text-red-700">Status</th>
+                                                <th className="p-3 text-center text-red-700">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {!loading &&
+                                                proposals.map((p, i) => (
+                                                    <tr key={i} className="border-t">
+                                                        <td className="p-3">{p.id}</td>
+                                                        <td className="p-3">{p.title}</td>
+                                                        <td className="p-3">{mapStatus(p.status)}</td>
+                                                        <td className="p-3 text-center">⋮</td>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                                 {loading && <p className="text-center p-3">Loading proposals...</p>}
                             </div>
+
 
                             <div className="sm:col-span-1 h-full border border-gray-500 rounded-lg drop-shadow-lg">
                                 <ProposalReportChart proposals={proposals} />
