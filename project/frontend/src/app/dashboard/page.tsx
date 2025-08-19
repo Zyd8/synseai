@@ -5,42 +5,64 @@ import Sidebar from "@/components/DashboardSidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
     const router = useRouter();
+    const API = process.env.NEXT_PUBLIC_API_URL;
 
-    const summary = [
-        { label: "Submitted", count: 2, img: "/images/db_submitted.png" },
-        { label: "In Progress", count: 1, img: "/images/db_inprogress.png" },
-        { label: "Approved", count: 1, img: "/images/db_approved.png" },
-        { label: "Rejected", count: 5, img: "/images/db_rejected.png" },
-    ];
+    const [proposals, setProposals] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const activities = [
-        {
-            title: "Tech Integration",
-            action: "Proposal Submitted",
-            date: "August 8, 2025 | 10:00 AM",
-        },
-        {
-            title: "Tech Integration",
-            action: "Proposal Submitted",
-            date: "August 8, 2025 | 10:00 AM",
-        },
-        {
-            title: "Tech Integration",
-            action: "Proposal Submitteda",
-            date: "August 8, 2025 | 10:00 AM",
+    // Map backend status
+    const mapStatus = (status: string) => {
+        switch (status) {
+            case "SUBMITTED": return "Submitted";
+            case "ONGOING": return "In Progress";
+            case "APPROVED": return "Approved";
+            case "REJECTED": return "Rejected";
+            default: return status;
         }
+    };
+
+    useEffect(() => {
+        const fetchProposals = async () => {
+            const token = sessionStorage.getItem("access_token");
+            try {
+                const res = await fetch(`${API}/api/proposal`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!res.ok) throw new Error("Failed to fetch proposals");
+                const data = await res.json();
+
+                setProposals(Array.isArray(data) ? data : data.proposals || []);
+            } catch (err) {
+                console.error("Error fetching proposals:", err);
+                setProposals([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProposals();
+    }, []);
+
+    // Compute summary counts
+    const summary = [
+        { label: "Submitted", count: proposals.filter(p => p.status === "Submitted").length, img: "/images/db_submitted.png" },
+        { label: "In Progress", count: proposals.filter(p => p.status === "Ongoing").length, img: "/images/db_inprogress.png" },
+        { label: "Approved", count: proposals.filter(p => p.status === "Approved").length, img: "/images/db_approved.png" },
+        { label: "Rejected", count: proposals.filter(p => p.status === "Rejected").length, img: "/images/db_rejected.png" },
     ];
 
-    const proposals = [
-        { id: "P001", title: "Tech Integration", status: "Proposal Submitted" },
-        { id: "P002", title: "Tech Integration", status: "Proposal Under Review" },
-        { id: "P003", title: "Tech Integration", status: "Proposal Under Review" },
-        { id: "P004", title: "Tech Integration", status: "Proposal Approved" },
-        { id: "P005", title: "Tech Integration", status: "Proposal Rejected" },
-    ];
+    // Activities = latest 3 proposals sorted by created_at
+    const activities = proposals
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 3);
 
     return (
         <ProtectedRoute>
@@ -53,32 +75,29 @@ export default function Dashboard() {
                     <main className="flex-1 py-3 sm:py-6 pl-[2%] sm:pl-[3%] pr-[3%] sm:pr-[5%]">
                         {/* Header row */}
                         <div className="flex items-center justify-between border-b-[3px] border-red-700 pb-2 sm:pb-4">
-                            {/* Title + Description */}
                             <div>
-                            <h1 className="text-2xl font-bold text-red-700">Dashboard</h1>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Track the status of all your submitted collaboration proposals with BPI.
-                            </p>
+                                <h1 className="text-2xl font-bold text-red-700">Dashboard</h1>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    Track the status of all your submitted collaboration proposals with BPI.
+                                </p>
                             </div>
 
-                            {/* Actions */}
                             <div className="flex gap-3">
-                                {/* Create Proposal Button */}
                                 <button
                                     onClick={() => router.push("/proposalform")}
                                     className="bg-[#B11016] border-2 text-white px-4 py-2 rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition"
-                                    >
+                                >
                                     Create Proposal
                                 </button>
-                                {/* Edit Company Button */}
                                 <button
                                     onClick={() => router.push("/companysetup")}
                                     className="bg-[#B11016] border-2 text-white px-4 py-2 rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition"
-                                    >
+                                >
                                     Edit Company
                                 </button>
                             </div>
                         </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5">
                             {/* Summary cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 m-0 p-0">
@@ -105,11 +124,9 @@ export default function Dashboard() {
                                     Recent Activities
                                 </h3>
 
-                                <div
-                                    className="relative"
-                                    style={{ "--dot-size": "0.75rem" } as React.CSSProperties}
-                                >
-                                    {activities.slice(0, 3).map((a, i, arr) => (
+                                <div className="relative" style={{ "--dot-size": "0.75rem" } as React.CSSProperties}>
+
+                                    {activities.map((a, i, arr) => (
                                         <div key={i} className="relative flex items-start">
                                             {/* Dot */}
                                             <div
@@ -124,24 +141,29 @@ export default function Dashboard() {
                                             {i < arr.length - 1 && (
                                                 <div
                                                     className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-400"
-                                                    style={{
-                                                        height: "calc(100% - var(--dot-size) - 0rem)",
-                                                    }}
+                                                    style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
                                                 ></div>
                                             )}
 
                                             <div className="ml-4 pb-6 last:pb-0 mb-4">
                                                 <div className="font-semibold text-gray-900">{a.title}</div>
-                                                <div className="font-bold text-gray-900">{a.action}</div>
-                                                <div className="text-gray-500 text-sm">{a.date}</div>
+                                                <div className="font-bold text-gray-900">{mapStatus(a.status)}</div>
+                                                <div className="text-gray-500 text-sm">
+                                                    {new Date(a.created_at).toLocaleDateString("en-US", {
+                                                        year: "numeric",
+                                                        month: "long",
+                                                        day: "numeric",
+                                                    })}{" | "}{new Date(a.created_at).toLocaleTimeString("en-US", {
+                                                        hour: "numeric",
+                                                        minute: "2-digit",
+                                                        hour12: true,
+                                                    })}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-
-
                             </div>
-
                         </div>
 
                         {/* Bottom grid */}
@@ -158,22 +180,23 @@ export default function Dashboard() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {proposals.map((p, i) => (
-                                            <tr key={i} className="border-t">
-                                                <td className="p-3">{p.id}</td>
-                                                <td className="p-3">{p.title}</td>
-                                                <td className="p-3">{p.status}</td>
-                                                <td className="p-3 text-center">⋮</td>
-                                            </tr>
-                                        ))}
+                                        {!loading && proposals
+                                            .map((p, i) => (
+                                                <tr key={i} className="border-t">
+                                                    <td className="p-3">{p.id}</td>
+                                                    <td className="p-3">{p.title}</td>
+                                                    <td className="p-3">{mapStatus(p.status)}</td>
+                                                    <td className="p-3 text-center">⋮</td>
+                                                </tr>
+                                            ))}
                                     </tbody>
                                 </table>
+                                {loading && <p className="text-center p-3">Loading proposals...</p>}
                             </div>
 
                             <div className="sm:col-span-1 h-full border border-gray-500 rounded-lg drop-shadow-lg">
-                                <ProposalReportChart />
+                                <ProposalReportChart proposals={proposals} />
                             </div>
-
                         </div>
                     </main>
                 </div>
