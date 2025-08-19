@@ -67,7 +67,8 @@ Content-Type: application/json
     "industry": "Technology",
     "size": 150,
     "created_at": "2023-08-09T08:00:00Z",
-    "user_role": "user"
+    "user_role": "user",
+    "user_id": 42
   }
 }
 ```
@@ -102,7 +103,8 @@ Authorization: Bearer <token>
   "bio": "Leading provider of innovative solutions",
   "industry": "Technology",
   "size": "101-500",
-  "created_at": "2023-08-09T08:00:00Z"
+  "created_at": "2023-08-09T08:00:00Z",
+  "user_id": 42
 }
 ```
 
@@ -162,7 +164,8 @@ Content-Type: application/json
       "last_name": "Doe",
       "position": "Software Developer",
       "role": "user"
-    }
+    },
+    "user_id": 42
   }
 }
 ```

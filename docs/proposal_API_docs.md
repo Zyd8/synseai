@@ -269,3 +269,12 @@ Authorization: Bearer <token>
   "error": "Proposal not found"
 }
 ```
+
+### Response Fields
+- `id`: Unique identifier for the proposal
+- `title`: Proposal title
+- `description`: Detailed description of the proposal
+- `collab_type`: Type of collaboration/partnership (string)
+- `status`: Status of the proposal (string)
+- `created_at`: Timestamp when the proposal was created
+- `company_id`: Foreign key referencing the company associated with the proposal
