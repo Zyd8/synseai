@@ -36,7 +36,8 @@ class Proposal(db.Model):
             "description": self.description,
             "collab_type": self.collab_type,
             "status": self.status.value if self.status else None,
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "company_id": self.company_id
         }
     
     def __repr__(self):

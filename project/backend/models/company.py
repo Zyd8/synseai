@@ -52,7 +52,8 @@ class Company(db.Model):
             'industry': self.industry,
             'size': self.size,
             'color': self.color,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'user_id': self.user_id
         }
     
     def __repr__(self):

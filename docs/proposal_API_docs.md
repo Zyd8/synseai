@@ -49,7 +49,8 @@ Content-Type: application/json
     "description": "Complete redesign of company website with modern UI/UX",
     "collab_type": "Technology Partner",
     "status": "Submitted",
-    "created_at": "2023-08-09T10:30:00Z"
+    "created_at": "2023-08-09T10:30:00Z",
+    "company_id": 123
   }
 }
 ```
@@ -83,7 +84,8 @@ Authorization: Bearer <token>
       "description": "Complete redesign of company website with modern UI/UX",
       "collab_type": "Technology Partner",
       "status": "Submitted",
-      "created_at": "2023-08-09T10:30:00Z"
+      "created_at": "2023-08-09T10:30:00Z",
+      "company_id": 123
     },
     {
       "id": 2,
@@ -91,7 +93,8 @@ Authorization: Bearer <token>
       "description": "Development of cross-platform mobile application",
       "collab_type": "",
       "status": "Submitted",
-      "created_at": "2023-08-10T14:15:00Z"
+      "created_at": "2023-08-10T14:15:00Z",
+      "company_id": 123
     }
   ]
 }
@@ -120,7 +123,8 @@ Authorization: Bearer <token>
   "description": "Complete redesign of company website with modern UI/UX",
   "collab_type": "Technology Partner",
   "status": "Submitted",
-  "created_at": "2023-08-09T10:30:00Z"
+  "created_at": "2023-08-09T10:30:00Z",
+  "company_id": 123
 }
 ```
 
@@ -172,7 +176,8 @@ Content-Type: application/json
     "description": "Complete redesign with additional e-commerce features",
     "collab_type": "Strategic Partner",
     "status": "Submitted",
-    "created_at": "2023-08-09T10:30:00Z"
+    "created_at": "2023-08-09T10:30:00Z",
+    "company_id": 123
   }
 }
 ```
@@ -209,7 +214,8 @@ Content-Type: application/json
     "title": "Website Redesign Project",
     "description": "Complete redesign of company website with modern UI/UX",
     "status": "Submitted",
-    "collab_type": "Technology Partner"
+    "collab_type": "Technology Partner",
+    "company_id": 123
   }
 }
 ```
