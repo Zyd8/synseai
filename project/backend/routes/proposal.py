@@ -33,7 +33,8 @@ def create_proposal():
             title=data['title'],
             description=data['description'],
             collab_type=data.get('collab_type'),
-            company_id=user.company.id
+            company_id=user.company.id,
+            status=ProposalStatus.SUBMITTED
         )
         
         db.session.add(proposal)
@@ -139,7 +140,7 @@ def update_proposal_status(proposal_id):
     """
     Update proposal status (Employee only)
     
-    Required fields: status (must be one of: 'Ongoing', 'Rejected', 'Accepted')
+    Required fields: status (must be one of: 'Ongoing', 'Rejected', 'Approved', 'Submitted')
     """
     current_user_id = str(get_jwt_identity())
     data = request.get_json()
@@ -151,9 +152,9 @@ def update_proposal_status(proposal_id):
     
     # Validate required fields
     status = data.get('status')
-    if not status or status.upper() not in ['ONGOING', 'REJECTED', 'ACCEPTED']:
+    if not status or status.upper() not in ['ONGOING', 'REJECTED', 'APPROVED', 'SUBMITTED']:
         return jsonify({
-            "error": "Status is required and must be one of: 'Ongoing', 'Rejected', 'Accepted'"
+            "error": "Status is required and must be one of: 'Ongoing', 'Rejected', 'Approved', 'Submitted'"
         }), 400
     
     # Find the proposal

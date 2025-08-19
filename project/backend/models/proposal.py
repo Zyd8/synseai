@@ -8,7 +8,8 @@ import os
 class ProposalStatus(Enum):
     ONGOING = 'Ongoing'
     REJECTED = 'Rejected'
-    ACCEPTED = 'Accepted'
+    APPROVED = 'Approved'
+    SUBMITTED = 'Submitted'
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ class Proposal(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     collab_type = db.Column(db.String(50), nullable=True)
-    status = db.Column(db.Enum(ProposalStatus), default=ProposalStatus.ONGOING, nullable=False)
+    status = db.Column(db.Enum(ProposalStatus), nullable=False, default=ProposalStatus.SUBMITTED)
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
     
     # Foreign key to Company

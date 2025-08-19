@@ -48,7 +48,7 @@ Content-Type: application/json
     "title": "Website Redesign Project",
     "description": "Complete redesign of company website with modern UI/UX",
     "collab_type": "Technology Partner",
-    "status": "Ongoing",
+    "status": "Submitted",
     "created_at": "2023-08-09T10:30:00Z"
   }
 }
@@ -82,7 +82,7 @@ Authorization: Bearer <token>
       "title": "Website Redesign Project",
       "description": "Complete redesign of company website with modern UI/UX",
       "collab_type": "Technology Partner",
-      "status": "Ongoing",
+      "status": "Submitted",
       "created_at": "2023-08-09T10:30:00Z"
     },
     {
@@ -90,7 +90,7 @@ Authorization: Bearer <token>
       "title": "Mobile App Development",
       "description": "Development of cross-platform mobile application",
       "collab_type": "",
-      "status": "Ongoing",
+      "status": "Submitted",
       "created_at": "2023-08-10T14:15:00Z"
     }
   ]
@@ -119,7 +119,7 @@ Authorization: Bearer <token>
   "title": "Website Redesign Project",
   "description": "Complete redesign of company website with modern UI/UX",
   "collab_type": "Technology Partner",
-  "status": "Ongoing",
+  "status": "Submitted",
   "created_at": "2023-08-09T10:30:00Z"
 }
 ```
@@ -160,7 +160,7 @@ Content-Type: application/json
 - `title`
 - `description`
 - `collab_type`
-- `status`: Initial status of the proposal (defaults to 'Ongoing')
+- `status`: Initial status of the proposal (defaults to 'Submitted')
 
 **Response (Success - 200)**:
 ```json
@@ -171,7 +171,7 @@ Content-Type: application/json
     "title": "Updated Website Redesign",
     "description": "Complete redesign with additional e-commerce features",
     "collab_type": "Strategic Partner",
-    "status": "Ongoing",
+    "status": "Submitted",
     "created_at": "2023-08-09T10:30:00Z"
   }
 }
@@ -182,7 +182,7 @@ Content-Type: application/json
 ### 5. Update Proposal Status (Employee Only)
 Update the status of a specific proposal. Only users with the 'employee' role can perform this action.
 
-**URL**: `PATCH /api/proposal/<proposal_id>/status`
+**URL**: `PATCH /api/proposal/<int:proposal_id>/status`
 
 **Request Headers**:
 ```
@@ -190,18 +190,15 @@ Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
-**URL Parameters**:
-- `proposal_id` (required): The ID of the proposal to update
-
 **Request Body**:
 ```json
 {
-  "status": "Accepted"
+  "status": "Submitted" | "Ongoing" | "Rejected" | "Approved"
 }
 ```
 
 **Required Fields**:
-- `status`: Must be one of: 'Ongoing', 'Rejected', 'Accepted'
+- `status`: Must be one of 'Submitted', 'Ongoing', 'Rejected', or 'Approved'
 
 **Response (Success - 200)**:
 ```json
@@ -211,9 +208,8 @@ Content-Type: application/json
     "id": 1,
     "title": "Website Redesign Project",
     "description": "Complete redesign of company website with modern UI/UX",
-    "collab_type": "Technology Partner",
-    "status": "Accepted",
-    "created_at": "2023-08-09T10:30:00Z"
+    "status": "Submitted",
+    "collab_type": "Technology Partner"
   }
 }
 ```
@@ -221,7 +217,7 @@ Content-Type: application/json
 **Response (Error - 400)**:
 ```json
 {
-  "error": "Status is required and must be one of: 'Ongoing', 'Rejected', 'Accepted'"
+  "error": "Status is required and must be one of: 'Submitted', 'Ongoing', 'Rejected', 'Approved'"
 }
 ```
 
@@ -229,6 +225,13 @@ Content-Type: application/json
 ```json
 {
   "error": "Unauthorized: Employee role required"
+}
+```
+
+**Response (Error - 404)**:
+```json
+{
+  "error": "Proposal not found"
 }
 ```
 
