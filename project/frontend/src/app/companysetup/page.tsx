@@ -1,8 +1,8 @@
 'use client';
 import React, { useState, useRef } from "react";
 import { useEffect } from "react";
-import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { FaArrowLeft } from "react-icons/fa";
 
 export default function CompanySetup() {
     const API = process.env.NEXT_PUBLIC_API_URL;
@@ -72,7 +72,7 @@ export default function CompanySetup() {
 
                     setFullname(`${user.first_name} ${user.last_name}`);
                     setContactEmail(user.email);
-                    setPosition(user.position || ""); // Fetch position from user data
+                    setPosition(user.position);
                 }
 
                 // Try to fetch existing company data
@@ -91,6 +91,7 @@ export default function CompanySetup() {
                     setCompanyWebsite(companyData.website || "");
                     setAddress(companyData.address || "");
                     setIndustry(companyData.industry || "");
+                    setPosition(companyData.position || "");
                     setBio(companyData.bio || "");
                     setColor(companyData.color || "#000000");
                     setCollabType(companyData.collab_type || "");
@@ -133,29 +134,14 @@ export default function CompanySetup() {
                         industry: companyData.industry || "",
                         size: companyData.size,
                         bio: companyData.bio || "",
+                        position: companyData.position || "",
                         color: companyData.color || "#000000",
                         collab_type: companyData.collab_type || "",
-                        logo: companyData.logo || "",
-                        // Store user data for cancel functionality
-                        // user_position: user.position || ""
+                        logo: companyData.logo || ""
                     });
                 } else if (resCompany.status === 404) {
                     // No company exists, user can create one
                     setHasExistingCompany(false);
-                    
-                    // Store user data for cancel functionality even when no company exists
-                    setOriginalCompanyData({
-                        name: "",
-                        website: "",
-                        address: "",
-                        industry: "",
-                        size: null,
-                        bio: "",
-                        color: "#000000",
-                        collab_type: "",
-                        logo: "",
-                        // user_position: user.position || ""
-                    });
                 }
             } catch (err) {
                 console.error("Error fetching data:", err);
@@ -210,7 +196,6 @@ export default function CompanySetup() {
             setCollabType(originalCompanyData.collab_type);
             setExistingLogoUrl(originalCompanyData.logo);
             setCompanyLogo(null);
-            setPosition(originalCompanyData.user_position || ""); // Restore position
 
             // Handle industry restoration
             const predefinedIndustries = [
@@ -306,23 +291,6 @@ export default function CompanySetup() {
             console.log("Token being sent:", token);
             console.log("Payload being sent:", payload);
 
-            // Update user position if it has changed (since position is stored in User model)
-            const originalPosition = originalCompanyData?.user_position || "";
-            if (position !== originalPosition) {
-                const userUpdateResponse = await fetch(`${API}/api/user/profile`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({ position: position }),
-                });
-
-                if (!userUpdateResponse.ok) {
-                    console.warn("Failed to update user position, but continuing with company update");
-                }
-            }
-
             // Use PUT for existing company, POST for new company
             const method = hasExistingCompany ? "PUT" : "POST";
             const response = await fetch(`${API}/api/company`, {
@@ -352,8 +320,7 @@ export default function CompanySetup() {
                         bio: data.company.bio || "",
                         color: data.company.color || "#000000",
                         collab_type: data.company.collab_type || "",
-                        logo: data.company.logo || "",
-                        user_position: position // Store updated position
+                        logo: data.company.logo || ""
                     });
                 } else {
                     setSuccess(`Company "${data.company.name}" created successfully!`);
@@ -370,13 +337,12 @@ export default function CompanySetup() {
                         bio: data.company.bio || "",
                         color: data.company.color || "#000000",
                         collab_type: data.company.collab_type || "",
-                        logo: data.company.logo || "",
-                        user_position: position // Store position
+                        logo: data.company.logo || ""
                     });
 
                     // Redirect to Proposal Form page after successful creation
                     setTimeout(() => {
-                        window.location.href = "/proposal-form"; // Adjust this path as needed
+                        window.location.href = "/proposalform"; // Adjust this path as needed
                     }, 2000);
                 }
             } else {
@@ -793,7 +759,6 @@ export default function CompanySetup() {
                         <div>
                             <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
                                 CONTACT NUMBER
-                               
                             </label>
                             <div className="relative w-full group">
                                 <input
@@ -813,7 +778,6 @@ export default function CompanySetup() {
                                     origin-center scale-x-0 w-full 
                                     group-focus-within:scale-x-100" />
                             </div>
-                            
                         </div>
                     </div>
                 </div>
