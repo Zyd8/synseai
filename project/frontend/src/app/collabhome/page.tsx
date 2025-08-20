@@ -60,7 +60,6 @@ export default function CollabHome() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["user"]}>
       <div>
         {/* Hero Section */}
         <div className="mt-8 md:mt-20 w-full max-w-7xl px-4 mx-auto">
@@ -256,6 +255,5 @@ export default function CollabHome() {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
   );
 }

@@ -392,7 +392,7 @@ const handleProposalClick = (proposalId: number) => {
                 {/* Dropdown Portal - renders outside of table to avoid clipping */}
                 {openRow !== null && createPortal(
                     <div 
-                        className="fixed w-40 bg-white border rounded-lg shadow-lg z-50"
+                        className="absolute w-40 bg-white border rounded-lg shadow-lg z-50"
                         style={{ 
                             top: `${dropdownPosition.top}px`, 
                             left: `${dropdownPosition.left}px` 
