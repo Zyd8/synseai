@@ -6,7 +6,7 @@ from datetime import timedelta
 import os
 from dotenv import load_dotenv
 from config import config
-from models import db, User, Company, UserRole
+from models import db, User, UserRole
 from auth.routes import auth_bp
 from routes.company import company_bp
 from routes.proposal import proposal_bp
@@ -14,6 +14,7 @@ from routes.department import department_bp
 from routes.document import document_bp
 from routes.document_setting import document_setting_bp
 from routes.synergy import synergy_bp
+from routes.department_preset import department_preset_bp
 
 # Load environment variables
 load_dotenv()
@@ -48,6 +49,7 @@ def create_app():
     app.register_blueprint(document_bp, url_prefix='/api/document')
     app.register_blueprint(synergy_bp, url_prefix='/api/synergy')
     app.register_blueprint(document_setting_bp, url_prefix='/api/document_setting')
+    app.register_blueprint(department_preset_bp, url_prefix='/api/department_preset')
     
     # Create database tables
     with app.app_context():

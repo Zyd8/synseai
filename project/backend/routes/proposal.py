@@ -113,7 +113,7 @@ def get_proposal(proposal_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
         
-    if not user.company:
+    if not user.company and user.role == UserRole.USER:
         return jsonify({"error": "User does not have a company"}), 400
     
     proposal = Proposal.query.filter_by(

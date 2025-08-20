@@ -316,7 +316,7 @@ export default function CollabProposalTracking() {
   const isRejected = proposalData.status.toUpperCase() === 'REJECTED';
 
   return (
-    <ProtectedRoute allowedRoles={["user"]}>
+    <ProtectedRoute allowedRoles={["user", "employee" ]}>
       <CollabCompanyProtectedRoute>
         <>
           <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">

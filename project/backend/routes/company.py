@@ -153,3 +153,23 @@ def delete_company():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@company_bp.route('/<int:company_id>', methods=['GET'])
+@jwt_required()
+def get_company_by_id(company_id):
+    """Get a company by ID"""
+    current_user_id = str(get_jwt_identity())
+    
+    # Find the company
+    company = Company.query.filter_by(id=company_id).first()
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+    
+    try:
+        return jsonify({
+            "company": company.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
