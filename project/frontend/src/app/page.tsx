@@ -1,4 +1,8 @@
+"use client"
+import { useRouter } from 'next/navigation';
 export default function LandingPage() {
+  const router = useRouter();
+
   return (
     <main className="min-h-screen px-4 py-4">
       <div className="flex flex-col items-center justify-center mt-8 md:mt-10 max-w-4xl mx-auto">
@@ -15,10 +19,16 @@ export default function LandingPage() {
         {/* Responsive button layout */}
         <div className="mt-8 md:mt-20 w-full max-w-2xl px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <button className="w-full cursor-pointer font-bold text-center py-4 px-6 text-white bg-[#B11016] border-2 border-[#B11016] rounded-md hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg">
+            <button
+              className="w-full cursor-pointer font-bold text-center py-4 px-6 text-white bg-[#B11016] border-2 border-[#B11016] rounded-md hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg"
+              onClick={() => router.push("/login")}
+            >
               BPI Employees
             </button>
-            <button className="w-full cursor-pointer font-bold text-center py-4 px-6 text-white bg-[#B11016] border-2 border-[#B11016] rounded-md hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg">
+            <button
+              className="w-full cursor-pointer font-bold text-center py-4 px-6 text-white bg-[#B11016] border-2 border-[#B11016] rounded-md hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg"
+              onClick={() => router.push("/login")}
+            >
               Collaborators
             </button>
           </div>

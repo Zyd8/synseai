@@ -40,7 +40,56 @@ export default function CollabFiles() {
   const API = process.env.NEXT_PUBLIC_API_URL;
 
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const fetchTimeline = async () => {
+    if (!proposalId) return;
+    try {
+      const token = sessionStorage.getItem("access_token");
+      if (!token) return;
 
+      const res = await fetch(`${API}/api/document/get_proposal_files/${proposalId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        setTimeline([]);
+        return;
+      }
+
+      const docs = await res.json();
+
+      const role = sessionStorage.getItem("role");
+
+      const fileTimeline: TimelineItem[] = docs.map((doc: any) => {
+        const sender: 'user' | 'bpi' = role === 'employee'
+          ? (doc.is_bpi ? 'bpi' : 'user')
+          : (doc.is_bpi ? 'bpi' : 'user');
+
+        return {
+          id: doc.id.toString(),
+          date: new Date(doc.created_at).toISOString().split('T')[0],
+          time: new Date(doc.created_at).toLocaleTimeString('en-PH', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Manila'
+          }),
+          title: doc.name,
+          description: doc.description,
+          status: 'completed',
+          sender,
+          fileType: doc.type,
+          fileSize: '',
+          downloadUrl: doc.download_url,
+          viewUrl: doc.view_url,
+        };
+      });
+
+      setTimeline(fileTimeline);
+
+    } catch (err) {
+      console.error("Failed to fetch timeline:", err);
+    }
+  };
   useEffect(() => {
     if (!proposalId) return;
     console.log("Fetching proposal for ID:", proposalId);
@@ -230,7 +279,7 @@ export default function CollabFiles() {
       setFileName("");
       setFileDescription("");
       setIsModalOpen(false);
-
+      await fetchTimeline();
     } catch (err) {
       console.error("Error uploading file:", err);
       alert("File upload failed. Check console for details.");
