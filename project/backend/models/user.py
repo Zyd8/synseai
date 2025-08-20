@@ -28,8 +28,10 @@ class User(db.Model):
     position = db.Column(db.String(100), nullable=True)
     role = db.Column(db.Enum(UserRole), default=UserRole.USER, nullable=False)
 
-    # One-to-one relationship with Company
+    # Relationships
     company = db.relationship('Company', back_populates='user', uselist=False)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
+    department = db.relationship('Department', backref='users')
 
     @property
     def full_name(self):
