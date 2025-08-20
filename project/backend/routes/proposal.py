@@ -73,6 +73,9 @@ def get_all_proposals():
     """
     Get all proposals across all companies (Employee only)
     
+    Query Parameters:
+    - status: Optional. Filter by proposal status (ongoing, rejected, approved, submitted)
+    
     Returns:
         A list of all proposals with company information
     """
@@ -82,14 +85,34 @@ def get_all_proposals():
     if not user or user.role != UserRole.EMPLOYEE:
         return jsonify({"error": "Employee access required"}), 403
     
-    # Get all proposals with company information
-    proposals = db.session.query(
+    # Get status filter from query parameters
+    status_filter = request.args.get('status')
+    if status_filter:
+        try:
+            # Convert the status string to the corresponding enum value
+            status_enum = ProposalStatus[status_filter.upper()]
+        except KeyError:
+            valid_statuses = [status.value for status in ProposalStatus]
+            return jsonify({
+                "error": "Invalid status",
+                "valid_statuses": valid_statuses
+            }), 400
+    
+    # Build the base query
+    query = db.session.query(
         Proposal,
         Company.name.label('company_name'),
         Company.industry.label('company_industry')
     ).join(
         Company, Proposal.company_id == Company.id
-    ).order_by(Proposal.created_at.desc()).all()
+    )
+    
+    # Apply status filter if provided
+    if status_filter:
+        query = query.filter(Proposal.status == status_enum)
+    
+    # Execute the query with ordering
+    proposals = query.order_by(Proposal.created_at.desc()).all()
     
     # Format the response
     result = []
