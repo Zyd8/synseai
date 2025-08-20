@@ -9,4 +9,5 @@ from .proposal import Proposal, ProposalStatus  # noqa
 from .department import Department  # noqa
 from .document import Document  # noqa
 from .synergy import Synergy  # noqa
+from .department_preset import DepartmentPreset  # noqa
 
