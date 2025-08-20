@@ -5,16 +5,16 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
 import { useEffect, useState } from "react";
 
-export default function CollabApproved() {
+export default function BpiApproved() {
     const API = process.env.NEXT_PUBLIC_API_URL;
     const [proposals, setProposals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchProposals = async () => {
+        const fetchAllProposals = async () => {
             const token = sessionStorage.getItem("access_token");
             try {
-                const res = await fetch(`${API}/api/proposal`, {
+                const res = await fetch(`${API}/api/proposal/all`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -24,20 +24,18 @@ export default function CollabApproved() {
                 if (!res.ok) throw new Error("Failed to fetch proposals");
                 const data = await res.json();
 
-                // Filter approved only
-                const approved = (Array.isArray(data) ? data : data.proposals || [])
-                    .filter((p: any) => p.status === "Approved");
-
-                setProposals(approved);
+                // Extract proposals from the response structure
+                const proposalsList = data.proposals || [];
+                setProposals(Array.isArray(proposalsList) ? proposalsList : []);
             } catch (err) {
-                console.error("Error fetching approved proposals:", err);
+                console.error("Error fetching proposals:", err);
                 setProposals([]);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProposals();
+        fetchAllProposals();
     }, [API]);
 
     const formatDate = (dateString: string) => {
@@ -54,7 +52,7 @@ export default function CollabApproved() {
     };
 
     return (
-        <ProtectedRoute allowedRoles={["user"]}>
+        <ProtectedRoute allowedRoles={["employee"]}>
             <CollabCompanyProtectedRoute>
                 <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
                     {/* Sidebar */}

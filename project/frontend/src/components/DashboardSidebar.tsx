@@ -8,7 +8,8 @@ export default function DashboardSidebar() {
   const menuItems = [
     { href: "/dashboard", icon: "/images/Sidebar_home.png", label: "Home" },
     { href: "/collabapproved", icon: "/images/Folder_check.png", label: "Approved" },
-    { href: "/collabrejected", icon: "/images/Folder_del.png", label: "Deleted" },
+    { href: "/collabinprocess", icon: "/images/folder-send.png", label: "In Process" },
+    { href: "/collabrejected", icon: "/images/Folder_del.png", label: "Rejected" },
   ];
 
   return (
