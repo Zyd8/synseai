@@ -112,9 +112,11 @@ def get_proposal(proposal_id):
     user = User.query.get(current_user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
-        
-# If user is an employee, allow access to any proposal
-    if user.role == UserRole.EMPLOYEE:
+
+    if not user.company and user.role == UserRole.USER:
+        return jsonify({"error": "User does not have a company"}), 400
+
+    if user.role == UserRole.EMPLOYEE or user.role == UserRole.ADMIN:
         proposal_data = db.session.query(
             Proposal,
             Company.name.label('company_name'),
@@ -133,19 +135,18 @@ def get_proposal(proposal_id):
         
         return jsonify(result), 200
 
-
-    if not user.company and user.role == UserRole.USER:
-        return jsonify({"error": "User does not have a company"}), 400
-    
-    proposal = Proposal.query.filter_by(
-        id=proposal_id,
-        company_id=user.company.id
-    ).first()
-    
-    if not proposal:
-        return jsonify({"error": "Proposal not found"}), 404
+    elif user.role == UserRole.USER:
+        proposal = Proposal.query.filter_by(
+            id=proposal_id,
+            company_id=user.company.id
+        ).first()
         
-    return jsonify(proposal.to_dict()), 200
+        if not proposal:
+            return jsonify({"error": "Proposal not found"}), 404
+        
+        return jsonify(proposal.to_dict()), 200
+
+    return jsonify({"error": "Unauthorized: Employee or User role required"}), 403
 
 
 @proposal_bp.route('/<int:proposal_id>', methods=['PUT'])
