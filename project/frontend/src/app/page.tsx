@@ -27,7 +27,7 @@ export default function LandingPage() {
             </button>
             <button
               className="w-full cursor-pointer font-bold text-center py-4 px-6 text-white bg-[#B11016] border-2 border-[#B11016] rounded-md hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg"
-              onClick={() => router.push("/login")}
+              onClick={() => router.push("/collabhome")}
             >
               Collaborators
             </button>
