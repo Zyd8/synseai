@@ -28,6 +28,7 @@ class Proposal(db.Model):
     
     # Relationship
     company = db.relationship('Company', back_populates='proposals')
+    #documents = db.relationship('Document', back_populates='proposal', cascade='all, delete-orphan')
 
     def to_dict(self):
         return {

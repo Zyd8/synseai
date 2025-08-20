@@ -18,6 +18,26 @@ def create_document():
         file_type = request.form.get("type")
         if not file_type:
             return jsonify({"error": "File Type is required"}), 400
+        
+        description = request.form.get("description")
+        # if not description:
+        #     return jsonify({"error": "Descr is required"}), 400
+
+        proposal_id = request.form.get("proposal_id")
+        if proposal_id in ["", "null", "None", None]:
+            proposal_id = None
+
+        is_bpi_str = request.form.get("is_bpi")
+        if is_bpi_str is None:
+            return jsonify({"error": "Insert If BPI or NOT is required"}), 400
+
+        if is_bpi_str.lower() in ["true", "1", "yes"]:
+            is_bpi = True
+        elif is_bpi_str.lower() in ["false", "0", "no"]:
+            is_bpi = False
+        else:
+            return jsonify({"error": "Invalid value for is_bpi, must be true/false or 1/0"}), 400
+
 
         if "file" not in request.files:
             return jsonify({"error": "No file part"}), 400
@@ -38,7 +58,7 @@ def create_document():
         folder_name = os.path.join(base_folder, sub_folder)
         os.makedirs(folder_name, exist_ok=True)
 
-        document = Document(name=name, type=file_type, file="")
+        document = Document(name=name, type=file_type, file="", description=description, is_bpi=is_bpi, proposal_id=proposal_id)
         db.session.add(document)
         db.session.commit()  
 
