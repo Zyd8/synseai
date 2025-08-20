@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from werkzeug.utils import secure_filename
+from flask import send_file
 import os
 
 from models import db, Document
@@ -80,26 +81,36 @@ def create_document():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@document_bp.route('/get_file/<int:doc_id>', methods=['GET'])
+@document_bp.route('/get_proposal_files/<int:proposal_id>', methods=['GET'])
 @jwt_required()
-def get_file(doc_id):
+def get_files_by_proposal(proposal_id):
     try:
-        document = Document.query.get_or_404(doc_id)
+        # Query all documents with this proposal_id
+        documents = Document.query.filter_by(proposal_id=proposal_id).all()
 
-        return jsonify({
-            "id": document.id,
-            "name": document.name,
-            "file_url": document.file,
-            "type": document.type,
-            "dowload_url": f"/api/document/download_file/{document.id}",
-            "view_url": f"/api/document/view_file/{document.id}"
-        }), 200
+        if not documents:
+            return jsonify({"message": "No documents found for this proposal"}), 404
+
+        # Map documents into a list of dicts
+        result = []
+        for doc in documents:
+            result.append({
+                "id": doc.id,
+                "name": doc.name,
+                "file_url": doc.file,
+                "type": doc.type,
+                "description": doc.description,
+                "is_bpi": doc.is_bpi,
+                "proposal_id": doc.proposal_id,
+                "created_at": doc.created_at,
+                "download_url": f"/api/document/download_file/{doc.id}",
+                "view_url": f"/api/document/view_file/{doc.id}"
+            })
+
+        return jsonify(result), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-from flask import send_file
-import os
 
 @document_bp.route('/download_file/<int:doc_id>', methods=['GET'])
 @jwt_required()
