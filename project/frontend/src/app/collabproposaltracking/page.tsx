@@ -245,7 +245,7 @@ export default function CollabProposalTracking() {
   // Loading state
   if (loading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={["user"]}>
         <CollabCompanyProtectedRoute>
           <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="text-center">
@@ -261,7 +261,7 @@ export default function CollabProposalTracking() {
   // Error state
   if (error) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={["user"]}>
         <CollabCompanyProtectedRoute>
           <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="text-center">
@@ -288,7 +288,7 @@ export default function CollabProposalTracking() {
   // No proposal found state
   if (!proposalData) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={["user"]}>
         <CollabCompanyProtectedRoute>
           <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="text-center">
@@ -316,7 +316,7 @@ export default function CollabProposalTracking() {
   const isRejected = proposalData.status.toUpperCase() === 'REJECTED';
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={["user"]}>
       <CollabCompanyProtectedRoute>
         <>
           <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">

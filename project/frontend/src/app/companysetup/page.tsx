@@ -3,6 +3,7 @@ import React, { useState, useRef } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaArrowLeft } from "react-icons/fa";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function CompanySetup() {
     const API = process.env.NEXT_PUBLIC_API_URL;
@@ -386,6 +387,7 @@ export default function CompanySetup() {
     };
 
     return (
+        <ProtectedRoute allowedRoles={["user"]}>
         <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
             {/* Header */}
             <div className="relative flex items-center w-full mt-2 mb-10">
@@ -814,5 +816,7 @@ export default function CompanySetup() {
                 </div>
             </form>
         </div>
+        </ProtectedRoute>
     );
+    
 }

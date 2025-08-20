@@ -70,7 +70,7 @@ export default function Dashboard() {
     };
 
     return (
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["user"]}>
             <CollabCompanyProtectedRoute>
                 <div className="flex min-h-screen bg-gray-50">
                     {/* Sidebar */}

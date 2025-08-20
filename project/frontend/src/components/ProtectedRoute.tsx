@@ -4,51 +4,29 @@ import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles: string[]; // e.g. ["user", "employee"]
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const API = process.env.NEXT_PUBLIC_API_URL;
+export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = sessionStorage.getItem("access_token");
+    const token = sessionStorage.getItem("access_token");
+    const role = sessionStorage.getItem("role");
 
-      if (!token) {
-        router.push("/login");
-        return;
-      }
+    if (!token || !role) {
+      router.push("/login");
+      return;
+    }
 
-      try {
-        const res = await fetch(`${API}/api/auth/protected`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+    if (!allowedRoles.includes(role)) {
+      router.push("/"); // redirect if role not allowed
+      return;
+    }
 
-        if (!res.ok) {
-          localStorage.removeItem("access_token");
-          router.push("/login");
-          return;
-        }
-
-        // Optional: You can store user data in state/context
-        // const data = await res.json();
-        // console.log("Authenticated user:", data.user);
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Error verifying token:", error);
-        localStorage.removeItem("access_token");
-        router.push("/login");
-      }
-    };
-
-    checkAuth();
-  }, [router]);
+    setLoading(false);
+  }, [router, allowedRoles]);
 
   if (loading) {
     return <div className="p-4 text-center">Checking authentication...</div>;
@@ -56,3 +34,4 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   return <>{children}</>;
 }
+

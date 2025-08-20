@@ -265,7 +265,7 @@ export default function CollabFiles() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={["user", "employee"]}>
       <CollabCompanyProtectedRoute>
         <>
           <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">

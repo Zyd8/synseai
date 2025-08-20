@@ -173,7 +173,7 @@ export default function ProposalForm() {
 
 
     return (
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["user", "employee"]}>
             <CollabCompanyProtectedRoute>
                 <form onSubmit={handleSubmit}>
                     <div className="min-h-screen bg-white flex flex-col items-center sm:px-[10%] px-[10%] py-6 sm:py-8 relative">

@@ -40,7 +40,7 @@ export default function CollabRejected() {
     }, [API]);
 
     return (
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={["user"]}>
             <CollabCompanyProtectedRoute>
                 <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
                     {/* Sidebar */}
