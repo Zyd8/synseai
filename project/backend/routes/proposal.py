@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, Proposal, UserRole, ProposalStatus
+from models import db, User, Proposal, UserRole, ProposalStatus, Company
 
 proposal_bp = Blueprint('proposal', __name__)
 
@@ -64,6 +64,44 @@ def get_proposals():
     proposals = Proposal.query.filter_by(company_id=user.company.id).all()
     return jsonify({
         "proposals": [proposal.to_dict() for proposal in proposals]
+    }), 200
+
+
+@proposal_bp.route('/all', methods=['GET'])
+@jwt_required()
+def get_all_proposals():
+    """
+    Get all proposals across all companies (Employee only)
+    
+    Returns:
+        A list of all proposals with company information
+    """
+    current_user_id = str(get_jwt_identity())
+    user = User.query.get(current_user_id)
+    
+    if not user or user.role != UserRole.EMPLOYEE:
+        return jsonify({"error": "Employee access required"}), 403
+    
+    # Get all proposals with company information
+    proposals = db.session.query(
+        Proposal,
+        Company.name.label('company_name'),
+        Company.industry.label('company_industry')
+    ).join(
+        Company, Proposal.company_id == Company.id
+    ).order_by(Proposal.created_at.desc()).all()
+    
+    # Format the response
+    result = []
+    for proposal, company_name, company_industry in proposals:
+        proposal_data = proposal.to_dict()
+        proposal_data['company_name'] = company_name
+        proposal_data['company_industry'] = company_industry
+        result.append(proposal_data)
+    
+    return jsonify({
+        "proposals": result,
+        "count": len(result)
     }), 200
 
 @proposal_bp.route('/<int:proposal_id>', methods=['GET'])
