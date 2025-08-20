@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { GiConsoleController } from "react-icons/gi";
 
 export default function ProposalForm() {
     const API = process.env.NEXT_PUBLIC_API_URL;
@@ -68,6 +69,8 @@ export default function ProposalForm() {
 
     const [confirm, setConfirm] = useState<boolean>(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+    const [fileName, setFileName] = useState<string>('');
+    const [fileDescription, setFileDescription] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,39 +120,49 @@ export default function ProposalForm() {
             const proposal = data.proposal;
             console.log("Created proposal:", proposal);
 
-            // STEP 2: Upload file if exists
-            if (uploadedFile) {
-                const formData = new FormData();
-                formData.append("name", uploadedFile.name);
-                formData.append("type", "Proposal");
-                formData.append("file", uploadedFile);
+            console.log("Proposal ID:", proposal.id);
 
-                const fileRes = await fetch(`${API}/api/document/upload_file`, {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: formData,
-                });
+            if (proposal.id) {
+                // STEP 2: Upload file if exists
+                if (uploadedFile) {
+                    const formData = new FormData();
+                    formData.append("file", uploadedFile);
+                    formData.append("name", fileName || uploadedFile.name);
+                    formData.append("description", fileDescription || "");
+                    formData.append("type", "Proposal");
+                    formData.append("proposal_id", proposal.id);
+                    formData.append("is_bpi", "false"); 
 
-                if (!fileRes.ok) {
-                    const error = await fileRes.json();
-                    alert(error.error || "File upload failed.");
-                    return;
+                    const fileRes = await fetch(`${API}/api/document/upload_file`, {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: formData,
+                    });
+
+                    if (!fileRes.ok) {
+                        const error = await fileRes.json(); 
+                        alert(error.error || "File upload failed.");
+                        return;
+                    }
+
+                    const fileData = await fileRes.json();
+                    console.log("Uploaded file:", fileData);
                 }
-
-                const fileData = await fileRes.json();
-                console.log("Uploaded file:", fileData);
             }
+
+
 
             alert("Proposal submitted successfully!");
             setTitle("");
             setDescription("");
             setCollabType("");
+            setFileName("");
+            setFileDescription("");
             setUploadedFile(null);
             setConfirm(false);
 
-            // ✅ Navigate to collabproposaltracking
             router.push(`/collabproposaltracking?id=${proposal.id}`);
 
         } catch (err) {
@@ -157,6 +170,7 @@ export default function ProposalForm() {
             alert("Something went wrong. Please try again.");
         }
     };
+
 
     return (
         <ProtectedRoute>
@@ -428,52 +442,92 @@ export default function ProposalForm() {
                             </div>
                         </div>
 
-                        <div>
-                            <div className="w-full text-red-700 text-base font-normal mb-3">
-                                PROPOSAL LETTER
-                            </div>
-
-                            {/* Drag and Drop Area */}
-                            <div
-                                onDrop={handleDrop}
-                                onDragOver={(e) => e.preventDefault()}
-                                className="border-2 border-dashed border-red-300 rounded-lg p-6 text-center cursor-pointer hover:border-red-500 transition"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                <img
-                                    src="/images/uploadicon.png"
-                                    alt="Upload Icon"
-                                    className="mx-auto h-12 w-12 object-contain"
-                                />
-
-                                <p className="mt-2 text-gray-600 text-md">
-                                    Drag & drop files or{" "}
-                                    <span className="text-red-600 underline">Browse</span>
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                    Supported formats: JPEG, PNG, PDF, DOCX
-                                </p>
-
-                                <input
-                                    type="file"
-                                    accept=".jpeg,.jpg,.png,.pdf,.docx"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    onChange={handleFileChange}
-                                />
-                            </div>
-
-                            {/* Uploaded File Preview */}
-                            {uploadedFile && (
-                                <div className="mt-3 p-2 border border-green-400 rounded bg-green-50 text-green-700 text-xs">
-                                    Uploaded: {uploadedFile.name}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {/* File Name */}
+                            <div>
+                                <div className="w-full text-red-700 text-base font-normal mb-1">
+                                    FILE NAME
                                 </div>
-                            )}
+                                <div className="w-full relative group mb-5">
+                                    <input
+                                        type="text"
+                                        value={fileName}
+                                        onChange={(e) => setFileName(e.target.value)}
+                                        placeholder="Enter file name"
+                                        className="px-2 appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
+                                        aria-label="File Name"
+                                    />
+                                    <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                    <div className="absolute left-0 bottom-0 h-[2px] bg-red-700 
+                transition-transform duration-300 ease-in-out 
+                origin-center scale-x-0 w-full 
+                group-focus-within:scale-x-100" />
+                                </div>
+                            </div>
 
-                            {/* Checkbox */}
-                            <div className="flex items-center mt-4">
+                            {/* File Description */}
+                            <div>
+                                <div className="w-full text-red-700 text-base font-normal mb-1">
+                                    FILE DESCRIPTION
+                                </div>
+                                <div className="w-full relative group mb-5">
+                                    <input
+                                        type="text"
+                                        value={fileDescription}
+                                        onChange={(e) => setFileDescription(e.target.value)}
+                                        placeholder="Enter file description"
+                                        className="px-2 appearance-none w-full py-3 placeholder-gray-400 bg-transparent focus:outline-none text-sm sm:text-base"
+                                        aria-label="File Description"
+                                    />
+                                    <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                    <div className="absolute left-0 bottom-0 h-[2px] bg-red-700 
+                transition-transform duration-300 ease-in-out 
+                origin-center scale-x-0 w-full 
+                group-focus-within:scale-x-100" />
+                                </div>
+                            </div>
+
+                            {/* Drag and Drop Area - Full width */}
+                            <div className="col-span-1 md:col-span-2">
+                                <div
+                                    onDrop={handleDrop}
+                                    onDragOver={(e) => e.preventDefault()}
+                                    className="border-2 border-dashed border-red-300 rounded-lg p-6 text-center cursor-pointer hover:border-red-500 transition"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <img
+                                        src="/images/uploadicon.png"
+                                        alt="Upload Icon"
+                                        className="mx-auto h-12 w-12 object-contain"
+                                    />
+
+                                    <p className="mt-2 text-gray-600 text-md">
+                                        Drag & drop files or{" "}
+                                        <span className="text-red-600 underline">Browse</span>
+                                    </p>
+                                    <p className="text-xs text-gray-400">
+                                        Supported formats: JPEG, PNG, PDF, DOCX
+                                    </p>
+
+                                    <input
+                                        type="file"
+                                        accept=".jpeg,.jpg,.png,.pdf,.docx"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        onChange={handleFileChange}
+                                    />
+                                </div>
+
+                                {uploadedFile && (
+                                    <div className="mt-3 p-2 border border-green-400 rounded bg-green-50 text-green-700 text-xs">
+                                        Uploaded: {uploadedFile.name}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Checkbox - Full width */}
+                            <div className="col-span-1 md:col-span-2 flex items-center mt-4">
                                 <label className="flex items-center space-x-2 cursor-pointer text-base">
-                                    {/* Hidden checkbox */}
                                     <input
                                         id="confirm"
                                         type="checkbox"
@@ -481,10 +535,8 @@ export default function ProposalForm() {
                                         onChange={(e) => setConfirm(e.target.checked)}
                                         className="sr-only peer"
                                     />
-
-                                    {/* Square with check mark */}
                                     <div className="w-5 h-5 border border-black rounded-sm flex items-center justify-center 
-                    peer-checked:bg-red-700 peer-checked:[&>svg]:block">
+                peer-checked:bg-red-700 peer-checked:[&>svg]:block">
                                         <svg
                                             className="w-3 h-3 text-white hidden"
                                             viewBox="0 0 24 24"
@@ -495,23 +547,24 @@ export default function ProposalForm() {
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
-
-                                    {/* Label text */}
                                     <span className="text-xs text-gray-700">
                                         I confirm that all information provided is accurate and true.
                                     </span>
                                 </label>
                             </div>
 
-                            {/* Submit Button */}
-                            <button
-                                type="submit"
-                                className="mt-2 sm:mt-4 w-full flex justify-center py-3 sm:py-3 px-3 border border-transparent 
+                            {/* Submit Button - Full width */}
+                            <div className="col-span-1 md:col-span-2">
+                                <button
+                                    type="submit"
+                                    className="mt-2 sm:mt-4 w-full flex justify-center py-3 sm:py-3 px-3 border border-transparent 
                 rounded-md text-xs font-bold text-white bg-[#B11016] hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105"
-                            >
-                                SUBMIT PROPOSAL
-                            </button>
+                                >
+                                    SUBMIT PROPOSAL
+                                </button>
+                            </div>
                         </div>
+
 
                     </div>
                 </form>
