@@ -53,6 +53,8 @@ export default function CollabFiles() {
 
   const API = process.env.NEXT_PUBLIC_API_URL;
 
+  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+
   useEffect(() => {
     if (!proposalId) return;
 
@@ -66,14 +68,14 @@ export default function CollabFiles() {
           return;
         }
 
+        let proposal: any;
         if (role === "employee") {
           const response = await fetch(`${API}/api/proposal?proposalId=${proposalId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (!response.ok) throw new Error("Failed to fetch proposals");
-
           const data = await response.json();
-          const proposal = data.proposals.find((p: any) => p.id === Number(proposalId));
+          proposal = data.proposals.find((p: any) => p.id === Number(proposalId));
           if (!proposal) throw new Error("Proposal not found");
 
           setproposalTitle(proposal.title);
@@ -89,7 +91,7 @@ export default function CollabFiles() {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (!proposalRes.ok) throw new Error("Failed to fetch proposal");
-          const proposal = await proposalRes.json();
+          proposal = await proposalRes.json();
 
           setproposalTitle(proposal.title);
           settypeOfCollaboration(proposal.collab_type);
@@ -103,68 +105,56 @@ export default function CollabFiles() {
 
           setCompanyData({
             companyName: company.name,
-            companyLogo: company.logo
-              ? `${company.logo}` 
-              : "/logo/synsei_icon.png",
+            companyLogo: company.logo ? `${company.logo}` : "/logo/synsei_icon.png",
           });
         }
 
+        // Fetch proposal documents
+        const docRes = await fetch(`${API}/api/document/get_proposal_files/${proposalId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!docRes.ok) {
+          console.warn("No documents found for this proposal");
+          setTimeline([]);
+          return;
+        }
+
+        const docs = await docRes.json();
+
+        console.log("DOCRES CONSOLE LOG", docs);
+
+        // Map documents to timeline items
+        const fileTimeline: TimelineItem[] = docs.map((doc: any) => ({
+          id: doc.id.toString(),
+          date: new Date(doc.created_at).toISOString().split('T')[0],
+          time: new Date(doc.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          title: doc.name,
+          description: doc.description,
+          status: 'completed',
+          sender: doc.is_bpi ? 'bpi' : 'user', // BPI on left, user on right
+          fileType: doc.type,
+          fileSize: '', // optional, if backend provides
+          downloadUrl: doc.download_url,
+          viewUrl: doc.view_url,
+        }));
+
+        setTimeline(fileTimeline);
+
       } catch (error) {
-        console.error("Error fetching proposal/company:", error);
+        console.error("Error fetching proposal/company/files:", error);
       }
     };
-    console.log("Fetching proposal data for ID:", proposalId);
+    
+
 
     fetchProposalData();
   }, [proposalId]);
 
-  // Sample timeline data for demonstration
-  const [timeline, setTimeline] = useState<TimelineItem[]>([
-    {
-      id: '1',
-      date: '2024-08-15',
-      time: '10:30 AM',
-      title: 'Initial Proposal Document',
-      description: 'Submitted collaboration proposal with project details and requirements.',
-      status: 'completed',
-      sender: 'user',
-      fileType: 'PDF',
-      fileSize: '1.2 MB'
-    },
-    {
-      id: '2',
-      date: '2024-08-16',
-      time: '2:15 PM',
-      title: 'Acknowledgment Letter',
-      description: 'BPI has received your proposal and assigned a reference number.',
-      status: 'completed',
-      sender: 'bpi',
-      fileType: 'PDF',
-      fileSize: '0.8 MB'
-    },
-    {
-      id: '3',
-      date: '2024-08-17',
-      time: '9:45 AM',
-      title: 'Additional Documentation',
-      description: 'Submitted required financial statements and company profile.',
-      status: 'completed',
-      sender: 'user',
-      fileType: 'ZIP',
-      fileSize: '5.3 MB'
-    },
-    {
-      id: '4',
-      date: '2024-08-18',
-      time: '4:20 PM',
-      title: 'Review Feedback',
-      description: 'Initial review completed with comments and requested modifications.',
-      status: 'in_progress',
-      sender: 'bpi',
-      fileType: 'DOCX',
-      fileSize: '0.9 MB'
-    }
-  ]);
+
+
+
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -209,12 +199,6 @@ export default function CollabFiles() {
   };
 
   const router = useRouter();
-
-  const getFileIcon = (fileType: string, sender: 'user' | 'bpi') => {
-    const iconClass = `text-lg ${sender === 'user' ? 'text-[#B11016]' : 'text-white'
-      }`;
-    return <FaFileAlt className={iconClass} />;
-  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
