@@ -185,7 +185,7 @@ export default function Dashboard() {
                                     <h3 className="text-red-700 font-bold text-lg">Your Proposals</h3>
                                     <span className="text-sm text-gray-600">Click on any row to view details</span>
                                 </div>
-                                <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl">
+                              
                                     <div className="max-h-64 overflow-y-auto">
                                         <table className="w-full text-sm rounded-lg overflow-hidden">
                                             <thead className="sticky top-0 bg-white z-10">
@@ -260,7 +260,7 @@ export default function Dashboard() {
                                             </tbody>
                                         </table>
                                     </div>
-                                </div>
+                           
                                 {loading && <p className="text-center p-3">Loading proposals...</p>}
                             </div>
 
