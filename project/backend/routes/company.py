@@ -156,7 +156,7 @@ def delete_company():
 
 @company_bp.route('/<int:company_id>', methods=['GET'])
 @jwt_required()
-def get_company(company_id):
+def get_company_by_id(company_id):
     """Get a company by ID"""
     current_user_id = str(get_jwt_identity())
     
