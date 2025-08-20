@@ -52,90 +52,37 @@ def create_proposal():
 @proposal_bp.route('', methods=['GET'])
 @jwt_required()
 def get_proposals():
-    """Get all proposals for the authenticated user's company"""
-    current_user_id = str(get_jwt_identity())
-    user = User.query.get(current_user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-        
-    if not user.company:
-        return jsonify({"error": "User does not have a company"}), 400
-    
-    proposals = Proposal.query.filter_by(company_id=user.company.id).all()
-    return jsonify({
-        "proposals": [proposal.to_dict() for proposal in proposals]
-    }), 200
-
-
-@proposal_bp.route('/all', methods=['GET'])
-@jwt_required()
-def get_all_proposals():
-    """
-    Get all proposals across all companies (Employee only)
-    
-    Query Parameters:
-    - status: Optional. Filter by proposal status (ongoing, rejected, approved, submitted)
-    
-    Returns:
-        A list of all proposals with company information
-    """
     current_user_id = str(get_jwt_identity())
     user = User.query.get(current_user_id)
     
-    if not user or user.role != UserRole.EMPLOYEE:
-        return jsonify({"error": "Employee access required"}), 403
+    # Get status from query parameters
+    status = request.args.get('status')
     
-    # Get status filter from query parameters
-    status_filter = request.args.get('status')
-    if status_filter:
-        try:
-            # Convert the status string to the corresponding enum value
-            status_enum = ProposalStatus[status_filter.upper()]
-        except KeyError:
-            valid_statuses = [status.value for status in ProposalStatus]
-            return jsonify({
-                "error": "Invalid status",
-                "valid_statuses": valid_statuses
-            }), 400
-    
-    # Build the base query
-    query = db.session.query(
-        Proposal,
-        Company.name.label('company_name'),
-        Company.industry.label('company_industry')
-    ).join(
-        Company, Proposal.company_id == Company.id
-    )
+    # Base query
+    if user.role in [UserRole.EMPLOYEE, UserRole.ADMIN]:
+        query = Proposal.query
+    elif user.role == UserRole.USER:
+        if not user.company:
+            return jsonify({"error": "User does not have a company"}), 400
+        query = Proposal.query.filter_by(company_id=user.company.id)
+    else:
+        return jsonify({"error": "Unauthorized"}), 403
     
     # Apply status filter if provided
-    if status_filter:
-        query = query.filter(Proposal.status == status_enum)
+    if status:
+        query = query.filter_by(status=status)
     
-    # Execute the query with ordering
-    proposals = query.order_by(Proposal.created_at.desc()).all()
-    
-    # Format the response
-    result = []
-    for proposal, company_name, company_industry in proposals:
-        proposal_data = proposal.to_dict()
-        proposal_data['company_name'] = company_name
-        proposal_data['company_industry'] = company_industry
-        result.append(proposal_data)
+    # Execute query
+    proposals = query.all()
     
     return jsonify({
-        "proposals": result,
-        "count": len(result)
+        "proposals": [proposal.to_dict() for proposal in proposals]
     }), 200
 
 @proposal_bp.route('/<int:proposal_id>', methods=['GET'])
 @jwt_required()
 def get_proposal(proposal_id):
-    """
-    Get a specific proposal by ID
-    
-    Optional query parameters:
-    - status: Filter by proposal status (Ongoing, Rejected, Approved, Submitted)
-    """
+    """Get a specific proposal by ID"""
     current_user_id = str(get_jwt_identity())
     user = User.query.get(current_user_id)
     if not user:
@@ -144,33 +91,14 @@ def get_proposal(proposal_id):
     if not user.company and user.role == UserRole.USER:
         return jsonify({"error": "User does not have a company"}), 400
 
-    # Get status filter from query parameters
-    status_filter = request.args.get('status')
-    if status_filter:
-        try:
-            # Convert the status string to the corresponding enum value
-            status_enum = ProposalStatus[status_filter.upper()]
-        except KeyError:
-            valid_statuses = [status.value for status in ProposalStatus]
-            return jsonify({
-                "error": "Invalid status",
-                "valid_statuses": valid_statuses
-            }), 400
-
-    if user.role in [UserRole.EMPLOYEE, UserRole.ADMIN]:
-        query = db.session.query(
+    if user.role == UserRole.EMPLOYEE or user.role == UserRole.ADMIN:
+        proposal_data = db.session.query(
             Proposal,
             Company.name.label('company_name'),
             Company.industry.label('company_industry')
         ).join(
             Company, Proposal.company_id == Company.id
-        ).filter(Proposal.id == proposal_id)
-        
-        # Apply status filter if provided
-        if status_filter:
-            query = query.filter(Proposal.status == status_enum)
-        
-        proposal_data = query.first()
+        ).filter(Proposal.id == proposal_id).first()
         
         if not proposal_data:
             return jsonify({"error": "Proposal not found"}), 404
@@ -183,16 +111,10 @@ def get_proposal(proposal_id):
         return jsonify(result), 200
 
     elif user.role == UserRole.USER:
-        query = Proposal.query.filter_by(
+        proposal = Proposal.query.filter_by(
             id=proposal_id,
             company_id=user.company.id
-        )
-        
-        # Apply status filter if provided
-        if status_filter:
-            query = query.filter(Proposal.status == status_enum)
-        
-        proposal = query.first()
+        ).first()
         
         if not proposal:
             return jsonify({"error": "Proposal not found"}), 404
