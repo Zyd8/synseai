@@ -153,6 +153,7 @@ export default function CollabFiles() {
 
     try {
       const token = sessionStorage.getItem("access_token");
+      const role = sessionStorage.getItem("role"); // Get role from sessionStorage
       if (!token) {
         alert("You are not authenticated.");
         return;
@@ -170,7 +171,7 @@ export default function CollabFiles() {
       formData.append("description", fileDescription || "");
       formData.append("type", "Proposal");
       formData.append("proposal_id", proposalId);
-      formData.append("is_bpi", "false");
+      formData.append("is_bpi", role === "employee" ? "true" : "false"); // <-- updated
 
       const response = await fetch(`${API}/api/document/upload_file`, {
         method: "POST",
@@ -189,7 +190,7 @@ export default function CollabFiles() {
       const uploadedDoc = await response.json();
       console.log("Uploaded file:", uploadedDoc);
 
-      // Optionally, update timeline state so it shows immediately
+      // Update timeline immediately
       setTimeline(prev => [
         ...prev,
         {
@@ -201,7 +202,7 @@ export default function CollabFiles() {
           title: uploadedDoc.name || uploadedFile.name,
           description: uploadedDoc.description || "",
           status: "completed",
-          sender: "user",
+          sender: role === "employee" ? "bpi" : "user", // <-- sender based on role
           fileType: uploadedDoc.type || uploadedFile.name.split('.').pop()?.toUpperCase(),
           fileSize: uploadedFile.size ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB` : undefined,
           fileUrl: uploadedDoc.file || ""
@@ -219,6 +220,7 @@ export default function CollabFiles() {
       alert("File upload failed. Check console for details.");
     }
   };
+
 
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
