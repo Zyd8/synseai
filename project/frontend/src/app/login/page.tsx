@@ -54,9 +54,9 @@ export default function LoginPage() {
 
           // Redirect after short delay
           setTimeout(() => {
-            if (role === "user") router.push("/collabhome");
+            if (role === "user") router.push("/dashboard");
             else if (role === "employee") router.push("/bpidashboard");
-            else router.push("/collabhome"); // fallback
+            else router.push("/collabhome"); 
           }, 1000);
         } else {
           setMessage("No role found, redirecting...");

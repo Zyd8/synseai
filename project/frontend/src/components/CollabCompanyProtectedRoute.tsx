@@ -25,13 +25,13 @@ export default function CompanyProtectedRoute({ children }: { children: React.Re
 
         if (!res.ok) {
           console.warn("Company fetch failed with status:", res.status);
-          router.replace("/companysetup");
+          router.replace("/collabhome");
           return;
         }
 
         const data = await res.json().catch(() => null);
         if (!data || !data.id) {
-          router.replace("/companysetup");
+          router.replace("/collabhome");
           return;
         }
 
@@ -39,7 +39,7 @@ export default function CompanyProtectedRoute({ children }: { children: React.Re
 
       } catch (err: any) {
         console.error("Fetch error:", err.message);
-        router.replace("/companysetup");
+        router.replace("/collabhome");
       } finally {
         setChecking(false); 
       }
