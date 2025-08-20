@@ -20,28 +20,15 @@ interface TimelineItem {
   fileSize?: string; // e.g., '2.4 MB'
 }
 
-interface ProposalData {
-  proposalTitle: string;
-  typeOfCollaboration: string;
-  expectedSupport: string;
-  currentStep: number; // 1: submitted, 2: in_progress, 3: approved
-  timeline: TimelineItem[];
-}
-
 interface CompanyData {
   companyName: string;
   companyLogo: string;
-}
-
-interface BPIDepartmentData {
-  department: string;
 }
 
 export default function CollabFiles() {
   const [proposalTitle, setproposalTitle] = useState<string>('');
   const [typeOfCollaboration, settypeOfCollaboration] = useState<string>('');
   const [expectedSupport, setexpectedSupport] = useState<string>('');
-  const [currentStep, setCurrentStep] = useState<number>(1);
   const [companyData, setCompanyData] = useState<CompanyData>({
     companyName: '',
     companyLogo: ''
@@ -145,42 +132,94 @@ export default function CollabFiles() {
         console.error("Error fetching proposal/company/files:", error);
       }
     };
-    
+
 
 
     fetchProposalData();
   }, [proposalId]);
-
-
-
-
-
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileName, setFileName] = useState("");
   const [fileDescription, setFileDescription] = useState("");
   const [fileUpload, setFileUpload] = useState<File | null>(null);
 
-  const handleFileSubmit = (e: React.FormEvent) => {
+  const handleFileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fileUpload) {
+
+    if (!uploadedFile) {
       alert("Please select a file to upload.");
       return;
     }
 
-    // For now just log it (you can integrate with API)
-    console.log({
-      fileName,
-      fileDescription,
-      fileUpload,
-    });
+    try {
+      const token = sessionStorage.getItem("access_token");
+      if (!token) {
+        alert("You are not authenticated.");
+        return;
+      }
 
-    // close modal after submission
-    setIsModalOpen(false);
-    setFileName("");
-    setFileDescription("");
-    setFileUpload(null);
+      // Make sure proposalId exists
+      if (!proposalId) {
+        alert("Missing proposal ID.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", uploadedFile);
+      formData.append("name", fileName || uploadedFile.name);
+      formData.append("description", fileDescription || "");
+      formData.append("type", "Proposal");
+      formData.append("proposal_id", proposalId);
+      formData.append("is_bpi", "false");
+
+      const response = await fetch(`${API}/api/document/upload_file`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || "File upload failed.");
+        return;
+      }
+
+      const uploadedDoc = await response.json();
+      console.log("Uploaded file:", uploadedDoc);
+
+      // Optionally, update timeline state so it shows immediately
+      setTimeline(prev => [
+        ...prev,
+        {
+          id: uploadedDoc.id?.toString() || Math.random().toString(36).substring(2),
+          date: uploadedDoc.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
+          time: uploadedDoc.created_at
+            ? new Date(uploadedDoc.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          title: uploadedDoc.name || uploadedFile.name,
+          description: uploadedDoc.description || "",
+          status: "completed",
+          sender: "user",
+          fileType: uploadedDoc.type || uploadedFile.name.split('.').pop()?.toUpperCase(),
+          fileSize: uploadedFile.size ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB` : undefined,
+          fileUrl: uploadedDoc.file || ""
+        }
+      ]);
+
+      // Clear form
+      setUploadedFile(null);
+      setFileName("");
+      setFileDescription("");
+      setIsModalOpen(false);
+
+    } catch (err) {
+      console.error("Error uploading file:", err);
+      alert("File upload failed. Check console for details.");
+    }
   };
+
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -209,7 +248,7 @@ export default function CollabFiles() {
   };
 
   const ProfilePicture = ({ sender }: { sender: 'user' | 'bpi' }) => {
-    const imageSize = 40; // 40px for w-10 h-10
+    const imageSize = 40;
 
     if (sender === 'user') {
       return (
@@ -495,6 +534,8 @@ export default function CollabFiles() {
                         Upload
                       </button>
                     </div>
+
+
                   </form>
                 </div>
               </div>

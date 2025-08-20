@@ -152,8 +152,7 @@ export default function ProposalForm() {
                 }
             }
 
-
-
+            
             alert("Proposal submitted successfully!");
             setTitle("");
             setDescription("");
