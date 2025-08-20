@@ -65,9 +65,12 @@ export default function Dashboard() {
         .slice(0, 3);
 
     // Handle proposal row click
+  
     const handleProposalClick = (proposalId: number) => {
-        router.push(`/proposaltracking/${proposalId}`);
+    console.log("Navigating to proposal:", proposalId);
+    router.push(`/collabproposaltracking?id=${proposalId}`);
     };
+
 
     return (
         <ProtectedRoute allowedRoles={["user"]}>
@@ -182,80 +185,81 @@ export default function Dashboard() {
                                     <h3 className="text-red-700 font-bold text-lg">Your Proposals</h3>
                                     <span className="text-sm text-gray-600">Click on any row to view details</span>
                                 </div>
-                                
-                                <div className="max-h-64 overflow-y-auto">
-                                    <table className="w-full text-sm rounded-lg overflow-hidden">
-                                        <thead className="sticky top-0 bg-white z-10">
-                                            <tr>
-                                                <th className="p-3 text-left text-red-700">Proposal ID</th>
-                                                <th className="p-3 text-left text-red-700">Proposal Title</th>
-                                                <th className="p-3 text-left text-red-700">Status</th>
-                                                <th className="p-3 text-center text-red-700">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {!loading && proposals.length === 0 && (
+                                <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl">
+                                    <div className="max-h-64 overflow-y-auto">
+                                        <table className="w-full text-sm rounded-lg overflow-hidden">
+                                            <thead className="sticky top-0 bg-white z-10">
                                                 <tr>
-                                                    <td colSpan={4} className="p-6 text-center text-gray-500">
-                                                        <div className="flex flex-col items-center gap-2">
-                                                            <p>No proposals found</p>
-                                                            <button
-                                                                onClick={() => router.push("/proposalform")}
-                                                                className="text-red-700 hover:underline text-sm"
-                                                            >
-                                                                Create your first proposal
-                                                            </button>
-                                                        </div>
-                                                    </td>
+                                                    <th className="p-3 text-left text-red-700">Proposal ID</th>
+                                                    <th className="p-3 text-left text-red-700">Proposal Title</th>
+                                                    <th className="p-3 text-left text-red-700">Status</th>
+                                                    <th className="p-3 text-center text-red-700">Action</th>
                                                 </tr>
-                                            )}
-                                            {!loading &&
-                                                proposals.map((p, i) => (
-                                                    <tr 
-                                                        key={i} 
-                                                        className="border-t hover:bg-gray-50 cursor-pointer transition-colors"
-                                                        onClick={() => handleProposalClick(p.id)}
-                                                    >
-                                                        <td className="p-3 font-medium text-red-700">#{p.id}</td>
-                                                        <td className="p-3">
-                                                            <div className="font-medium">{p.title}</div>
-                                                            {p.description && (
-                                                                <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
-                                                                    {p.description}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="p-3">
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                                mapStatus(p.status) === 'Approved' ? 'bg-green-100 text-green-800' :
-                                                                mapStatus(p.status) === 'Rejected' ? 'bg-red-100 text-red-800' :
-                                                                mapStatus(p.status) === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
-                                                                'bg-gray-100 text-gray-800'
-                                                            }`}>
-                                                                {mapStatus(p.status)}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-3 text-center">
-                                                            <div className="flex items-center justify-center">
-                                                                <svg 
-                                                                    className="w-4 h-4 text-gray-400" 
-                                                                    fill="none" 
-                                                                    stroke="currentColor" 
-                                                                    viewBox="0 0 24 24"
+                                            </thead>
+                                            <tbody>
+                                                {!loading && proposals.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={4} className="p-6 text-center text-gray-500">
+                                                            <div className="flex flex-col items-center gap-2">
+                                                                <p>No proposals found</p>
+                                                                <button
+                                                                    onClick={() => router.push("/proposalform")}
+                                                                    className="text-red-700 hover:underline text-sm"
                                                                 >
-                                                                    <path 
-                                                                        strokeLinecap="round" 
-                                                                        strokeLinejoin="round" 
-                                                                        strokeWidth={2} 
-                                                                        d="M9 5l7 7-7 7" 
-                                                                    />
-                                                                </svg>
+                                                                    Create your first proposal
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                ))}
-                                        </tbody>
-                                    </table>
+                                                )}
+                                                {!loading &&
+                                                    proposals.map((p, i) => (
+                                                        <tr 
+                                                            key={i} 
+                                                            className="border-t hover:bg-gray-50 cursor-pointer transition-colors"
+                                                            onClick={() => handleProposalClick(p.id)}
+                                                        >
+                                                            <td className="p-3 font-medium text-red-700">#{p.id}</td>
+                                                            <td className="p-3">
+                                                                <div className="font-medium">{p.title}</div>
+                                                                {p.description && (
+                                                                    <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                                                                        {p.description}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                            <td className="p-3">
+                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                    mapStatus(p.status) === 'Approved' ? 'bg-green-100 text-green-800' :
+                                                                    mapStatus(p.status) === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                                    mapStatus(p.status) === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-gray-100 text-gray-800'
+                                                                }`}>
+                                                                    {mapStatus(p.status)}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-3 text-center">
+                                                                <div className="flex items-center justify-center">
+                                                                    <svg 
+                                                                        className="w-4 h-4 text-gray-400" 
+                                                                        fill="none" 
+                                                                        stroke="currentColor" 
+                                                                        viewBox="0 0 24 24"
+                                                                    >
+                                                                        <path 
+                                                                            strokeLinecap="round" 
+                                                                            strokeLinejoin="round" 
+                                                                            strokeWidth={2} 
+                                                                            d="M9 5l7 7-7 7" 
+                                                                        />
+                                                                    </svg>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                                 {loading && <p className="text-center p-3">Loading proposals...</p>}
                             </div>
