@@ -1,16 +1,35 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const [role, setRole] = useState<string | null>(null);
 
-  const menuItems = [
+  // Example: retrieve role from localStorage (replace with your auth logic)
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role"); 
+    setRole(storedRole);
+  }, []);
+
+  // Menus for collab users
+  const collabMenu = [
     { href: "/dashboard", icon: "/images/Sidebar_home.png", label: "Home" },
     { href: "/collabapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/collabinprocess", icon: "/images/folder-send.png", label: "In Process" },
     { href: "/collabrejected", icon: "/images/Folder_del.png", label: "Rejected" },
   ];
+
+  // Menus for employees (BPI side)
+  const employeeMenu = [
+    { href: "/dashboard", icon: "/images/Sidebar_home.png", label: "Home" },
+    { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
+    { href: "/collabinprocess", icon: "/images/folder-send.png", label: "In Process" },
+    { href: "/collabinprocess", icon: "/images/Folder_del.png", label: "Rejected" },
+  ];
+
+  // Pick which menu to show
+  const menuItems = role === "employee" ? employeeMenu : collabMenu;
 
   return (
     <aside
@@ -31,8 +50,8 @@ export default function DashboardSidebar() {
             key={index}
             href={item.href}
             className={`flex items-center gap-3 rounded-lg transition-all duration-200
-    ${pathname === item.href ? "bg-[#FEC2C5]" : "hover:bg-gray-100"}
-    px-2 py-2 w-12 group-hover:w-full`}
+              ${pathname === item.href ? "bg-[#FEC2C5]" : "hover:bg-gray-100"}
+              px-2 py-2 w-12 group-hover:w-full`}
           >
             <img src={item.icon} alt={item.label} className="w-8 h-8" />
             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">

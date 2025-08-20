@@ -14,7 +14,7 @@ export default function BpiApproved() {
         const fetchAllProposals = async () => {
             const token = sessionStorage.getItem("access_token");
             try {
-                const res = await fetch(`${API}/api/proposal/all`, {
+                const res = await fetch(`${API}/api/proposal/all?status=approved`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -53,7 +53,7 @@ export default function BpiApproved() {
 
     return (
         <ProtectedRoute allowedRoles={["employee"]}>
-            <CollabCompanyProtectedRoute>
+           
                 <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
                     {/* Sidebar */}
                     <Sidebar />
@@ -107,7 +107,7 @@ export default function BpiApproved() {
                         </div>
                     </div>
                 </div>
-            </CollabCompanyProtectedRoute>
+           
         </ProtectedRoute>
     );
 }
