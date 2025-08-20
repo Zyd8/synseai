@@ -8,7 +8,7 @@ export default function DashboardSidebar() {
 
   // Example: retrieve role from localStorage (replace with your auth logic)
   useEffect(() => {
-    const storedRole = localStorage.getItem("role"); 
+    const storedRole = sessionStorage.getItem("role"); 
     setRole(storedRole);
   }, []);
 
@@ -22,14 +22,14 @@ export default function DashboardSidebar() {
 
   // Menus for employees (BPI side)
   const employeeMenu = [
-    { href: "/dashboard", icon: "/images/Sidebar_home.png", label: "Home" },
+    { href: "/bpidashboard", icon: "/images/Sidebar_home.png", label: "Home" },
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
-    { href: "/collabinprocess", icon: "/images/folder-send.png", label: "In Process" },
-    { href: "/collabinprocess", icon: "/images/Folder_del.png", label: "Rejected" },
+    { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
+    { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
   ];
 
   // Pick which menu to show
-  const menuItems = role === "employee" ? employeeMenu : collabMenu;
+  const menuItems = role === "user" ? collabMenu : role === "employee" ? employeeMenu : [];
 
   return (
     <aside

@@ -44,7 +44,8 @@ export default function BpiDashboard() {
         const fetchAllProposals = async () => {
             const token = sessionStorage.getItem("access_token");
             try {
-                const res = await fetch(`${API}/api/proposal/all`, {
+                console.log("Fetching proposals from:", `${API}/api/proposal`);
+                const res = await fetch(`${API}/api/proposal`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -53,9 +54,23 @@ export default function BpiDashboard() {
 
                 if (!res.ok) throw new Error("Failed to fetch proposals");
                 const data = await res.json();
-
+                console.log("Full API Response:", data);
+                
                 // Extract proposals from the response structure
-                const proposalsList = data.proposals || [];
+                const proposalsList = data.proposals || data || [];
+                console.log("Extracted proposals list:", proposalsList);
+                
+                // Log each proposal to check company_name field
+                proposalsList.forEach((proposal: any, index: number) => {
+                    console.log(`Proposal ${index + 1}:`, {
+                        id: proposal.id,
+                        title: proposal.title,
+                        company_name: proposal.company_name,
+                        company_industry: proposal.company_industry,
+                        status: proposal.status
+                    });
+                });
+                
                 setProposals(Array.isArray(proposalsList) ? proposalsList : []);
             } catch (err) {
                 console.error("Error fetching proposals:", err);
@@ -105,36 +120,35 @@ export default function BpiDashboard() {
     ];
 
     // Handle proposal row click → navigate to BPI proposal tracking
-const handleProposalClick = (proposalId: number) => {
-    console.log('=== NAVIGATION DEBUG ===');
-    console.log('Proposal ID:', proposalId);
+    const handleProposalClick = (proposalId: number) => {
+        console.log('=== NAVIGATION DEBUG ===');
+        console.log('Proposal ID:', proposalId);
 
-    const token = sessionStorage.getItem("access_token");
-    const userRole = sessionStorage.getItem("role");
+        const token = sessionStorage.getItem("access_token");
+        const userRole = sessionStorage.getItem("role");
 
-    if (!token) {
-        alert('Session expired. Please log in again.');
-        router.push('/login');
-        return;
-    }
+        if (!token) {
+            alert('Session expired. Please log in again.');
+            router.push('/login');
+            return;
+        }
 
-    if (!userRole) {
-        alert('Role information missing. Please log in again.');
-        router.push('/login');
-        return;
-    }
+        if (!userRole) {
+            alert('Role information missing. Please log in again.');
+            router.push('/login');
+            return;
+        }
 
-    if (userRole !== 'employee') {
-        alert('Access denied. Employee role required.');
-        return;
-    }
+        if (userRole !== 'employee') {
+            alert('Access denied. Employee role required.');
+            return;
+        }
 
-    // ✅ Correct path for BPI proposal tracking
-    const targetUrl = `/bpiproposaltracking?id=${proposalId}`;
-    console.log('Navigating to:', targetUrl);
-    router.push(targetUrl);
-};
-
+        // ✅ Correct path for BPI proposal tracking
+        const targetUrl = `/bpiproposaltracking?id=${proposalId}`;
+        console.log('Navigating to:', targetUrl);
+        router.push(targetUrl);
+    };
 
     // Activities = latest 3 proposals sorted by created_at
     const activities = proposals
@@ -288,7 +302,9 @@ const handleProposalClick = (proposalId: number) => {
 
                                         <div className="ml-4 pb-6 last:pb-0 mb-4">
                                             <div className="font-semibold text-gray-900">{a.title}</div>
-                                            <div className="text-sm text-blue-600 mb-1">{a.company_name}</div>
+                                            <div className="text-sm text-blue-600 mb-1">
+                                                {a.company_name || 'Unknown Company'}
+                                            </div>
                                             <div className="font-bold text-gray-900">{mapStatus(a.status)}</div>
                                             <div className="text-gray-500 text-sm">
                                                 {new Date(a.created_at).toLocaleDateString("en-US", {
@@ -343,11 +359,20 @@ const handleProposalClick = (proposalId: number) => {
                                                     {p.id}
                                                 </td>
                                                 <td className="p-3">
-                                                    <div className="font-medium">{p.company_name}</div>
-                                                    <div className="text-xs text-gray-500">{p.company_industry}</div>
+                                                    <div className="font-medium">
+                                                        {p.company_name || 'Unknown Company'}
+                                                    </div>
                                                 </td>
                                                 <td className="p-3">
-                                                    {p.title}
+                                                    <div className="font-medium">{p.title || 'No title'}</div>
+                                                    {p.description && (
+                                                        <div className="text-xs text-gray-500 truncate max-w-xs">
+                                                            {p.description.length > 50 
+                                                                ? `${p.description.substring(0, 50)}...` 
+                                                                : p.description
+                                                            }
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="p-3">
                                                     <span
