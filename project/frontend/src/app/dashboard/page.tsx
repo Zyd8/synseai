@@ -53,16 +53,21 @@ export default function Dashboard() {
 
     // Compute summary counts
     const summary = [
-        { label: "Submitted", count: proposals.filter(p => p.status === "Submitted").length, img: "/images/db_submitted.png" },
-        { label: "In Progress", count: proposals.filter(p => p.status === "Ongoing").length, img: "/images/db_inprogress.png" },
-        { label: "Approved", count: proposals.filter(p => p.status === "Approved").length, img: "/images/db_approved.png" },
-        { label: "Rejected", count: proposals.filter(p => p.status === "Rejected").length, img: "/images/db_rejected.png" },
+        { label: "Submitted", count: proposals.filter(p => mapStatus(p.status) === "Submitted").length, img: "/images/db_submitted.png" },
+        { label: "In Progress", count: proposals.filter(p => mapStatus(p.status) === "In Progress").length, img: "/images/db_inprogress.png" },
+        { label: "Approved", count: proposals.filter(p => mapStatus(p.status) === "Approved").length, img: "/images/db_approved.png" },
+        { label: "Rejected", count: proposals.filter(p => mapStatus(p.status) === "Rejected").length, img: "/images/db_rejected.png" },
     ];
 
     // Activities = latest 3 proposals sorted by created_at
     const activities = proposals
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 3);
+
+    // Handle proposal row click
+    const handleProposalClick = (proposalId: number) => {
+        router.push(`/proposaltracking/${proposalId}`);
+    };
 
     return (
         <ProtectedRoute>
@@ -125,43 +130,46 @@ export default function Dashboard() {
                                 </h3>
 
                                 <div className="relative" style={{ "--dot-size": "0.75rem" } as React.CSSProperties}>
-
-                                    {activities.map((a, i, arr) => (
-                                        <div key={i} className="relative flex items-start">
-                                            {/* Dot */}
-                                            <div
-                                                className="relative z-10 rounded-full flex-shrink-0 bg-gray-600"
-                                                style={{
-                                                    width: "var(--dot-size)",
-                                                    height: "var(--dot-size)",
-                                                    marginTop: "0.5rem",
-                                                }}
-                                            ></div>
-
-                                            {i < arr.length - 1 && (
+                                    {activities.length === 0 ? (
+                                        <p className="text-gray-500 text-center">No recent activities</p>
+                                    ) : (
+                                        activities.map((a, i, arr) => (
+                                            <div key={i} className="relative flex items-start">
+                                                {/* Dot */}
                                                 <div
-                                                    className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-400"
-                                                    style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
+                                                    className="relative z-10 rounded-full flex-shrink-0 bg-gray-600"
+                                                    style={{
+                                                        width: "var(--dot-size)",
+                                                        height: "var(--dot-size)",
+                                                        marginTop: "0.5rem",
+                                                    }}
                                                 ></div>
-                                            )}
 
-                                            <div className="ml-4 pb-6 last:pb-0 mb-4">
-                                                <div className="font-semibold text-gray-900">{a.title}</div>
-                                                <div className="font-bold text-gray-900">{mapStatus(a.status)}</div>
-                                                <div className="text-gray-500 text-sm">
-                                                    {new Date(a.created_at).toLocaleDateString("en-US", {
-                                                        year: "numeric",
-                                                        month: "long",
-                                                        day: "numeric",
-                                                    })}{" | "}{new Date(a.created_at).toLocaleTimeString("en-US", {
-                                                        hour: "numeric",
-                                                        minute: "2-digit",
-                                                        hour12: true,
-                                                    })}
+                                                {i < arr.length - 1 && (
+                                                    <div
+                                                        className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-400"
+                                                        style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
+                                                    ></div>
+                                                )}
+
+                                                <div className="ml-4 pb-6 last:pb-0 mb-4">
+                                                    <div className="font-semibold text-gray-900">{a.title}</div>
+                                                    <div className="font-bold text-gray-900">{mapStatus(a.status)}</div>
+                                                    <div className="text-gray-500 text-sm">
+                                                        {new Date(a.created_at).toLocaleDateString("en-US", {
+                                                            year: "numeric",
+                                                            month: "long",
+                                                            day: "numeric",
+                                                        })}{" | "}{new Date(a.created_at).toLocaleTimeString("en-US", {
+                                                            hour: "numeric",
+                                                            minute: "2-digit",
+                                                            hour12: true,
+                                                        })}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -170,6 +178,11 @@ export default function Dashboard() {
                         <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5 items-stretch">
                             {/* Table */}
                             <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-red-700 font-bold text-lg">Your Proposals</h3>
+                                    <span className="text-sm text-gray-600">Click on any row to view details</span>
+                                </div>
+                                
                                 <div className="max-h-64 overflow-y-auto">
                                     <table className="w-full text-sm rounded-lg overflow-hidden">
                                         <thead className="sticky top-0 bg-white z-10">
@@ -181,13 +194,64 @@ export default function Dashboard() {
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            {!loading && proposals.length === 0 && (
+                                                <tr>
+                                                    <td colSpan={4} className="p-6 text-center text-gray-500">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <p>No proposals found</p>
+                                                            <button
+                                                                onClick={() => router.push("/proposalform")}
+                                                                className="text-red-700 hover:underline text-sm"
+                                                            >
+                                                                Create your first proposal
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
                                             {!loading &&
                                                 proposals.map((p, i) => (
-                                                    <tr key={i} className="border-t">
-                                                        <td className="p-3">{p.id}</td>
-                                                        <td className="p-3">{p.title}</td>
-                                                        <td className="p-3">{mapStatus(p.status)}</td>
-                                                        <td className="p-3 text-center">⋮</td>
+                                                    <tr 
+                                                        key={i} 
+                                                        className="border-t hover:bg-gray-50 cursor-pointer transition-colors"
+                                                        onClick={() => handleProposalClick(p.id)}
+                                                    >
+                                                        <td className="p-3 font-medium text-red-700">#{p.id}</td>
+                                                        <td className="p-3">
+                                                            <div className="font-medium">{p.title}</div>
+                                                            {p.description && (
+                                                                <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                                                                    {p.description}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                mapStatus(p.status) === 'Approved' ? 'bg-green-100 text-green-800' :
+                                                                mapStatus(p.status) === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                                mapStatus(p.status) === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                                                                'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                {mapStatus(p.status)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3 text-center">
+                                                            <div className="flex items-center justify-center">
+                                                                <svg 
+                                                                    className="w-4 h-4 text-gray-400" 
+                                                                    fill="none" 
+                                                                    stroke="currentColor" 
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path 
+                                                                        strokeLinecap="round" 
+                                                                        strokeLinejoin="round" 
+                                                                        strokeWidth={2} 
+                                                                        d="M9 5l7 7-7 7" 
+                                                                    />
+                                                                </svg>
+                                                            </div>
+                                                        </td>
                                                     </tr>
                                                 ))}
                                         </tbody>
@@ -195,7 +259,6 @@ export default function Dashboard() {
                                 </div>
                                 {loading && <p className="text-center p-3">Loading proposals...</p>}
                             </div>
-
 
                             <div className="sm:col-span-1 h-full border border-gray-500 rounded-lg drop-shadow-lg">
                                 <ProposalReportChart proposals={proposals} />

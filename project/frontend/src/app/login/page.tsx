@@ -11,38 +11,56 @@ export default function LoginPage() {
 
   const router = useRouter();
 
-  const handleSubmit = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+ const handleSubmit = async (e: MouseEvent<HTMLButtonElement>) => {
+  e.preventDefault();
 
-    try {
-      const response = await fetch(`${API}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,  
-          password: password,
-        }),
-      });
+  try {
+    const response = await fetch(`${API}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
+    console.log("Login response data:", data);
 
-      // console.log("Login response data:", data);
+    if (response.ok && data.access_token) {
+      // store token
+      sessionStorage.setItem("access_token", data.access_token);
 
-      if (response.ok && data.access_token) {
+      // extract role from user object
+      const role = data.user?.role; 
+      console.log("User role:", role);
 
-        sessionStorage.setItem("access_token", data.access_token);
+      if (role) {
+        sessionStorage.setItem("role", role);
 
-        router.push("/collabhome");
+        if (role == "user") {
+          router.push("/collabhome");
+        } else if (role == "employee") {
+          router.push("/bpidashboard");
+        } else {
+          console.warn("Unknown role:", role);
+          router.push("/collabhome"); // fallback
+        }
       } else {
-        console.error("Login failed:", data.message || "Unknown error");
+        console.error("No role found in response");
+        router.push("/collabhome"); // fallback
       }
-
-    } catch (error) {
-      console.error("Error logging in:", error);
+    } else {
+      console.error("Login failed:", data.message || "Unknown error");
     }
-  };
+  } catch (error) {
+    console.error("Error logging in:", error);
+  }
+};
+
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 py-6 sm:py-8">
