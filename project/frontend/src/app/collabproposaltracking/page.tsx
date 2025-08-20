@@ -28,15 +28,17 @@ interface ProposalData {
   timeline: TimelineItem[];
 }
 
-// API service functions
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000';
+// API service functions - Fixed to use correct environment variable
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const apiService = {
   async getProposal(proposalId: number): Promise<ProposalData> {
-    const token = sessionStorage.getItem("access_token"); // ✅ switched to sessionStorage for consistency
+    const token = sessionStorage.getItem("access_token");
     if (!token) throw new Error("No access token found. Please log in again.");
 
     try {
+      console.log(`Fetching proposal from: ${API_BASE}/api/proposal/${proposalId}`);
+      
       const response = await fetch(`${API_BASE}/api/proposal/${proposalId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -59,11 +61,11 @@ const apiService = {
   },
 
   async getAllProposals(): Promise<ProposalData[]> {
-    const token = sessionStorage.getItem("access_token"); // ✅ same fix
+    const token = sessionStorage.getItem("access_token");
     if (!token) throw new Error("No access token found. Please log in again.");
 
     try {
-      const response = await fetch(`${API_BASE}/api/proposal`, {
+      const response = await fetch(`${API_BASE}/api/proposal/all`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -78,7 +80,7 @@ const apiService = {
       }
 
       const data = await response.json();
-      return data.proposals || [];
+      return Array.isArray(data) ? data : data.proposals || [];
     } catch (err) {
       console.error("getAllProposals error:", err);
       throw err;
@@ -202,10 +204,16 @@ export default function CollabProposalTracking() {
     const fetchProposalData = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log('Proposal ID from URL:', proposalId);
+        console.log('API Base URL:', API_BASE);
         
         if (proposalId) {
           // Fetch specific proposal by ID
           const proposal = await apiService.getProposal(parseInt(proposalId));
+          console.log('Fetched proposal:', proposal);
+          
           const timeline = createTimelineFromProposal(proposal);
           
           setProposalData({
@@ -272,12 +280,20 @@ export default function CollabProposalTracking() {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Proposal</h3>
               <p className="text-red-600 mb-4">{error}</p>
-              <button 
-                onClick={() => router.push("/dashboard")}
-                className="bg-[#B11016] text-white px-6 py-2 rounded hover:bg-[#800b10] transition-colors"
-              >
-                Back to Dashboard
-              </button>
+              <div className="space-x-4">
+                <button 
+                  onClick={() => router.push("/dashboard")}
+                  className="bg-[#B11016] text-white px-6 py-2 rounded hover:bg-[#800b10] transition-colors"
+                >
+                  Back to Dashboard
+                </button>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
             </div>
           </div>
         </CollabCompanyProtectedRoute>
@@ -317,7 +333,7 @@ export default function CollabProposalTracking() {
 
   return (
     <ProtectedRoute allowedRoles={["user", "employee" ]}>
-      <CollabCompanyProtectedRoute>
+   
         <>
           <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
             {/* Header */}
@@ -397,8 +413,6 @@ export default function CollabProposalTracking() {
                 }`}>APPROVED</span>
               </div>
             </div>
-
-            
 
             {/* Rejection Notice */}
             {isRejected && (
@@ -576,7 +590,7 @@ export default function CollabProposalTracking() {
             </div>
           </div>
         </>
-      </CollabCompanyProtectedRoute>
+      
     </ProtectedRoute>
   );
 }

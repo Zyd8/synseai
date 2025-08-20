@@ -113,6 +113,27 @@ def get_proposal(proposal_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
         
+# If user is an employee, allow access to any proposal
+    if user.role == UserRole.EMPLOYEE:
+        proposal_data = db.session.query(
+            Proposal,
+            Company.name.label('company_name'),
+            Company.industry.label('company_industry')
+        ).join(
+            Company, Proposal.company_id == Company.id
+        ).filter(Proposal.id == proposal_id).first()
+        
+        if not proposal_data:
+            return jsonify({"error": "Proposal not found"}), 404
+        
+        proposal, company_name, company_industry = proposal_data
+        result = proposal.to_dict()
+        result['company_name'] = company_name
+        result['company_industry'] = company_industry
+        
+        return jsonify(result), 200
+
+
     if not user.company and user.role == UserRole.USER:
         return jsonify({"error": "User does not have a company"}), 400
     

@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function BpiDashboard() {
     const router = useRouter();
@@ -14,6 +15,8 @@ export default function BpiDashboard() {
     const [proposals, setProposals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<number | null>(null);
+    const [openRow, setOpenRow] = useState<number | null>(null);
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
     // Map backend status to display status
     const mapStatus = (status: string) => {
@@ -51,7 +54,9 @@ export default function BpiDashboard() {
                 if (!res.ok) throw new Error("Failed to fetch proposals");
                 const data = await res.json();
 
-                setProposals(Array.isArray(data) ? data : data.proposals || []);
+                // Extract proposals from the response structure
+                const proposalsList = data.proposals || [];
+                setProposals(Array.isArray(proposalsList) ? proposalsList : []);
             } catch (err) {
                 console.error("Error fetching proposals:", err);
                 setProposals([]);
@@ -61,7 +66,19 @@ export default function BpiDashboard() {
         };
 
         fetchAllProposals();
-    }, []);
+    }, [API]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setOpenRow(null);
+        };
+
+        if (openRow !== null) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [openRow]);
 
     // Compute summary counts based on mapped status
     const summary = [
@@ -87,17 +104,42 @@ export default function BpiDashboard() {
         },
     ];
 
-    const handleProposalClick = (proposalId: number) => {
-    console.log("Navigating to proposal:", proposalId);
-    router.push(`/collabproposaltracking?id=${proposalId}`);
-    };
+    // Handle proposal row click → navigate to BPI proposal tracking
+const handleProposalClick = (proposalId: number) => {
+    console.log('=== NAVIGATION DEBUG ===');
+    console.log('Proposal ID:', proposalId);
+
+    const token = sessionStorage.getItem("access_token");
+    const userRole = sessionStorage.getItem("role");
+
+    if (!token) {
+        alert('Session expired. Please log in again.');
+        router.push('/login');
+        return;
+    }
+
+    if (!userRole) {
+        alert('Role information missing. Please log in again.');
+        router.push('/login');
+        return;
+    }
+
+    if (userRole !== 'employee') {
+        alert('Access denied. Employee role required.');
+        return;
+    }
+
+    // ✅ Correct path for BPI proposal tracking
+    const targetUrl = `/bpiproposaltracking?id=${proposalId}`;
+    console.log('Navigating to:', targetUrl);
+    router.push(targetUrl);
+};
+
 
     // Activities = latest 3 proposals sorted by created_at
     const activities = proposals
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 3);
-
-    const [openRow, setOpenRow] = useState<number | null>(null);
 
     const handleStatusUpdate = async (proposalId: number, newStatus: string) => {
         const token = sessionStorage.getItem("access_token");
@@ -144,6 +186,29 @@ export default function BpiDashboard() {
         const mappedStatus = mapStatus(currentStatus);
         const allStatuses = ["Submitted", "In Progress", "Approved", "Rejected"];
         return allStatuses.filter(status => status !== mappedStatus);
+    };
+
+    const handleActionClick = (e: React.MouseEvent, rowIndex: number) => {
+        e.stopPropagation();
+        
+        if (openRow === rowIndex) {
+            setOpenRow(null);
+            return;
+        }
+
+        // Calculate dropdown position
+        const button = e.currentTarget as HTMLElement;
+        const rect = button.getBoundingClientRect();
+        const scrollY = window.scrollY;
+        const scrollX = window.scrollX;
+        
+        // Position dropdown to the left of the button (since it's the last column)
+        setDropdownPosition({
+            top: rect.bottom + scrollY + 5, // 5px gap below button
+            left: rect.right + scrollX - 160 // Align right edge of dropdown with right edge of button
+        });
+        
+        setOpenRow(rowIndex);
     };
 
     return (
@@ -245,110 +310,111 @@ export default function BpiDashboard() {
                 </div>
 
                 {/* Bottom grid */}
-<div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5 items-stretch">
-  <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl relative">
-    <div className="max-h-64 overflow-y-auto">
-      <table className="w-full text-sm rounded-lg overflow-hidden">
-        <thead className="sticky top-0 bg-white z-10">
-          <tr>
-            <th className="p-3 text-left text-red-700">ID</th>
-            <th className="p-3 text-left text-red-700">Company</th>
-            <th className="p-3 text-left text-red-700">Proposal Title</th>
-            <th className="p-3 text-left text-red-700">Status</th>
-            <th className="p-3 text-center text-red-700">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {!loading && proposals.length === 0 && (
-            <tr>
-              <td colSpan={5} className="p-3 text-center text-gray-500">
-                No proposals found
-              </td>
-            </tr>
-          )}
+                <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5 items-stretch">
+                    <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl relative">
+                        <div className="max-h-200 overflow-y-auto relative">
+                            <table className="w-full text-sm rounded-lg overflow-hidden">
+                                <thead className="sticky top-0 bg-white z-10">
+                                    <tr>
+                                        <th className="p-3 text-left text-red-700">ID</th>
+                                        <th className="p-3 text-left text-red-700">Company</th>
+                                        <th className="p-3 text-left text-red-700">Proposal Title</th>
+                                        <th className="p-3 text-left text-red-700">Status</th>
+                                        <th className="p-3 text-center text-red-700">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {!loading && proposals.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="p-3 text-center text-gray-500">
+                                                No proposals found
+                                            </td>
+                                        </tr>
+                                    )}
 
-          {!loading &&
-            proposals.map((p, i) => (
-              <tr
-                key={i}
-                className="border-t hover:bg-gray-50 transition-colors"
-                onClick={(e) => {
-                  // Prevent row click if action button was clicked
-                  if (!(e.target as HTMLElement).closest(".action-menu")) {
-                    handleProposalClick(p.id);
-                  }
-                }}
-              >
-                <td className="p-3">{p.id}</td>
-                <td className="p-3">
-                  <div className="font-medium">{p.company_name}</div>
-                  <div className="text-xs text-gray-500">{p.company_industry}</div>
-                </td>
-                <td className="p-3">{p.title}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      mapStatus(p.status) === "Approved"
-                        ? "bg-green-100 text-green-800"
-                        : mapStatus(p.status) === "Rejected"
-                        ? "bg-red-100 text-red-800"
-                        : mapStatus(p.status) === "In Progress"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {mapStatus(p.status)}
-                  </span>
-                </td>
+                                    {!loading &&
+                                        proposals.map((p, i) => (
+                                            <tr
+                                                key={p.id}
+                                                className="border-t hover:bg-gray-50 transition-colors cursor-pointer"
+                                                onClick={() => handleProposalClick(p.id)}
+                                            >
+                                                <td className="p-3">
+                                                    {p.id}
+                                                </td>
+                                                <td className="p-3">
+                                                    <div className="font-medium">{p.company_name}</div>
+                                                    <div className="text-xs text-gray-500">{p.company_industry}</div>
+                                                </td>
+                                                <td className="p-3">
+                                                    {p.title}
+                                                </td>
+                                                <td className="p-3">
+                                                    <span
+                                                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                            mapStatus(p.status) === "Approved"
+                                                                ? "bg-green-100 text-green-800"
+                                                                : mapStatus(p.status) === "Rejected"
+                                                                ? "bg-red-100 text-red-800"
+                                                                : mapStatus(p.status) === "In Progress"
+                                                                ? "bg-yellow-100 text-yellow-800"
+                                                                : "bg-gray-100 text-gray-800"
+                                                        }`}
+                                                    >
+                                                        {mapStatus(p.status)}
+                                                    </span>
+                                                </td>
 
-                {/* Action Button */}
-                <td className="p-3 text-center relative action-menu">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevent row click
-                      setOpenRow(openRow === i ? null : i);
-                    }}
-                    className="text-xl font-bold text-gray-600 hover:text-red-600 disabled:opacity-50"
-                    disabled={updating === p.id}
-                  >
-                    {updating === p.id ? "..." : "⋮"}
-                  </button>
+                                                {/* Action Button */}
+                                                <td className="p-3 text-center">
+                                                    <button
+                                                        onClick={(e) => handleActionClick(e, i)}
+                                                        className="text-xl font-bold text-gray-600 hover:text-red-600 disabled:opacity-50"
+                                                        disabled={updating === p.id}
+                                                    >
+                                                        {updating === p.id ? "..." : "⋮"}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
 
-                  {/* Dropdown Menu */}
-                  {openRow === i && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg z-20 overflow-hidden">
-                      {getStatusOptions(p.status).map((status) => (
-                        <button
-                          key={status}
-                          onClick={(e) => {
-                            e.stopPropagation(); // stop row navigation
-                            handleStatusUpdate(p.id, status);
-                            setOpenRow(null); // close after action
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-red-100 text-red-700 border-b border-gray-100 last:border-b-0"
-                          disabled={updating === p.id}
-                        >
-                          Set to {status}
-                        </button>
-                      ))}
+                        {loading && <p className="text-center p-3">Loading proposals...</p>}
                     </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
-    </div>
-
-    {loading && <p className="text-center p-3">Loading proposals...</p>}
-  </div>
-
-
 
                     <div className="sm:col-span-1 h-full border border-gray-500 rounded-lg drop-shadow-lg">
                         <ProposalReportChart proposals={proposals} />
                     </div>
                 </div>
+
+                {/* Dropdown Portal - renders outside of table to avoid clipping */}
+                {openRow !== null && createPortal(
+                    <div 
+                        className="fixed w-40 bg-white border rounded-lg shadow-lg z-50"
+                        style={{ 
+                            top: `${dropdownPosition.top}px`, 
+                            left: `${dropdownPosition.left}px` 
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {getStatusOptions(proposals[openRow]?.status || '').map((status) => (
+                            <button
+                                key={status}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusUpdate(proposals[openRow].id, status);
+                                }}
+                                className="w-full px-4 py-2 text-left text-sm hover:bg-red-100 text-red-700 border-b border-gray-100 last:border-b-0 first:rounded-t-lg last:rounded-b-lg"
+                                disabled={updating === proposals[openRow]?.id}
+                            >
+                                Set to {status}
+                            </button>
+                        ))}
+                    </div>,
+                    document.body
+                )}
             </main>
         </div>
     );
