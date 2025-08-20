@@ -111,19 +111,36 @@ export default function CollabFiles() {
         const docs = await docRes.json();
 
         // Map documents to timeline items
-        const fileTimeline: TimelineItem[] = docs.map((doc: any) => ({
-          id: doc.id.toString(),
-          date: new Date(doc.created_at).toISOString().split('T')[0],
-          time: new Date(doc.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          title: doc.name,
-          description: doc.description,
-          status: 'completed',
-          sender: doc.is_bpi ? 'bpi' : 'user',
-          fileType: doc.type,
-          fileSize: '', // optional, if backend provides
-          downloadUrl: doc.download_url,
-          viewUrl: doc.view_url,
-        }));
+        const fileTimeline: TimelineItem[] = docs.map((doc: any) => {
+          let sender: 'user' | 'bpi';
+
+          if (role === "employee") {
+            // On employee view, files from user are 'user' (left), files from employee/BPI are 'bpi' (right)
+            sender = doc.is_bpi ? 'bpi' : 'user';
+          } else {
+            // On user view, files from user are 'user' (right), files from BPI are 'bpi' (left)
+            sender = doc.is_bpi ? 'bpi' : 'user';
+          }
+
+          return {
+            id: doc.id.toString(),
+            date: new Date(doc.created_at).toISOString().split('T')[0],
+            time: new Date(doc.created_at).toLocaleTimeString('en-PH', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true,       // optional: true for 12-hour, false for 24-hour
+              timeZone: 'Asia/Manila'
+            }),
+            title: doc.name,
+            description: doc.description,
+            status: 'completed',
+            sender: sender,
+            fileType: doc.type,
+            fileSize: '', // optional
+            downloadUrl: doc.download_url,
+            viewUrl: doc.view_url,
+          };
+        });
 
         setTimeline(fileTimeline);
 
@@ -241,7 +258,7 @@ export default function CollabFiles() {
   const router = useRouter();
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString('en-PH', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -327,89 +344,91 @@ export default function CollabFiles() {
             </div>
 
             <div className="space-y-4 pb-6 px-2 sm:px-0">
-              {timeline.map((item, index) => (
-                <div key={item.id} className={`flex items-end ${item.sender === 'user' ? 'justify-end' : 'justify-start'
-                  }`}>
-                  {/* Profile Picture - Show on left for BPI, directly beside tail */}
-                  {item.sender === 'bpi' && (
-                    <div className="mr-4 shadow-lg rounded-full overflow-hidden ">
-                      <ProfilePicture sender={item.sender} />
-                    </div>
-                  )}
+              {timeline.map((item) => {
+                const role = sessionStorage.getItem("role"); // 'user' or 'employee'
 
-                  {/* File Card - Fixed width for consistency */}
-                  <div className={`w-100 max-w-[calc(100vw-80px)] sm:max-w-md shadow-lg ${item.sender === 'user'
-                    ? 'bg-[#B11016] text-white'
-                    : 'bg-[#fdfdfd]'
-                    } rounded-lg shadow-lg p-4 relative`}>
+                // Determine if the bubble should appear on the right
+                const isRightSide =
+                  (item.sender === "user" && role === "user") ||
+                  (item.sender === "bpi" && role === "employee");
 
-                    {/* Sender Label */}
-                    <div
-                      className={`text-xs font-semibold mb-2 pb-2 border-b-1 ${item.sender === "user"
-                        ? "text-white opacity-90 border-white"
-                        : "text-[#B11016] border-[#B11016]"
-                        }`}
-                    >
-                      {getSenderName(item.sender)}
-                    </div>
-
-                    {/* File Icon and Info */}
-                    <div className="flex items-start space-x-3">
-
-
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-md mb-1 ${item.sender === 'user' ? 'text-white' : 'text-gray-800'
-                          }`}>
-                          {item.title}
-                        </h3>
-                        <p className={`text-sm mb-2 line-clamp-2 ${item.sender === 'user' ? 'text-white' : 'text-gray-600'
-                          }`}>
-                          {item.description}
-                        </p>
-
-                        {/* Timestamp */}
-                        <div className={`text-xs mt-1 mb-2 ${item.sender === 'user' ? 'text-white opacity-75' : 'text-gray-400'
-                          }`}>
-                          {formatDate(item.date)} at {item.time}
-                        </div>
-
-                        {/* File Details */}
-                        <div className={`flex items-center justify-between text-xs ${item.sender === 'user' ? 'text-white opacity-75' : 'text-gray-500'
-                          }`}>
-                          <span className="truncate">{item.fileType} • {item.fileSize}</span>
-                          <button className={`p-1 rounded hover:bg-opacity-20 hover:bg-gray-500 transition-colors flex-shrink-0 ml-2 ${item.sender === 'user' ? 'text-white' : 'text-[#B11016]'
-                            }`}>
-                            <FaDownload size={12} />
-                          </button>
-                        </div>
-
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-end ${isRightSide ? "justify-end" : "justify-start"}`}
+                  >
+                    {/* Left profile picture */}
+                    {!isRightSide && (
+                      <div className="mr-4 shadow-lg rounded-full overflow-hidden">
+                        <ProfilePicture sender={item.sender} />
                       </div>
+                    )}
+
+                    {/* File card */}
+                    <div
+                      className={`w-100 max-w-[calc(100vw-80px)] sm:max-w-md shadow-lg ${isRightSide ? "bg-[#B11016] text-white" : "bg-[#fdfdfd]"
+                        } rounded-lg p-4 relative`}
+                    >
+                      {/* Sender label */}
+                      <div
+                        className={`text-xs font-semibold mb-2 pb-2 border-b-1 ${isRightSide ? "text-white opacity-90 border-white" : "text-[#B11016] border-[#B11016]"
+                          }`}
+                      >
+                        {getSenderName(item.sender)}
+                      </div>
+
+                      {/* File info */}
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`font-semibold text-md mb-1 ${isRightSide ? "text-white" : "text-gray-800"}`}>
+                            {item.title}
+                          </h3>
+                          <p className={`text-sm mb-2 line-clamp-2 ${isRightSide ? "text-white" : "text-gray-600"}`}>
+                            {item.description}
+                          </p>
+                          <div className={`text-xs mt-1 mb-2 ${isRightSide ? "text-white opacity-75" : "text-gray-400"}`}>
+                            {formatDate(item.date)} at {item.time}
+                          </div>
+
+                          <div className={`flex items-center justify-between text-xs ${isRightSide ? "text-white opacity-75" : "text-gray-500"}`}>
+                            <span className="truncate">{item.fileType} • {item.fileSize}</span>
+                            <button className={`p-1 rounded hover:bg-opacity-20 hover:bg-gray-500 transition-colors flex-shrink-0 ml-2 ${isRightSide ? "text-white" : "text-[#B11016]"}`}>
+                              <FaDownload size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bubble tail */}
+                      <div
+                        className={`absolute bottom-4 ${isRightSide
+                          ? "-right-2 border-l-8 border-l-[#B11016] border-t-4 border-b-4 border-t-transparent border-b-transparent shadow-md"
+                          : "-left-2 border-r-8 border-r-white border-t-4 border-b-4 border-t-transparent border-b-transparent shadow-md"
+                          } w-0 h-0`}
+                      ></div>
                     </div>
 
-                    {/* Chat Bubble Tail */}
-                    <div className={`absolute bottom-4 ${item.sender === 'user'
-                      ? '-right-2 border-l-8 border-l-[#B11016] border-t-4 border-b-4 border-t-transparent border-b-transparent shadow-md'
-                      : '-left-2 border-r-8 border-r-white border-t-4 border-b-4 border-t-transparent border-b-transparent shadow-md'
-                      } w-0 h-0`}></div>
+                    {/* Right profile picture */}
+                    {isRightSide && (
+                      <div className="ml-4 shadow-lg rounded-full overflow-hidden">
+                        <ProfilePicture sender={item.sender} />
+                      </div>
+                    )}
                   </div>
-
-                  {/* Profile Picture - Show on right for user, directly beside tail */}
-                  {item.sender === 'user' && (
-                    <div className="ml-4 shadow-lg rounded-full overflow-hidden ">
-                      <ProfilePicture sender={item.sender} />
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
 
               {timeline.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
                   <FaFileAlt className="mx-auto text-4xl mb-4 opacity-30" />
                   <p className="text-sm sm:text-base">No files exchanged yet</p>
-                  <p className="text-xs sm:text-sm mt-1 px-4">Files will appear here as they are shared between you and BPI</p>
+                  <p className="text-xs sm:text-sm mt-1 px-4">
+                    Files will appear here as they are shared between you and BPI
+                  </p>
                 </div>
               )}
             </div>
+
 
             {/* Date Separators for better organization */}
             {timeline.length > 0 && (
