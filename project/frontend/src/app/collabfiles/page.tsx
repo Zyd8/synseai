@@ -6,6 +6,7 @@ import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRout
 import { FaArrowLeft, FaFileAlt, FaDownload } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useSearchParams } from "next/navigation";
 
 interface TimelineItem {
   id: string;
@@ -121,6 +122,9 @@ export default function CollabFiles() {
     setFileDescription("");
     setFileUpload(null);
   };
+
+  const searchParams = useSearchParams();
+    const proposalId = searchParams?.get("id");
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
       const fileInputRef = useRef<HTMLInputElement>(null);
@@ -269,9 +273,9 @@ export default function CollabFiles() {
             <div className="relative flex items-center w-full mt-2 mb-4">
                 {/* Back Button */}
                 <button
-                    onClick={() => router.push("/collabproposaltracking")}
+                    onClick={() => router.push(`/collabproposaltracking?id=${proposalId}`)}
                     className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
-                >
+                    >
                     <FaArrowLeft className="mr-2" />
                     <span className="hidden sm:inline">Back</span>
                 </button>

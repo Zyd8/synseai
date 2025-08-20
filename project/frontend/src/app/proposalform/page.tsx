@@ -149,6 +149,9 @@ export default function ProposalForm() {
             setUploadedFile(null);
             setConfirm(false);
 
+            // ✅ Navigate to collabproposaltracking
+            router.push(`/collabproposaltracking?id=${proposal.id}`);
+
         } catch (err) {
             console.error("Error submitting proposal:", err);
             alert("Something went wrong. Please try again.");
