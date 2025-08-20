@@ -540,7 +540,7 @@ export default function BpiProposalTracking() {
         {/* Action Buttons */}
         <div className="w-full mt-10 space-y-4">
           {/* View Files Button - Optional for employees */}
-          <Link href={`/bpifiles${proposalId ? `?proposalId=${proposalId}` : ''}`}>
+          <Link href={`/collabfiles${proposalId ? `?proposalId=${proposalId}` : ''}`}>
             <button className="w-full bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors">
               VIEW PROPOSAL FILES
             </button>
