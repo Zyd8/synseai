@@ -48,9 +48,16 @@ Content-Type: application/json
 - `address`: Company address
 - `logo`: Base64 encoded image string
 - `bio`: Company description
-- `industry`: Company's industry sector (string)
-- `size`: Company size range (string, e.g., '1-10', '11-50', '51-200', '201-500', '501-1000', '1000+')
-- `color`: Company color in hex format (string, e.g., '#3b82f6')
+- `industry`: Company's industry sector
+- `size`: Number of employees (e.g., "1-10", "11-50", "51-200", "201-1000", "1000+")
+- `color`: Primary brand color in hex format
+- `collab_type`: Type of collaboration the company is interested in
+
+**Notes**:
+- Upon successful company creation, a background thread is automatically started to analyze and create synergy data for the company.
+- The synergy analysis includes web scraping and AI-based analysis of the company's online presence.
+- The company creation endpoint will return immediately while the synergy analysis runs in the background.
+- Check the company's synergy status using the `GET /api/company/synergy` endpoint.
 
 **Response (Success - 201)**:
 ```json

@@ -1,6 +1,15 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Company, User
+from routes.synergy import _create_company_synergy
+import threading
+
+def run_synergy_creation(app, company_id, company_name):
+    """Helper function to run synergy creation in a background thread"""
+    with app.app_context():
+        success, result = _create_company_synergy(company_id, company_name)
+        if not success:
+            current_app.logger.error(f"Failed to create synergy: {result}")
 
 company_bp = Blueprint('company', __name__)
 
@@ -45,6 +54,14 @@ def create_company():
         
         db.session.add(company)
         db.session.commit()
+
+        # Start the synergy creation in a background thread
+        thread = threading.Thread(
+            target=run_synergy_creation,
+            args=(current_app._get_current_object(), company.id, company.name)
+        )
+        thread.daemon = True
+        thread.start()
         
         return jsonify({
             "message": "Company created successfully",

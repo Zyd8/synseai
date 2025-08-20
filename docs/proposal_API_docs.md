@@ -12,7 +12,45 @@ All endpoints are prefixed with `/api/proposal`
 
 ## Endpoints
 
-### 1. Create Proposal
+### 1. Get All Proposals (Employee Only)
+Get all proposals across all companies. This endpoint is only accessible to users with the EMPLOYEE role.
+
+**URL**: `GET /api/proposal/all`
+
+**Request Headers**:
+```
+Authorization: Bearer <token>
+```
+
+**Response (Success - 200)**:
+```json
+{
+  "proposals": [
+    {
+      "id": 1,
+      "title": "Project Alpha",
+      "description": "Collaboration proposal for Project Alpha",
+      "status": "Submitted",
+      "collab_type": "Joint Venture",
+      "company_id": 1,
+      "company_name": "Acme Inc",
+      "company_industry": "Technology",
+      "created_at": "2025-08-20T12:00:00Z",
+      "updated_at": "2025-08-20T12:00:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+**Response (Error - 403)**:
+```json
+{
+  "error": "Employee access required"
+}
+```
+
+### 2. Create Proposal
 Create a new proposal for the authenticated user's company.
 
 **URL**: `POST /api/proposal`
