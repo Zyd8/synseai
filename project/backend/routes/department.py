@@ -118,3 +118,41 @@ def delete_department(department_id):
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@department_bp.route('/<int:department_id>/users/<int:user_id>', methods=['PUT'])
+@jwt_required()
+def update_user_department(department_id, user_id):
+    """
+    Update a user's department assignment
+    Only accessible by admin
+    """
+    try:
+    
+        current_user_id = str(get_jwt_identity())
+        current_user = User.query.get(current_user_id)
+        
+        if not current_user or current_user.role != UserRole.ADMIN:
+            return jsonify({"error": "Only admin can assign users to departments"}), 403
+        
+        department = Department.query.get(department_id)
+        if not department:
+            return jsonify({"error": "Department not found"}), 404
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        previous_department_id = user.department_id
+        user.department_id = department_id
+        
+        db.session.commit()
+        
+        return jsonify({
+            "message": "User's department updated successfully",
+            "user_id": user_id,
+            "previous_department_id": previous_department_id,
+            "new_department_id": department_id
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
