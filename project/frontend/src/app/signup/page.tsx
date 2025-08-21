@@ -68,12 +68,10 @@ export default function SignupPage() {
       }
 
       if (data.access_token) {
-        sessionStorage.setItem("access_token", data.access_token);
-        setMessage("Registration successful!");
+        setMessage("Registration successful! Please log in.");
         setMessageType("success");
 
-        // Optionally redirect after a short delay
-        setTimeout(() => router.push("/collabhome"), 1500);
+        setTimeout(() => router.push("/login"), 1500);
       } else {
         setMessage("Registration succeeded, but no token received.");
         setMessageType("error");
