@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Company, User
+from models import db, Company, User, UserRole
 from routes.synergy import _create_company_synergy
 import threading
 
@@ -81,10 +81,11 @@ def get_company():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    if not user.company:
-        return jsonify({"error": "User does not have a company"}), 400
-
     if user.role == UserRole.USER:
+
+        if not user.company:
+            return jsonify({"error": "User does not have a company"}), 400
+
         company = Company.query.filter_by(user_id=current_user_id).first()
         return jsonify(company.to_dict()), 200
 
