@@ -62,51 +62,106 @@ export default function FilesPusher() {
     }
   };
 
-  // Upload handler
-  const handleFileUpload = async () => {
-    if (!selectedFile || !settingId) {
-      alert("Please select a file first.");
-      return;
+// NEW: update handler
+const handleFileUpdate = async () => {
+  if (!selectedFile || !settingId) {
+    alert("Please select a file first.");
+    return;
+  }
+
+  try {
+    const token = sessionStorage.getItem("access_token");
+    if (!token) throw new Error("No token found.");
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    const res = await fetch(`${API}/api/document_setting/update/${settingId}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const responseText = await res.text();
+    console.log("Update response:", responseText);
+
+    if (!res.ok) {
+      throw new Error(`Update failed: ${responseText}`);
     }
 
-    try {
-      const token = sessionStorage.getItem("access_token");
-      if (!token) throw new Error("No token found.");
-
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("setting_id", settingId);
-      
-      // Add file name and description if provided
-      if (fileName) {
-        formData.append("name", fileName);
-      }
-      if (fileDescription) {
-        formData.append("description", fileDescription);
-      }
-
-      const res = await fetch(`${API}/api/document/upload_file`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      alert("File uploaded successfully!");
-      setIsUploadModalOpen(false);
-      setSelectedFile(null);
-      setFileName('');
-      setFileDescription('');
-      // Refresh files list after upload
-      window.location.reload();
-    } catch (err) {
+    alert("File updated successfully!");
+    setIsUploadModalOpen(false);
+    setSelectedFile(null);
+    setFileName("");
+    setFileDescription("");
+    window.location.reload(); // refresh data
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error(err.message);
+      alert(`Error updating file: ${err.message}`);
+    } else {
       console.error(err);
-      alert("Error uploading file.");
+      alert("Error updating file.");
     }
-  };
+  }
+};
+
+
+  // Upload handler
+const handleFileUpload = async () => {
+  if (!selectedFile || !settingId) {
+    alert("Please select a file first.");
+    return;
+  }
+
+  try {
+    const token = sessionStorage.getItem("access_token");
+    if (!token) throw new Error("No token found.");
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("setting_id", settingId);
+
+    // Add file name and description if provided
+    if (fileName) formData.append("name", fileName);
+    if (fileDescription) formData.append("description", fileDescription);
+
+    const res = await fetch(`${API}/api/document/upload_file`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    // Debug: log backend response
+    const responseText = await res.text();
+    console.log("Upload response:", responseText);
+
+    if (!res.ok) {
+      throw new Error(`Upload failed: ${responseText}`);
+    }
+
+    alert("File uploaded successfully!");
+    setIsUploadModalOpen(false);
+    setSelectedFile(null);
+    setFileName("");
+    setFileDescription("");
+    // Refresh files list after upload
+    window.location.reload();
+ } catch (err) {
+  if (err instanceof Error) {
+    console.error(err.message);
+    alert(`Error uploading file: ${err.message}`);
+  } else {
+    console.error(err);
+    alert("Error uploading file.");
+  }
+}
+};
+
 
   // Fetch document setting and files data
   useEffect(() => {
@@ -497,12 +552,12 @@ export default function FilesPusher() {
 
               {/* Upload Button */}
               <button
-                onClick={handleFileUpload}
-                disabled={!selectedFile}
-                className="w-full px-4 py-2 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Upload File
-              </button>
+  onClick={handleFileUpdate}   // <-- changed here
+  disabled={!selectedFile}
+  className="w-full px-4 py-2 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+>
+  Update File
+</button>
             </div>
           </div>
         )}
