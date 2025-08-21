@@ -15,7 +15,6 @@ class Synergy(db.Model):
     referential_score = db.Column(db.Float, nullable=False)
     credibility_reasonings = db.Column(db.Text, nullable=False)
     referential_reasonings = db.Column(db.Text, nullable=False)
-    project_reccomendations = db.Column(db.Text, nullable=True)
     
     # One-to-one relationship with Company
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), unique=True, nullable=False)
@@ -29,7 +28,6 @@ class Synergy(db.Model):
             "referential_score": self.referential_score,
             "credibility_reasonings": self.credibility_reasonings,
             "referential_reasonings": self.referential_reasonings,
-            "project_reccomendations": self.project_reccomendations,
             "company_id": self.company_id
         }
     
