@@ -6,6 +6,7 @@ class SynsaiLLM:
 
         self.credibility_reasonings = []
         self.referential_reasonings = []
+        self.compliance_reasonings = []
 
         self.company = company
 
@@ -68,6 +69,8 @@ class SynsaiLLM:
                 self.credibility_reasonings.append(reason_text)
             elif criteria == 'referential':
                 self.referential_reasonings.append(reason_text)
+            elif criteria == 'compliance':
+                self.compliance_reasonings.append(reason_text)
 
             return max(0.0, min(1.0, score))  
             
@@ -88,6 +91,15 @@ class SynsaiLLM:
             )
         elif criteria == 'referential':
             reasonings = '\n'.join(self.referential_reasonings) if self.referential_reasonings else 'No referential reasonings available.'
+            reason_response = ollama.chat(
+                model='llama2',
+                messages=[
+                    {'role': 'assistant', 'content': reasonings},
+                    {'role': 'user', 'content': f'Summarize the reasonings in cohesive bullet points based on the {criteria} criteria. Answer directly, no unnecessary introductions. Strictly Do not mention any score.'}
+                ]
+            )
+        elif criteria == 'compliance':
+            reasonings = '\n'.join(self.compliance_reasonings) if self.compliance_reasonings else 'No compliance reasonings available.'
             reason_response = ollama.chat(
                 model='llama2',
                 messages=[

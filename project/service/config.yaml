@@ -7,8 +7,9 @@ search_settings:
 criteria:
   credibility:
     - What are the reviews of
-    # - Rating
-    # - Feedback
+
   referential:
     - What are the partners of
-    # - Clients
+
+  compliance:
+    - What are the compliance papers of

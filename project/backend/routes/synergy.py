@@ -22,7 +22,9 @@ def _create_company_synergy(company_id, company_name):
             credibility_score=data['credibility_score'],
             referential_score=data['referential_score'],
             credibility_reasonings=data['credibility_reasoning'],
-            referential_reasonings=data['referential_reasoning']
+            referential_reasonings=data['referential_reasoning'],
+            compliance_score=data['compliance_score'],
+            compliance_reasonings=data['compliance_reasoning']
         )
         
         db.session.add(synergy)
@@ -56,6 +58,73 @@ def create_company_synergy():
             "synergy": result.to_dict()
         }), 201
     return jsonify({"error": result}), 500
+
+def _update_company_synergy(company_id, company_name):
+    """Core function to update company synergy without JWT requirements"""
+    try:
+        service_url = "http://localhost:5001/scrape"
+        response = requests.post(
+            service_url,
+            json={"company": company_name},
+            timeout=3600
+        )
+
+        data = response.json()['data']
+        
+        synergy = Synergy.query.filter_by(company_id=company_id).first()
+        if not synergy:
+            return jsonify({"error": "Synergy does not exist for this company yet"}), 400
+        
+        synergy.credibility_score = data['credibility_score']
+        synergy.referential_score = data['referential_score']
+        synergy.credibility_reasonings = data['credibility_reasoning']
+        synergy.referential_reasonings = data['referential_reasoning']
+        synergy.compliance_score = data['compliance_score']
+        synergy.compliance_reasonings = data['compliance_reasoning']
+        
+        db.session.commit()
+        return True, synergy
+        
+    except Exception as e:
+        db.session.rollback()
+        return False, str(e)
+
+@synergy_bp.route('company/<int:company_id>', methods=['PUT'])
+@jwt_required()
+def update_company_synergy(company_id):
+    """HTTP endpoint for updating company synergy with partial updates"""
+    current_user_id = str(get_jwt_identity())
+    user = User.query.get(current_user_id)
+
+    print(user.role)
+    
+    # Check user permissions
+    if user.role not in [UserRole.ADMIN, UserRole.EMPLOYEE]:
+        return jsonify({"error": "Insufficient permissions"}), 403
+        
+    # Get the target company
+    company = Company.query.get(company_id)
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+        
+    if not company.synergy:
+        return jsonify({"error": "Synergy does not exist for this company"}), 404
+
+    success, result = _update_company_synergy(company_id, company.name)
+    
+    if not success:
+        return jsonify({"error": str(result)}), 500
+
+    try:
+        return jsonify({
+            "message": "Synergy updated successfully",
+            "synergy": result.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating synergy: {str(e)}")
+        return jsonify({"error": "Failed to update synergy"}), 500
 
 @synergy_bp.route('company/<int:company_id>', methods=['GET'])
 @jwt_required()
