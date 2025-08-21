@@ -11,4 +11,52 @@ document_setting_bp = Blueprint('document_setting', __name__)
 @document_setting_bp.route('/upload_document_setting', methods=['POST'])
 @jwt_required()
 def create_document_setting(): 
-    pass
+    try:
+        data = request.get_json()
+
+        iteration = data.get("iteration")
+        document_id = data.get("document_id")
+
+        if not document_id:
+            return jsonify({"error": "document_id is required"}), 400
+        if not iteration or not isinstance(iteration, list):
+            return jsonify({"error": "iteration must be a list of numbers"}), 400
+        if not all(isinstance(i, int) for i in iteration):
+            return jsonify({"error": "all iteration values must be integers"}), 400
+
+        current_location = iteration[0]
+
+        new_setting = Document_setting(
+            current_location=current_location,
+            iteration=iteration,
+            document_id=document_id
+        )
+        db.session.add(new_setting)
+        db.session.commit()
+
+        return jsonify(new_setting.to_dict()), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+
+@document_setting_bp.route('/get_all', methods=['GET'])
+@jwt_required()
+def get_all():
+    try:
+        settings = Document_setting.query.all()
+
+        results = []
+        for setting in settings:
+            results.append({
+                "id": setting.id,
+                "document_id": setting.document_id,
+                "document_name": setting.document.name if setting.document else None
+            })
+
+        return jsonify(results), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+

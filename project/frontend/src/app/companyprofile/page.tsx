@@ -1,14 +1,14 @@
 'use client';
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { 
+import {
     FaArrowLeft,
-    FaMapMarkerAlt, 
+    FaMapMarkerAlt,
     FaMapPin,
-    FaGlobe, 
-    FaBriefcase, 
-    FaUsers, 
-    FaEnvelope, 
+    FaGlobe,
+    FaBriefcase,
+    FaUsers,
+    FaEnvelope,
     FaCalendarAlt
 } from "react-icons/fa";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -36,7 +36,7 @@ export default function CompanyProfile() {
     const API = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
     const searchParams = useSearchParams();
-    
+
     const [companyData, setCompanyData] = useState<CompanyData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
@@ -70,7 +70,7 @@ export default function CompanyProfile() {
             try {
                 console.log("Fetching company with ID:", companyId);
                 console.log("API URL:", `${API}/api/company/${companyId}`);
-                
+
                 const response = await fetch(`${API}/api/company/${companyId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -84,7 +84,7 @@ export default function CompanyProfile() {
                 if (response.ok) {
                     const data = await response.json();
                     console.log("Full API Response:", data);
-                    
+
                     // The API returns {company: {...}}
                     if (data.company) {
                         console.log("Company data found:", data.company);
@@ -184,7 +184,7 @@ export default function CompanyProfile() {
                         <span className="hidden sm:inline">Back to Company List</span>
                     </button>
 
-                   
+
                 </div>
 
                 {/* Company Profile Display */}
@@ -193,8 +193,8 @@ export default function CompanyProfile() {
                     <div className="text-center mb-8">
                         {companyData.logo ? (
                             <div className="inline-block">
-                                <img 
-                                    src={companyData.logo} 
+                                <img
+                                    src={companyData.logo}
                                     alt={`${companyData.name} Logo`}
                                     className="max-w-48 max-h-48 mx-auto rounded-lg shadow-lg"
                                 />
@@ -208,9 +208,9 @@ export default function CompanyProfile() {
 
                     {/* Company Name */}
                     <div className="text-center mb-8">
-                        <h2 
+                        <h2
                             className="text-3xl sm:text-5xl font-bold mb-4 text-[#B11016]"
-                            // style={{ color: companyData.color || '#B11016' }}
+                        // style={{ color: companyData.color || '#B11016' }}
                         >
                             {companyData.name}
                         </h2>
@@ -226,9 +226,9 @@ export default function CompanyProfile() {
                         {/* Location */}
                         {companyData.address && (
                             <div className="flex items-center gap-3 p-4 transition-colors">
-                                <FaMapMarkerAlt 
+                                <FaMapMarkerAlt
                                     className="text-2xl"
-                                    style={{ color:  '#B11016' }}
+                                    style={{ color: '#B11016' }}
                                 />
                                 <div>
                                     <h3 className="font-semibold text-gray-800">Location</h3>
@@ -240,18 +240,18 @@ export default function CompanyProfile() {
                         {/* Website */}
                         {companyData.website && (
                             <div className="flex items-center gap-3 p-4 transition-colors">
-                                <FaGlobe 
+                                <FaGlobe
                                     className="text-2xl"
-                                    style={{ color:  '#B11016' }}
+                                    style={{ color: '#B11016' }}
                                 />
                                 <div>
                                     <h3 className="font-semibold text-gray-800">Website</h3>
-                                    <a 
-                                        href={companyData.website} 
-                                        target="_blank" 
+                                    <a
+                                        href={companyData.website}
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-sm hover:underline break-all"
-                                        style={{ color:  '#B11016' }}
+                                        style={{ color: '#B11016' }}
                                     >
                                         {companyData.website.replace(/^https?:\/\//, '')}
                                     </a>
@@ -262,7 +262,7 @@ export default function CompanyProfile() {
                         {/* Industry */}
                         {companyData.industry && (
                             <div className="flex items-center gap-3 p-4 transition-colors">
-                                <FaBriefcase 
+                                <FaBriefcase
                                     className="text-2xl"
                                     style={{ color: '#B11016' }}
                                 />
@@ -276,9 +276,9 @@ export default function CompanyProfile() {
                         {/* Company Size */}
                         {companyData.size && (
                             <div className="flex items-center gap-3 p-4 transition-colors">
-                                <FaUsers 
+                                <FaUsers
                                     className="text-2xl"
-                                    style={{ color:'#B11016' }}
+                                    style={{ color: '#B11016' }}
                                 />
                                 <div>
                                     <h3 className="font-semibold text-gray-800">Team Size</h3>
@@ -290,13 +290,13 @@ export default function CompanyProfile() {
                         {/* Contact Email */}
                         {companyData.contact_email && (
                             <div className="flex items-center gap-3 p-4 transition-colors">
-                                <FaEnvelope 
+                                <FaEnvelope
                                     className="text-2xl"
                                     style={{ color: '#B11016' }}
                                 />
                                 <div>
                                     <h3 className="font-semibold text-gray-800">Contact Email</h3>
-                                    <a 
+                                    <a
                                         href={`mailto:${companyData.contact_email}`}
                                         className="text-sm hover:underline break-all"
                                         style={{ color: '#B11016' }}
@@ -310,7 +310,7 @@ export default function CompanyProfile() {
                         {/* Creation Date */}
                         {companyData.created_at && (
                             <div className="flex items-center gap-3 p-4 transition-colors">
-                                <FaCalendarAlt 
+                                <FaCalendarAlt
                                     className="text-2xl"
                                     style={{ color: '#B11016' }}
                                 />
@@ -328,107 +328,107 @@ export default function CompanyProfile() {
                         )}
                     </div>
                     {/* Synergy Score */}
-<div className="text-center my-12">
-  <h3 className="text-2xl font-bold text-red-700 mb-6">Synergy Score</h3>
-  <div className="w-48 h-48 mx-auto mb-12">
-    {(() => {
-      const synergyScore = 75;
-      return (
-        <CircularProgressbar
-          value={synergyScore}
-          text={`${synergyScore}%`}
-          styles={buildStyles({
-            textSize: "20px",
-            textColor: "#111827",
-            pathColor: "#B11016",
-            trailColor: "#d1d5db",
-          
-          })}
-        />
-      );
-    })()}
-  </div>
+                    <div className="text-center my-12">
+                        <h3 className="text-2xl font-bold text-red-700 mb-6">Synergy Score</h3>
+                        <div className="w-48 h-48 mx-auto mb-12">
+                            {(() => {
+                                const synergyScore = 75;
+                                return (
+                                    <CircularProgressbar
+                                        value={synergyScore}
+                                        text={`${synergyScore}%`}
+                                        styles={buildStyles({
+                                            textSize: "20px",
+                                            textColor: "#111827",
+                                            pathColor: "#B11016",
+                                            trailColor: "#d1d5db",
 
-  {/* Categories Row */}
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 max-w-6xl mx-auto text-center">
-    {/* Credibility */}
-    <div>
-      <h4 className="text-xl font-bold text-red-700 mb-2">Credibility</h4>
-      <p className="text-4xl font-bold mb-4">35%</p>
-      <div className="border-t-2 border-gray-800 mb-8"></div>
-      <div className="space-y-6">
-        <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Market Leadership:</span> GCash is the
-          leading e-wallet in the Philippines with over 80M users,
-          establishing it as a trusted financial platform.
-        </div>
-        <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
-          partnership between Globe Telecom, Ayala Corporation, and Ant Group
-          (Alibaba).
-        </div>
-        <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Track Record:</span> Recognized by the
-          Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
-          financial inclusion.
-        </div>
-      </div>
-    </div>
+                                        })}
+                                    />
+                                );
+                            })()}
+                        </div>
 
-    {/* Referential */}
-    <div>
-      <h4 className="text-xl font-bold text-red-700 mb-2">Referential</h4>
-      <p className="text-4xl font-bold mb-4">25%</p>
-      <div className="border-t-2 border-gray-800 mb-8"></div>
-      <div className="space-y-6">
-        <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Market Leadership:</span> GCash is the
-          leading e-wallet in the Philippines with over 80M users,
-          establishing it as a trusted financial platform.
-        </div>
-        <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
-          partnership between Globe Telecom, Ayala Corporation, and Ant Group
-          (Alibaba).
-        </div>
-        <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Track Record:</span> Recognized by the
-          Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
-          financial inclusion.
-        </div>
-      </div>
-    </div>
+                        {/* Categories Row */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 max-w-6xl mx-auto text-center">
+                            {/* Credibility */}
+                            <div>
+                                <h4 className="text-xl font-bold text-red-700 mb-2">Credibility</h4>
+                                <p className="text-4xl font-bold mb-4">35%</p>
+                                <div className="border-t-2 border-gray-800 mb-8"></div>
+                                <div className="space-y-6">
+                                    <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Market Leadership:</span> GCash is the
+                                        leading e-wallet in the Philippines with over 80M users,
+                                        establishing it as a trusted financial platform.
+                                    </div>
+                                    <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
+                                        partnership between Globe Telecom, Ayala Corporation, and Ant Group
+                                        (Alibaba).
+                                    </div>
+                                    <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Track Record:</span> Recognized by the
+                                        Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
+                                        financial inclusion.
+                                    </div>
+                                </div>
+                            </div>
 
-    {/* Compliance */}
-    <div>
-      <h4 className="text-xl font-bold text-red-700 mb-2">Compliance</h4>
-      <p className="text-4xl font-bold mb-4">15%</p>
-      <div className="border-t-2 border-gray-800 mb-8"></div>
-      <div className="space-y-6">
-        <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Market Leadership:</span> GCash is the
-          leading e-wallet in the Philippines with over 80M users,
-          establishing it as a trusted financial platform.
-        </div>
-        <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
-          partnership between Globe Telecom, Ayala Corporation, and Ant Group
-          (Alibaba).
-        </div>
-        <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
-          <span className="font-bold">Track Record:</span> Recognized by the
-          Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
-          financial inclusion.
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                            {/* Referential */}
+                            <div>
+                                <h4 className="text-xl font-bold text-red-700 mb-2">Referential</h4>
+                                <p className="text-4xl font-bold mb-4">25%</p>
+                                <div className="border-t-2 border-gray-800 mb-8"></div>
+                                <div className="space-y-6">
+                                    <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Market Leadership:</span> GCash is the
+                                        leading e-wallet in the Philippines with over 80M users,
+                                        establishing it as a trusted financial platform.
+                                    </div>
+                                    <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
+                                        partnership between Globe Telecom, Ayala Corporation, and Ant Group
+                                        (Alibaba).
+                                    </div>
+                                    <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Track Record:</span> Recognized by the
+                                        Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
+                                        financial inclusion.
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Compliance */}
+                            <div>
+                                <h4 className="text-xl font-bold text-red-700 mb-2">Compliance</h4>
+                                <p className="text-4xl font-bold mb-4">15%</p>
+                                <div className="border-t-2 border-gray-800 mb-8"></div>
+                                <div className="space-y-6">
+                                    <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Market Leadership:</span> GCash is the
+                                        leading e-wallet in the Philippines with over 80M users,
+                                        establishing it as a trusted financial platform.
+                                    </div>
+                                    <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
+                                        partnership between Globe Telecom, Ayala Corporation, and Ant Group
+                                        (Alibaba).
+                                    </div>
+                                    <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
+                                        <span className="font-bold">Track Record:</span> Recognized by the
+                                        Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
+                                        financial inclusion.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 
 
-                    
-                    
+
+
                 </div>
             </div>
         </ProtectedRoute>

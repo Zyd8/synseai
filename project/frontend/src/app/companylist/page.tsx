@@ -2,14 +2,13 @@
 
 import Sidebar from "@/components/DashboardSidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface Company {
     id: number;
     name: string;
-    contact_email: string;
+    // contact_email: string;
     website?: string;
     address?: string;
     industry?: string;
@@ -30,7 +29,7 @@ export default function CompanyList() {
         const fetchAllCompanies = async () => {
             const token = sessionStorage.getItem("access_token");
             try {
-                const res = await fetch(`${API}/api/company/all`, {
+                const res = await fetch(`${API}/api/company`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -40,7 +39,6 @@ export default function CompanyList() {
                 if (!res.ok) throw new Error("Failed to fetch companies");
                 const data = await res.json();
 
-                // The API returns companies array directly
                 setCompanies(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Error fetching companies:", err);
