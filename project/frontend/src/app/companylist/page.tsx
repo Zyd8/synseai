@@ -4,6 +4,7 @@ import Sidebar from "@/components/DashboardSidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface Company {
     id: number;
@@ -23,14 +24,13 @@ export default function CompanyList() {
     const API = process.env.NEXT_PUBLIC_API_URL;
     const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchAllCompanies = async () => {
             const token = sessionStorage.getItem("access_token");
             try {
-                // Since your API doesn't have a "get all companies" endpoint,
-                // you'll need to create one or modify this to work with your existing endpoints
-                const res = await fetch(`${API}/api/companies/all`, {
+                const res = await fetch(`${API}/api/company/all`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -40,9 +40,8 @@ export default function CompanyList() {
                 if (!res.ok) throw new Error("Failed to fetch companies");
                 const data = await res.json();
 
-                // Assuming the response structure contains companies array
-                const companiesList = data.companies || data || [];
-                setCompanies(Array.isArray(companiesList) ? companiesList : []);
+                // The API returns companies array directly
+                setCompanies(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Error fetching companies:", err);
                 setCompanies([]);
@@ -65,6 +64,12 @@ export default function CompanyList() {
             minute: "2-digit",
             hour12: true,
         })}`;
+    };
+
+    // Fixed function to redirect to company profile with the correct company ID
+    const handleCompanyClick = (companyId: number) => {
+        console.log("Navigating to company profile:", companyId);
+        router.push(`/companyprofile?id=${companyId}`);
     };
 
     return (
@@ -92,7 +97,7 @@ export default function CompanyList() {
                                     <tr>
                                         <th className="p-3 text-left text-red-700 whitespace-nowrap">Company ID</th>
                                         <th className="p-3 text-left text-red-700 whitespace-nowrap">Company Name</th>
-                                        <th className="p-3 text-left text-red-700 whitespace-nowrap">Contact Email</th>
+                                        {/* <th className="p-3 text-left text-red-700 whitespace-nowrap">Contact Email</th> */}
                                         <th className="p-3 text-left text-red-700 whitespace-nowrap">Industry</th>
                                         <th className="p-3 text-left text-red-700 whitespace-nowrap">Company Size</th>
                                         <th className="p-3 text-left text-red-700 whitespace-nowrap">Created Date</th>
@@ -101,14 +106,34 @@ export default function CompanyList() {
                                 </thead>
                                 <tbody>
                                     {companies.map((company, i) => (
-                                            <tr key={company.id} className="border-t">
+                                            <tr 
+                                                key={i} 
+                                                className="border-t hover:bg-gray-50 cursor-pointer transition-colors"
+                                                onClick={() => handleCompanyClick(company.id)}
+                                            >
                                                 <td className="p-3 whitespace-nowrap">{company.id}</td>
                                                 <td className="p-3">{company.name}</td>
-                                                <td className="p-3">{company.contact_email}</td>
+                                                {/* <td className="p-3">{company.contact_email}</td> */}
                                                 <td className="p-3">{company.industry || 'N/A'}</td>
                                                 <td className="p-3">{company.size || 'N/A'}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatDate(company.created_at)}</td>
-                                                <td className="p-3 text-center">⋮</td>
+                                                <td className="p-3 text-center">
+                                                    <div className="flex items-center justify-center">
+                                                        <svg 
+                                                            className="w-4 h-4 text-gray-400" 
+                                                            fill="none" 
+                                                            stroke="currentColor" 
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path 
+                                                                strokeLinecap="round" 
+                                                                strokeLinejoin="round" 
+                                                                strokeWidth={2} 
+                                                                d="M9 5l7 7-7 7" 
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         )
                                     )}
