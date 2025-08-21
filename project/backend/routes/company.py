@@ -173,3 +173,16 @@ def get_company_by_id(company_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@company_bp.route('/all', methods=['GET'])
+@jwt_required()
+def get_all_companies():
+    """Get all companies in the system"""
+    try:
+        companies = Company.query.all()
+        return jsonify([company.to_dict() for company in companies]), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
