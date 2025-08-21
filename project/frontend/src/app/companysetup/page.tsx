@@ -343,7 +343,7 @@ export default function CompanySetup() {
 
                     // Redirect to Proposal Form page after successful creation
                     setTimeout(() => {
-                        window.location.href = "/proposalform"; // Adjust this path as needed
+                        window.location.href = "/dashboard"; // Adjust this path as needed
                     }, 2000);
                 }
             } else {

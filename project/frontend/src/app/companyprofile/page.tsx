@@ -32,6 +32,7 @@ interface CompanyData {
     user_id?: string;
 }
 
+
 export default function CompanyProfile() {
     const API = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
@@ -40,6 +41,8 @@ export default function CompanyProfile() {
     const [companyData, setCompanyData] = useState<CompanyData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
+
+    const [synergyData, setSynergyData] = useState<any | null>(null);
 
     // Get company ID from URL parameters - this is required for employee view
     const companyId = searchParams.get('id');
@@ -50,10 +53,36 @@ export default function CompanyProfile() {
         return size;
     };
 
+    const formatScore = (score: number | null | undefined): string => {
+        if (score == null) return "0%";
+        const percentage = score * 100;
+        return Number.isInteger(percentage)
+            ? `${percentage}%`
+            : `${percentage.toFixed(2)}%`;
+    };
+    const computeOverallSynergy = (
+        credibility: number | null | undefined,
+        referential: number | null | undefined,
+        compliance: number | null | undefined
+    ): number => {
+        const scores = [credibility, referential, compliance].filter(
+            (s): s is number => s != null
+        );
+
+        if (scores.length === 0) return 0;
+
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        return avg * 100;
+    };
+
+    const overallSynergy = computeOverallSynergy(
+        synergyData?.credibility_score,
+        synergyData?.referential_score,
+        synergyData?.compliance_score
+    );
     // Fetch specific company data by ID
     useEffect(() => {
-        const fetchCompanyData = async () => {
-            // Company ID is required for this employee view
+        const fetchData = async () => {
             if (!companyId) {
                 setError("Company ID is required to view company profile.");
                 setIsLoading(false);
@@ -68,54 +97,82 @@ export default function CompanyProfile() {
             }
 
             try {
-                console.log("Fetching company with ID:", companyId);
-                console.log("API URL:", `${API}/api/company/${companyId}`);
-
-                const response = await fetch(`${API}/api/company/${companyId}`, {
+                // Fetch company
+                const companyRes = await fetch(`${API}/api/company/${companyId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
                 });
 
-                console.log("Response status:", response.status);
-                console.log("Response ok:", response.ok);
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log("Full API Response:", data);
-
-                    // The API returns {company: {...}}
-                    if (data.company) {
-                        console.log("Company data found:", data.company);
-                        setCompanyData(data.company);
-                    } else {
-                        console.log("No company key in response");
-                        setError("Invalid response format from server.");
-                    }
-                } else if (response.status === 404) {
-                    console.log("Company not found");
-                    setError("Company not found.");
+                if (companyRes.ok) {
+                    const data = await companyRes.json();
+                    setCompanyData(data.company);
                 } else {
-                    console.log("Other error occurred");
-                    try {
-                        const errorData = await response.json();
-                        console.log("Error data:", errorData);
-                        setError(errorData.error || `Failed to load company data. Status: ${response.status}`);
-                    } catch {
-                        setError(`Failed to load company data. Status: ${response.status}`);
+                    const errData = await companyRes.json();
+                    setError(errData.error || "Failed to load company data");
+                }
+
+                // Fetch synergy
+                const synergyRes = await fetch(`${API}/api/synergy/company/${companyId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (synergyRes.ok) {
+                    const synergy = await synergyRes.json();
+
+                    // DUMMY DATA FOR COMPLIANCE
+                    if (!synergy.compliance_score) {
+                        synergy.compliance_score = 0.75;
                     }
+                    if (!synergy.compliance_reasonings) {
+                        synergy.compliance_reasonings =
+                            "• Regulatory compliance: The company is registered with the Securities and Exchange Commission (SEC) and follows standard reporting requirements.\n" +
+                            "• Data privacy: The organization publicly states compliance with the Philippines Data Privacy Act (RA 10173), but no recent third-party audit reports are available.\n" +
+                            "• Industry certifications: Holds ISO 27001 certification for information security, though details on renewal dates are not disclosed.\n" +
+                            "• Labor compliance: Regularly submits reports to DOLE and maintains proper employment contracts.\n" +
+                            "• Environmental standards: No official compliance records found related to DENR environmental guidelines.";
+                    }
+
+
+                    setSynergyData(synergy);
+                } else {
+                    console.warn("No synergy data available for this company");
                 }
             } catch (err) {
-                console.error("Network/fetch error:", err);
-                setError("Network error occurred while loading company data.");
+                setError("Network error occurred while loading data.");
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchCompanyData();
+        fetchData();
     }, [API, companyId]);
+
+
+    const parseReasonings = (rawText?: string): string[] => {
+        if (!rawText) return [];
+        return rawText
+            .split("•")
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+    };
+
+    const renderReasonings = (items: string[]) => {
+        const shades = ["#B11016", "#60080c"];
+        return items.map((text, idx) => (
+            <div
+                key={idx}
+                className="text-white rounded-md p-3 text-sm text-left shadow-md"
+                style={{ backgroundColor: shades[idx % shades.length] }}
+            >
+                {text}
+            </div>
+        ));
+    };
+
 
     if (isLoading) {
         return (
@@ -328,103 +385,60 @@ export default function CompanyProfile() {
                         )}
                     </div>
                     {/* Synergy Score */}
-                    <div className="text-center my-12">
-                        <h3 className="text-2xl font-bold text-red-700 mb-6">Synergy Score</h3>
-                        <div className="w-48 h-48 mx-auto mb-12">
-                            {(() => {
-                                const synergyScore = 75;
-                                return (
-                                    <CircularProgressbar
-                                        value={synergyScore}
-                                        text={`${synergyScore}%`}
-                                        styles={buildStyles({
-                                            textSize: "20px",
-                                            textColor: "#111827",
-                                            pathColor: "#B11016",
-                                            trailColor: "#d1d5db",
+                    {synergyData && (
+                        <div className="text-center my-12">
+                            <h3 className="text-2xl font-bold text-red-700 mb-6">Synergy Score</h3>
 
-                                        })}
-                                    />
-                                );
-                            })()}
-                        </div>
-
-                        {/* Categories Row */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 max-w-6xl mx-auto text-center">
-                            {/* Credibility */}
-                            <div>
-                                <h4 className="text-xl font-bold text-red-700 mb-2">Credibility</h4>
-                                <p className="text-4xl font-bold mb-4">35%</p>
-                                <div className="border-t-2 border-gray-800 mb-8"></div>
-                                <div className="space-y-6">
-                                    <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Market Leadership:</span> GCash is the
-                                        leading e-wallet in the Philippines with over 80M users,
-                                        establishing it as a trusted financial platform.
-                                    </div>
-                                    <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
-                                        partnership between Globe Telecom, Ayala Corporation, and Ant Group
-                                        (Alibaba).
-                                    </div>
-                                    <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Track Record:</span> Recognized by the
-                                        Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
-                                        financial inclusion.
-                                    </div>
-                                </div>
+                            {/* Circular Progress */}
+                            <div className="w-48 h-48 mx-auto mb-12">
+                                <CircularProgressbar
+                                    value={overallSynergy}
+                                    text={`${formatScore(overallSynergy / 100)}`} 
+                                    styles={buildStyles({
+                                        textSize: "20px",
+                                        textColor: "#111827",
+                                        pathColor: "#B11016",
+                                        trailColor: "#d1d5db",
+                                    })}
+                                />
                             </div>
 
-                            {/* Referential */}
-                            <div>
-                                <h4 className="text-xl font-bold text-red-700 mb-2">Referential</h4>
-                                <p className="text-4xl font-bold mb-4">25%</p>
-                                <div className="border-t-2 border-gray-800 mb-8"></div>
-                                <div className="space-y-6">
-                                    <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Market Leadership:</span> GCash is the
-                                        leading e-wallet in the Philippines with over 80M users,
-                                        establishing it as a trusted financial platform.
-                                    </div>
-                                    <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
-                                        partnership between Globe Telecom, Ayala Corporation, and Ant Group
-                                        (Alibaba).
-                                    </div>
-                                    <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Track Record:</span> Recognized by the
-                                        Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
-                                        financial inclusion.
-                                    </div>
-                                </div>
-                            </div>
+                            {/* Categories Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 max-w-6xl mx-auto text-center">
 
-                            {/* Compliance */}
-                            <div>
-                                <h4 className="text-xl font-bold text-red-700 mb-2">Compliance</h4>
-                                <p className="text-4xl font-bold mb-4">15%</p>
-                                <div className="border-t-2 border-gray-800 mb-8"></div>
-                                <div className="space-y-6">
-                                    <div className="bg-[#B11016] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Market Leadership:</span> GCash is the
-                                        leading e-wallet in the Philippines with over 80M users,
-                                        establishing it as a trusted financial platform.
-                                    </div>
-                                    <div className="bg-[#800b10] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Strong Backing:</span> Operated by Mynt, a
-                                        partnership between Globe Telecom, Ayala Corporation, and Ant Group
-                                        (Alibaba).
-                                    </div>
-                                    <div className="bg-[#60080c] text-white rounded-md p-3 text-sm text-left shadow-md">
-                                        <span className="font-bold">Track Record:</span> Recognized by the
-                                        Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in
-                                        financial inclusion.
+                                {/* Credibility */}
+                                <div>
+                                    <h4 className="text-xl font-bold text-red-700 mb-2">Credibility</h4>
+                                    <p className="text-4xl font-bold mb-4">{formatScore(synergyData.credibility_score)}</p>
+                                    <div className="border-t-2 border-gray-800 mb-8"></div>
+                                    <div className="space-y-6">
+                                        {renderReasonings(parseReasonings(synergyData.credibility_reasonings))}
                                     </div>
                                 </div>
+
+                                {/* Referential */}
+                                <div>
+                                    <h4 className="text-xl font-bold text-red-700 mb-2">Referential</h4>
+                                    <p className="text-4xl font-bold mb-4">{formatScore(synergyData.referential_score)}</p>
+                                    <div className="border-t-2 border-gray-800 mb-8"></div>
+                                    <div className="space-y-6">
+                                        {renderReasonings(parseReasonings(synergyData.referential_reasonings))}
+                                    </div>
+                                </div>
+
+                                {/* Compliance */}
+                                <div>
+                                    <h4 className="text-xl font-bold text-red-700 mb-2">Compliance</h4>
+                                    <p className="text-4xl font-bold mb-4">{formatScore(synergyData.compliance_score)}</p>
+                                    <div className="border-t-2 border-gray-800 mb-8"></div>
+                                    <div className="space-y-6">
+                                        {renderReasonings(parseReasonings(synergyData.compliance_reasonings))}
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
-                    </div>
-
+                    )}
 
 
 
