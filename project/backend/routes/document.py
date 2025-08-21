@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from werkzeug.utils import secure_filename
-from flask import send_file
+from flask import send_file, current_app
 import os
 
 from models import db, Document
@@ -113,7 +113,6 @@ def get_files_by_proposal(proposal_id):
         return jsonify({"error": str(e)}), 500
 
 @document_bp.route('/download_file/<int:doc_id>', methods=['GET'])
-@jwt_required()
 def download_file(doc_id):
     try:
         document = Document.query.get_or_404(doc_id)
@@ -126,6 +125,24 @@ def download_file(doc_id):
             file_path,
             as_attachment=True,
             download_name=document.name  # what the user sees when saving
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@document_bp.route('/download_file2/<int:doc_id>', methods=['GET'])
+def download_file2(doc_id):
+    try:
+        document = Document.query.get_or_404(doc_id)
+        file_path = os.path.join(current_app.root_path, document.file)  
+
+        if not os.path.exists(file_path):
+            return jsonify({"error": "File not found"}), 404
+
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=os.path.basename(file_path)  # keeps extension
         )
 
     except Exception as e:
