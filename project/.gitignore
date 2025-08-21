@@ -5,3 +5,4 @@ frontend/.env
 *.db
 .env.local
 backend/uploaded_files/
+backend/previous_files/

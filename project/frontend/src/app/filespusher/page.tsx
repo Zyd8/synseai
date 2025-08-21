@@ -42,8 +42,25 @@ export default function FilesPusher() {
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState<string>('');
+  const [fileDescription, setFileDescription] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [files, setFiles] = useState<FileItem[]>([]);
+
+  // Handle file selection from input or drag & drop
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setSelectedFile(e.dataTransfer.files[0]);
+    }
+  };
 
   // Upload handler
   const handleFileUpload = async () => {
@@ -59,6 +76,14 @@ export default function FilesPusher() {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("setting_id", settingId);
+      
+      // Add file name and description if provided
+      if (fileName) {
+        formData.append("name", fileName);
+      }
+      if (fileDescription) {
+        formData.append("description", fileDescription);
+      }
 
       const res = await fetch(`${API}/api/document/upload_file`, {
         method: "POST",
@@ -73,6 +98,8 @@ export default function FilesPusher() {
       alert("File uploaded successfully!");
       setIsUploadModalOpen(false);
       setSelectedFile(null);
+      setFileName('');
+      setFileDescription('');
       // Refresh files list after upload
       window.location.reload();
     } catch (err) {
@@ -296,20 +323,23 @@ export default function FilesPusher() {
           
 
           {/* Department Progress Indicator */}
-          <div className="flex space-x-2">
-            {departments.map((dept, index) => (
-              <div
-                key={dept.id}
-                className={`flex-1 h-6 rounded ${
-                  dept.isCompleted 
-                    ? 'bg-[#333333]' 
-                    : dept.isActive 
-                      ? 'bg-[#B11016]' 
-                      : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
+         <div className="flex space-x-2 w-full">
+      {departments.map((dept) => (
+        <div
+          key={dept.id}
+          className={`flex-1 h-10 rounded flex items-center justify-center text-xs font-medium transition-colors duration-300 ${
+            dept.isCompleted
+              ? "bg-[#333333] text-white"
+              : dept.isActive
+              ? "bg-[#B11016] text-white"
+              : "bg-gray-300 text-gray-700"
+          }`}
+        >
+          {dept.name}
+        </div>
+      ))}
+    </div>
+
 
           <div className="flex items-center justify-between mt-4 mb-5">
             <button
@@ -394,25 +424,29 @@ export default function FilesPusher() {
             <div className="flex justify-center space-x-4">
                 <button
               onClick={() => setIsUploadModalOpen(true)}
-              className="px-6 py-3 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+              className="w-full px-6 py-3 bg-[#333333] text-white rounded hover:bg-[#0f0f0f] transition-colors"
             >
-              Upload
+              Update
             </button>
-              <button className="px-6 py-3 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors">
-                Push Selected Files ({currentDepartmentFiles.filter(f => f.isSelected).length})
+              <button className="w-full px-6 py-3 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors">
+                Push
               </button>
               
             </div>
           </div>
 
-          {/* Upload Modal */}
+          {/* Upload Modal with Drag & Drop */}
         {isUploadModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative mx-4">
               {/* Close button */}
               <button
-                onClick={() => setIsUploadModalOpen(false)}
+                onClick={() => {
+                  setIsUploadModalOpen(false);
+                  setSelectedFile(null);
+                  setFileName('');
+                  setFileDescription('');
+                }}
                 className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
               >
                 <FaTimes />
@@ -422,17 +456,52 @@ export default function FilesPusher() {
                 Upload File
               </h2>
 
-              <input
-                type="file"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                className="mb-4 w-full border border-gray-300 rounded px-3 py-2"
-              />
+              
 
+              {/* Drag and Drop Area */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={(e) => e.preventDefault()}
+                className="border-2 border-dashed border-red-300 rounded-lg p-6 text-center cursor-pointer hover:border-red-500 transition mb-4"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <img
+                  src="/images/uploadicon.png"
+                  alt="Upload Icon"
+                  className="mx-auto h-12 w-12 object-contain"
+                />
+
+                <p className="mt-2 text-gray-600 text-sm">
+                  Drag & drop files or{" "}
+                  <span className="text-red-600 underline">Browse</span>
+                </p>
+                <p className="text-xs text-gray-400">
+                  Supported formats: JPEG, PNG, PDF, DOCX
+                </p>
+
+                <input
+                  type="file"
+                  accept=".jpeg,.jpg,.png,.pdf,.docx"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {/* Selected File Display */}
+              {selectedFile && (
+                <div className="mb-4 p-2 border border-green-400 rounded bg-green-50 text-green-700 text-sm">
+                  Selected: {selectedFile.name}
+                </div>
+              )}
+
+              {/* Upload Button */}
               <button
                 onClick={handleFileUpload}
-                className="w-full px-4 py-2 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors"
+                disabled={!selectedFile}
+                className="w-full px-4 py-2 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                Upload
+                Upload File
               </button>
             </div>
           </div>
