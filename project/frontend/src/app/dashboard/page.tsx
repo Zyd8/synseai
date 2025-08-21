@@ -127,38 +127,43 @@ export default function Dashboard() {
                             </div>
 
                             {/* Activities */}
-                            <div className="bg-white rounded-lg drop-shadow-lg sm:p-8 p-6 border border-gray-500">
+                            <div className="bg-white rounded-lg drop-shadow-lg sm:p-8 p-6 border border-gray-500 h-[350px] flex flex-col">
                                 <h3 className="text-red-700 font-bold text-xl mb-4 border-b border-black pb-2 sm:pb-4">
                                     Recent Activities
                                 </h3>
 
-                                <div className="relative" style={{ "--dot-size": "0.75rem" } as React.CSSProperties}>
+                                {/* Scrollable container */}
+                                <div
+                                    className="relative flex-1 overflow-y-auto pr-2"
+                                    style={{ "--dot-size": "0.75rem" } as React.CSSProperties}
+                                >
                                     {activities.length === 0 ? (
-                                        <p className="text-gray-500 text-center">No recent activities</p>
+                                        <p className="text-gray-500 text-center mt-6">No recent activities</p>
                                     ) : (
                                         activities.map((a, i, arr) => (
                                             <div key={i} className="relative flex items-start">
                                                 {/* Dot */}
                                                 <div
-                                                    className="relative z-10 rounded-full flex-shrink-0 bg-gray-600"
-                                                    style={{
-                                                        width: "var(--dot-size)",
-                                                        height: "var(--dot-size)",
-                                                        marginTop: "0.5rem",
-                                                    }}
+                                                className="relative z-10 rounded-full flex-shrink-0 bg-[#B11016]"
+                                                style={{
+                                                    width: "var(--dot-size)",
+                                                    height: "var(--dot-size)",
+                                                    marginTop: "0.5rem",
+                                                }}
                                                 ></div>
 
+                                                {/* Vertical line */}
                                                 {i < arr.length - 1 && (
-                                                    <div
-                                                        className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-400"
-                                                        style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
-                                                    ></div>
+                                                <div
+                                                    className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-300"
+                                                    style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
+                                                ></div>
                                                 )}
 
                                                 <div className="ml-4 pb-6 last:pb-0 mb-4">
                                                     <div className="font-semibold text-gray-900">{a.title}</div>
-                                                    <div className="font-bold text-gray-900">{mapStatus(a.status)}</div>
-                                                    <div className="text-gray-500 text-sm">
+                                                    <div className="font-bold text-gray-800 mb-1">{mapStatus(a.status)}</div>
+                                                    <div className="text-gray-500 text-xs">
                                                         {new Date(a.created_at).toLocaleDateString("en-US", {
                                                             year: "numeric",
                                                             month: "long",

@@ -13,6 +13,7 @@ export default function BpiDashboard() {
     const API = process.env.NEXT_PUBLIC_API_URL;
 
     const [proposals, setProposals] = useState<any[]>([]);
+    const [companies, setCompanies] = useState<{[key: number]: any}>({});
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<number | null>(null);
     const [openRow, setOpenRow] = useState<number | null>(null);
@@ -40,6 +41,30 @@ export default function BpiDashboard() {
         }
     };
 
+    // Fetch company by ID
+    const fetchCompanyById = async (companyId: number) => {
+        const token = sessionStorage.getItem("access_token");
+        try {
+            const res = await fetch(`${API}/api/company/${companyId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!res.ok) {
+                console.warn(`Failed to fetch company ${companyId}`);
+                return null;
+            }
+            
+            const data = await res.json();
+            return data.company;
+        } catch (err) {
+            console.error(`Error fetching company ${companyId}:`, err);
+            return null;
+        }
+    };
+
     useEffect(() => {
         const fetchAllProposals = async () => {
             const token = sessionStorage.getItem("access_token");
@@ -60,18 +85,35 @@ export default function BpiDashboard() {
                 const proposalsList = data.proposals || data || [];
                 console.log("Extracted proposals list:", proposalsList);
                 
-                // Log each proposal to check company_name field
-                proposalsList.forEach((proposal: any, index: number) => {
-                    console.log(`Proposal ${index + 1}:`, {
-                        id: proposal.id,
-                        title: proposal.title,
-                        company_name: proposal.company_name,
-                        company_industry: proposal.company_industry,
-                        status: proposal.status
-                    });
-                });
-                
                 setProposals(Array.isArray(proposalsList) ? proposalsList : []);
+
+                // Extract unique company IDs and fetch company data
+                const companyIds = [...new Set(proposalsList
+                    .map((p: any) => p.company_id)
+                    .filter((id: any) => id !== null && id !== undefined)
+                )] as number[];
+
+                console.log("Unique company IDs:", companyIds);
+
+                // Fetch all companies in parallel
+                const companyPromises = companyIds.map(async (id: number) => {
+                    const company = await fetchCompanyById(id);
+                    return { id, company };
+                });
+
+                const companyResults = await Promise.all(companyPromises);
+                
+                // Create companies lookup object
+                const companiesLookup: {[key: number]: any} = {};
+                companyResults.forEach(({ id, company }) => {
+                    if (company) {
+                        companiesLookup[id] = company;
+                    }
+                });
+
+                console.log("Companies lookup:", companiesLookup);
+                setCompanies(companiesLookup);
+                
             } catch (err) {
                 console.error("Error fetching proposals:", err);
                 setProposals([]);
@@ -94,6 +136,14 @@ export default function BpiDashboard() {
             return () => document.removeEventListener('click', handleClickOutside);
         }
     }, [openRow]);
+
+    // Get company name for a proposal
+    const getCompanyName = (proposal: any) => {
+        if (proposal.company_id && companies[proposal.company_id]) {
+            return companies[proposal.company_id].name;
+        }
+        return proposal.company_name || 'Unknown Company';
+    };
 
     // Compute summary counts based on mapped status
     const summary = [
@@ -272,62 +322,79 @@ export default function BpiDashboard() {
                     </div>
 
                     {/* Activities */}
-                    <div className="bg-white rounded-lg drop-shadow-lg sm:p-8 p-6 border border-gray-500">
-                        <h3 className="text-red-700 font-bold text-xl mb-4 border-b border-black pb-2 sm:pb-4">
-                            Recent Activities
-                        </h3>
+<div className="bg-white rounded-lg drop-shadow-lg sm:p-8 p-6 border border-gray-500 h-[350px] flex flex-col">
+  <h3 className="text-red-700 font-bold text-xl mb-4 border-b border-black pb-2 sm:pb-4">
+    Recent Activities
+  </h3>
 
-                        <div className="relative" style={{ "--dot-size": "0.75rem" } as React.CSSProperties}>
-                            {activities.length === 0 ? (
-                                <p className="text-gray-500 text-center">No recent activities</p>
-                            ) : (
-                                activities.map((a, i, arr) => (
-                                    <div key={i} className="relative flex items-start">
-                                        {/* Dot */}
-                                        <div
-                                            className="relative z-10 rounded-full flex-shrink-0 bg-gray-600"
-                                            style={{
-                                                width: "var(--dot-size)",
-                                                height: "var(--dot-size)",
-                                                marginTop: "0.5rem",
-                                            }}
-                                        ></div>
+  {/* Scrollable container */}
+  <div
+    className="relative flex-1 overflow-y-auto pr-2"
+    style={{ "--dot-size": "0.75rem" } as React.CSSProperties}
+  >
+    {activities.length === 0 ? (
+      <p className="text-gray-500 text-center mt-6">No recent activities</p>
+    ) : (
+      <div className="space-y-0">
+        {activities.map((a, i, arr) => (
+          <div key={i} className="relative flex items-start">
+            {/* Dot */}
+            <div
+              className="relative z-10 rounded-full flex-shrink-0 bg-[#B11016]"
+              style={{
+                width: "var(--dot-size)",
+                height: "var(--dot-size)",
+                marginTop: "0.5rem",
+              }}
+            ></div>
 
-                                        {i < arr.length - 1 && (
-                                            <div
-                                                className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-400"
-                                                style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
-                                            ></div>
-                                        )}
+            {/* Vertical line */}
+            {i < arr.length - 1 && (
+              <div
+                className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-300"
+                style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
+              ></div>
+            )}
 
-                                        <div className="ml-4 pb-6 last:pb-0 mb-4">
-                                            <div className="font-semibold text-gray-900">{a.title}</div>
-                                            <div className="text-sm text-blue-600 mb-1">
-                                                {a.company_name || 'Unknown Company'}
-                                            </div>
-                                            <div className="font-bold text-gray-900">{mapStatus(a.status)}</div>
-                                            <div className="text-gray-500 text-sm">
-                                                {new Date(a.created_at).toLocaleDateString("en-US", {
-                                                    year: "numeric",
-                                                    month: "long",
-                                                    day: "numeric",
-                                                })}{" | "}{new Date(a.created_at).toLocaleTimeString("en-US", {
-                                                    hour: "numeric",
-                                                    minute: "2-digit",
-                                                    hour12: true,
-                                                })}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
+            {/* Content */}
+            <div className="ml-4 pb-2">
+              <div className="font-semibold text-gray-900">{a.title}</div>
+              <div className="text-sm text-blue-600 mb-1">
+                {getCompanyName(a)}
+              </div>
+              <div className="font-bold text-gray-800 mb-1">
+                {mapStatus(a.status)}
+              </div>
+              <div className="text-gray-500 text-xs">
+                {new Date(a.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}{" "}
+                |{" "}
+                {new Date(a.created_at).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
                 </div>
 
                 {/* Bottom grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5 items-stretch">
                     <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl relative">
+                        <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-red-700 font-bold text-lg">Your Proposals</h3>
+                                    <span className="text-sm text-gray-600">Click on any row to view details</span>
+                                </div>
                         <div className="max-h-200 overflow-y-auto relative">
                             <table className="w-full text-sm rounded-lg overflow-hidden">
                                 <thead className="sticky top-0 bg-white z-10">
@@ -360,7 +427,7 @@ export default function BpiDashboard() {
                                                 </td>
                                                 <td className="p-3">
                                                     <div className="font-medium">
-                                                        {p.company_name || 'Unknown Company'}
+                                                        {getCompanyName(p)}
                                                     </div>
                                                 </td>
                                                 <td className="p-3">
