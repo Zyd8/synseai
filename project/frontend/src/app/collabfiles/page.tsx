@@ -17,6 +17,7 @@ interface TimelineItem {
   sender: 'user' | 'bpi';
   fileType?: string; // e.g., 'PDF', 'DOCX', 'JPG'
   fileSize?: string; // e.g., '2.4 MB'
+  downloadUrl: string; // URL to download the file
 }
 
 interface CompanyData {
@@ -79,7 +80,7 @@ export default function CollabFiles() {
           sender,
           fileType: doc.type,
           fileSize: '',
-          downloadUrl: doc.download_url,
+          downloadUrl: `${API}/api/document/download_file/${doc.id}`,
           viewUrl: doc.view_url,
         };
       });
@@ -186,7 +187,7 @@ export default function CollabFiles() {
             sender: sender,
             fileType: doc.type,
             fileSize: '', // optional
-            downloadUrl: doc.download_url,
+            downloadUrl: `${API}/api/document/download_file/${doc.id}`,
             viewUrl: doc.view_url,
           };
         });
@@ -270,7 +271,8 @@ export default function CollabFiles() {
           sender: role === "employee" ? "bpi" : "user", // <-- sender based on role
           fileType: uploadedDoc.type || uploadedFile.name.split('.').pop()?.toUpperCase(),
           fileSize: uploadedFile.size ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB` : undefined,
-          fileUrl: uploadedDoc.file || ""
+          fileUrl: uploadedDoc.file || "",
+          downloadUrl: `${API}/api/document/download_file/${uploadedDoc.id}`
         }
       ]);
 
@@ -441,7 +443,11 @@ export default function CollabFiles() {
 
                           <div className={`flex items-center justify-between text-xs ${isRightSide ? "text-white opacity-75" : "text-gray-500"}`}>
                             <span className="truncate">{item.fileType} • {item.fileSize}</span>
-                            <button className={`p-1 rounded hover:bg-opacity-20 hover:bg-gray-500 transition-colors flex-shrink-0 ml-2 ${isRightSide ? "text-white" : "text-[#B11016]"}`}>
+                            <button
+                              onClick={() => window.open(item.downloadUrl, "_blank")}
+                              className={`p-1 rounded hover:bg-opacity-20 hover:bg-gray-500 transition-colors flex-shrink-0 ml-2 ${isRightSide ? "text-white" : "text-[#B11016]"
+                                }`}
+                            >
                               <FaDownload size={12} />
                             </button>
                           </div>
