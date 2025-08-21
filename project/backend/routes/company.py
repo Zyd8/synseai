@@ -75,13 +75,24 @@ def create_company():
 @company_bp.route('', methods=['GET'])
 @jwt_required()
 def get_company():
-    """Get the authenticated user's company details"""
     current_user_id = str(get_jwt_identity())
-    company = Company.query.filter_by(user_id=current_user_id).first()
-    if not company:
-        return jsonify({"error": "Company not found"}), 404
-        
-    return jsonify(company.to_dict())
+    user = User.query.get(current_user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if not user.company:
+        return jsonify({"error": "User does not have a company"}), 400
+
+    if user.role == UserRole.USER:
+        company = Company.query.filter_by(user_id=current_user_id).first()
+        return jsonify(company.to_dict()), 200
+
+    if user.role == UserRole.ADMIN or user.role == UserRole.EMPLOYEE:
+        companies = Company.query.all()
+        return jsonify([company.to_dict() for company in companies]), 200
+    
+    return jsonify({"error": "Unauthorized"}), 403
 
 @company_bp.route('', methods=['PUT'])
 @jwt_required()
@@ -173,16 +184,3 @@ def get_company_by_id(company_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
-@company_bp.route('/all', methods=['GET'])
-@jwt_required()
-def get_all_companies():
-    """Get all companies in the system"""
-    try:
-        companies = Company.query.all()
-        return jsonify([company.to_dict() for company in companies]), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
-
-
