@@ -13,6 +13,7 @@ export default function Dashboard() {
 
     const [proposals, setProposals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [companyColor, setCompanyColor] = useState("#B11016"); // Default red color
 
     // Map backend status
     const mapStatus = (status: string) => {
@@ -25,7 +26,35 @@ export default function Dashboard() {
         }
     };
 
+    // Fetch company data to get the color theme
+    const fetchCompanyColor = async () => {
+        const token = sessionStorage.getItem("access_token");
+        try {
+            const res = await fetch(`${API}/api/company`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.color) {
+                    setCompanyColor(data.color);
+                    console.log("Company color fetched:", data.color);
+                }
+            } else {
+                console.warn("Failed to fetch company color, using default");
+            }
+        } catch (err) {
+            console.error("Error fetching company color:", err);
+        }
+    };
+
     useEffect(() => {
+        // Fetch company color first
+        fetchCompanyColor();
+
         const fetchProposals = async () => {
             const token = sessionStorage.getItem("access_token");
             try {
@@ -49,7 +78,7 @@ export default function Dashboard() {
         };
 
         fetchProposals();
-    }, []);
+    }, [API]);
 
     // Compute summary counts
     const summary = [
@@ -65,12 +94,10 @@ export default function Dashboard() {
         .slice(0, 3);
 
     // Handle proposal row click
-  
     const handleProposalClick = (proposalId: number) => {
-    console.log("Navigating to proposal:", proposalId);
-    router.push(`/collabproposaltracking?id=${proposalId}`);
+        console.log("Navigating to proposal:", proposalId);
+        router.push(`/collabproposaltracking?id=${proposalId}`);
     };
-
 
     return (
         <ProtectedRoute allowedRoles={["user"]}>
@@ -82,9 +109,9 @@ export default function Dashboard() {
                     {/* Main content */}
                     <main className="flex-1 py-3 sm:py-6 pl-[2%] sm:pl-[3%] pr-[3%] sm:pr-[5%]">
                         {/* Header row */}
-                        <div className="flex items-center justify-between border-b-[3px] border-red-700 pb-2 sm:pb-4">
+                        <div className="flex items-center justify-between pb-2 sm:pb-4" style={{ borderBottom: `3px solid ${companyColor}` }}>
                             <div>
-                                <h1 className="text-2xl font-bold text-red-700">Dashboard</h1>
+                                <h1 className="text-2xl font-bold" style={{ color: companyColor }}>Dashboard</h1>
                                 <p className="text-sm text-gray-600 mt-1">
                                     Track the status of all your submitted collaboration proposals with BPI.
                                 </p>
@@ -93,13 +120,37 @@ export default function Dashboard() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => router.push("/proposalform")}
-                                    className="bg-[#B11016] border-2 text-white px-4 py-2 rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition"
+                                    className="border-2 text-white px-4 py-2 rounded-md transition"
+                                    style={{ 
+                                        backgroundColor: companyColor,
+                                        borderColor: companyColor
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'white';
+                                        e.currentTarget.style.color = companyColor;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = companyColor;
+                                        e.currentTarget.style.color = 'white';
+                                    }}
                                 >
                                     Create Proposal
                                 </button>
                                 <button
                                     onClick={() => router.push("/companysetup")}
-                                    className="bg-[#B11016] border-2 text-white px-4 py-2 rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition"
+                                    className="border-2 text-white px-4 py-2 rounded-md transition"
+                                    style={{ 
+                                        backgroundColor: companyColor,
+                                        borderColor: companyColor
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'white';
+                                        e.currentTarget.style.color = companyColor;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = companyColor;
+                                        e.currentTarget.style.color = 'white';
+                                    }}
                                 >
                                     Edit Company
                                 </button>
@@ -128,7 +179,7 @@ export default function Dashboard() {
 
                             {/* Activities */}
                             <div className="bg-white rounded-lg drop-shadow-lg sm:p-8 p-6 border border-gray-500 h-[350px] flex flex-col">
-                                <h3 className="text-red-700 font-bold text-xl mb-4 border-b border-black pb-2 sm:pb-4">
+                                <h3 className="font-bold text-xl mb-4 border-b border-black pb-2 sm:pb-4" style={{ color: companyColor }}>
                                     Recent Activities
                                 </h3>
 
@@ -144,20 +195,21 @@ export default function Dashboard() {
                                             <div key={i} className="relative flex items-start">
                                                 {/* Dot */}
                                                 <div
-                                                className="relative z-10 rounded-full flex-shrink-0 bg-[#B11016]"
-                                                style={{
-                                                    width: "var(--dot-size)",
-                                                    height: "var(--dot-size)",
-                                                    marginTop: "0.5rem",
-                                                }}
+                                                    className="relative z-10 rounded-full flex-shrink-0"
+                                                    style={{
+                                                        width: "var(--dot-size)",
+                                                        height: "var(--dot-size)",
+                                                        marginTop: "0.5rem",
+                                                        backgroundColor: companyColor
+                                                    }}
                                                 ></div>
 
                                                 {/* Vertical line */}
                                                 {i < arr.length - 1 && (
-                                                <div
-                                                    className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-300"
-                                                    style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
-                                                ></div>
+                                                    <div
+                                                        className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-300"
+                                                        style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
+                                                    ></div>
                                                 )}
 
                                                 <div className="ml-4 pb-6 last:pb-0 mb-4">
@@ -187,85 +239,86 @@ export default function Dashboard() {
                             {/* Table */}
                             <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-red-700 font-bold text-lg">Your Proposals</h3>
+                                    <h3 className="font-bold text-lg" style={{ color: companyColor }}>Your Proposals</h3>
                                     <span className="text-sm text-gray-600">Click on any row to view details</span>
                                 </div>
                               
-                                    <div className="max-h-64 overflow-y-auto">
-                                        <table className="w-full text-sm rounded-lg overflow-hidden">
-                                            <thead className="sticky top-0 bg-white z-10">
+                                <div className="max-h-64 overflow-y-auto">
+                                    <table className="w-full text-sm rounded-lg overflow-hidden">
+                                        <thead className="sticky top-0 bg-white z-10">
+                                            <tr>
+                                                <th className="p-3 text-left" style={{ color: companyColor }}>Proposal ID</th>
+                                                <th className="p-3 text-left" style={{ color: companyColor }}>Proposal Title</th>
+                                                <th className="p-3 text-left" style={{ color: companyColor }}>Status</th>
+                                                <th className="p-3 text-center" style={{ color: companyColor }}>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {!loading && proposals.length === 0 && (
                                                 <tr>
-                                                    <th className="p-3 text-left text-red-700">Proposal ID</th>
-                                                    <th className="p-3 text-left text-red-700">Proposal Title</th>
-                                                    <th className="p-3 text-left text-red-700">Status</th>
-                                                    <th className="p-3 text-center text-red-700">Action</th>
+                                                    <td colSpan={4} className="p-6 text-center text-gray-500">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <p>No proposals found</p>
+                                                            <button
+                                                                onClick={() => router.push("/proposalform")}
+                                                                className="hover:underline text-sm"
+                                                                style={{ color: companyColor }}
+                                                            >
+                                                                Create your first proposal
+                                                            </button>
+                                                        </div>
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                {!loading && proposals.length === 0 && (
-                                                    <tr>
-                                                        <td colSpan={4} className="p-6 text-center text-gray-500">
-                                                            <div className="flex flex-col items-center gap-2">
-                                                                <p>No proposals found</p>
-                                                                <button
-                                                                    onClick={() => router.push("/proposalform")}
-                                                                    className="text-red-700 hover:underline text-sm"
+                                            )}
+                                            {!loading &&
+                                                proposals.map((p, i) => (
+                                                    <tr 
+                                                        key={i} 
+                                                        className="border-t hover:bg-gray-50 cursor-pointer transition-colors"
+                                                        onClick={() => handleProposalClick(p.id)}
+                                                    >
+                                                        <td className="p-3 font-medium" style={{ color: companyColor }}>#{p.id}</td>
+                                                        <td className="p-3">
+                                                            <div className="font-medium">{p.title}</div>
+                                                            {p.description && (
+                                                                <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                                                                    {p.description}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                mapStatus(p.status) === 'Approved' ? 'bg-green-100 text-green-800' :
+                                                                mapStatus(p.status) === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                                mapStatus(p.status) === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                                                                'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                {mapStatus(p.status)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3 text-center">
+                                                            <div className="flex items-center justify-center">
+                                                                <svg 
+                                                                    className="w-4 h-4 text-gray-400" 
+                                                                    fill="none" 
+                                                                    stroke="currentColor" 
+                                                                    viewBox="0 0 24 24"
                                                                 >
-                                                                    Create your first proposal
-                                                                </button>
+                                                                    <path 
+                                                                        strokeLinecap="round" 
+                                                                        strokeLinejoin="round" 
+                                                                        strokeWidth={2} 
+                                                                        d="M9 5l7 7-7 7" 
+                                                                    />
+                                                                </svg>
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                )}
-                                                {!loading &&
-                                                    proposals.map((p, i) => (
-                                                        <tr 
-                                                            key={i} 
-                                                            className="border-t hover:bg-gray-50 cursor-pointer transition-colors"
-                                                            onClick={() => handleProposalClick(p.id)}
-                                                        >
-                                                            <td className="p-3 font-medium text-red-700">#{p.id}</td>
-                                                            <td className="p-3">
-                                                                <div className="font-medium">{p.title}</div>
-                                                                {p.description && (
-                                                                    <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
-                                                                        {p.description}
-                                                                    </div>
-                                                                )}
-                                                            </td>
-                                                            <td className="p-3">
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                                    mapStatus(p.status) === 'Approved' ? 'bg-green-100 text-green-800' :
-                                                                    mapStatus(p.status) === 'Rejected' ? 'bg-red-100 text-red-800' :
-                                                                    mapStatus(p.status) === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
-                                                                    'bg-gray-100 text-gray-800'
-                                                                }`}>
-                                                                    {mapStatus(p.status)}
-                                                                </span>
-                                                            </td>
-                                                            <td className="p-3 text-center">
-                                                                <div className="flex items-center justify-center">
-                                                                    <svg 
-                                                                        className="w-4 h-4 text-gray-400" 
-                                                                        fill="none" 
-                                                                        stroke="currentColor" 
-                                                                        viewBox="0 0 24 24"
-                                                                    >
-                                                                        <path 
-                                                                            strokeLinecap="round" 
-                                                                            strokeLinejoin="round" 
-                                                                            strokeWidth={2} 
-                                                                            d="M9 5l7 7-7 7" 
-                                                                        />
-                                                                    </svg>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                           
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                       
                                 {loading && <p className="text-center p-3">Loading proposals...</p>}
                             </div>
 
