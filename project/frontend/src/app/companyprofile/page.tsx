@@ -123,20 +123,6 @@ export default function CompanyProfile() {
                 if (synergyRes.ok) {
                     const synergy = await synergyRes.json();
 
-                    // DUMMY DATA FOR COMPLIANCE
-                    if (!synergy.compliance_score) {
-                        synergy.compliance_score = 0.75;
-                    }
-                    if (!synergy.compliance_reasonings) {
-                        synergy.compliance_reasonings =
-                            "• Regulatory compliance: The company is registered with the Securities and Exchange Commission (SEC) and follows standard reporting requirements.\n" +
-                            "• Data privacy: The organization publicly states compliance with the Philippines Data Privacy Act (RA 10173), but no recent third-party audit reports are available.\n" +
-                            "• Industry certifications: Holds ISO 27001 certification for information security, though details on renewal dates are not disclosed.\n" +
-                            "• Labor compliance: Regularly submits reports to DOLE and maintains proper employment contracts.\n" +
-                            "• Environmental standards: No official compliance records found related to DENR environmental guidelines.";
-                    }
-
-
                     setSynergyData(synergy);
                 } else {
                     console.warn("No synergy data available for this company");
