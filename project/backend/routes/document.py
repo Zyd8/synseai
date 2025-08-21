@@ -113,24 +113,6 @@ def get_files_by_proposal(proposal_id):
         return jsonify({"error": str(e)}), 500
 
 @document_bp.route('/download_file/<int:doc_id>', methods=['GET'])
-def download_file(doc_id):
-    try:
-        document = Document.query.get_or_404(doc_id)
-        file_path = document.file  # e.g. uploaded_files\\team_files\\5_Sheens_Resume.pdf
-
-        if not os.path.exists(file_path):
-            return jsonify({"error": "File not found"}), 404
-
-        return send_file(
-            file_path,
-            as_attachment=True,
-            download_name=document.name  # what the user sees when saving
-        )
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@document_bp.route('/download_file2/<int:doc_id>', methods=['GET'])
 def download_file2(doc_id):
     try:
         document = Document.query.get_or_404(doc_id)
@@ -142,7 +124,7 @@ def download_file2(doc_id):
         return send_file(
             file_path,
             as_attachment=True,
-            download_name=os.path.basename(file_path)  # keeps extension
+            download_name=os.path.basename(file_path)
         )
 
     except Exception as e:
@@ -158,7 +140,6 @@ def view_file(doc_id):
         if not os.path.exists(file_path):
             return jsonify({"error": "File not found"}), 404
 
-        # Don’t force download, just return so browser can render PDF/image/etc.
         return send_file(file_path)
 
     except Exception as e:
