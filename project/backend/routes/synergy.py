@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, Synergy
+from models import db, User, Synergy, Company, UserRole
 import requests
 
 synergy_bp = Blueprint('synergy', __name__)
@@ -56,3 +56,33 @@ def create_company_synergy():
             "synergy": result.to_dict()
         }), 201
     return jsonify({"error": result}), 500
+
+@synergy_bp.route('company/<int:company_id>', methods=['GET'])
+@jwt_required()
+def get_company_synergy(company_id):
+    """HTTP endpoint for getting company synergy"""
+    current_user_id = str(get_jwt_identity())
+    user = User.query.get(current_user_id)
+    
+    if user.role == UserRole.ADMIN or user.role == UserRole.EMPLOYEE:
+        company = Company.query.filter_by(id=company_id).first()
+        if not company:
+            return jsonify({"error": "Company not found"}), 404
+        if not company.synergy:
+            return jsonify({"error": "Synergy does not exist for this company yet"}), 400
+        return jsonify(company.synergy.to_dict()), 200
+
+    return jsonify({"error": "Unauthorized"}), 403
+
+@synergy_bp.route('company', methods=['GET'])
+@jwt_required()
+def get_companies_synergy():
+    """HTTP endpoint for getting companies synergy"""
+    current_user_id = str(get_jwt_identity())
+    user = User.query.get(current_user_id)
+
+    if user.role == UserRole.ADMIN or user.role == UserRole.EMPLOYEE:
+        companies = Company.query.all()
+        return jsonify([company.synergy.to_dict() for company in companies]), 200
+
+    return jsonify({"error": "Unauthorized"}), 403

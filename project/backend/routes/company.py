@@ -9,7 +9,10 @@ def run_synergy_creation(app, company_id, company_name):
     with app.app_context():
         success, result = _create_company_synergy(company_id, company_name)
         if not success:
+            print("FAILEDD")
             current_app.logger.error(f"Failed to create synergy: {result}")
+
+        print("DONEEEEE")
 
 company_bp = Blueprint('company', __name__)
 

@@ -72,7 +72,8 @@ class SynsaiLLM:
             return max(0.0, min(1.0, score))  
             
         except Exception as e:
-            print(f"Error getting {criteria} score: {str(e)}")
+            print(f"Error getting {criteria} score: {str(e)}")  
+            return 0.0
 
 
     def company_score_reasoning(self, criteria):
