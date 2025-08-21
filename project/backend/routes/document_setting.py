@@ -60,3 +60,30 @@ def get_all():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@document_setting_bp.route('/<int:setting_id>', methods=['GET'])
+@jwt_required()
+def get_by_id(setting_id):
+    try:
+        setting = Document_setting.query.get(setting_id)
+        if not setting:
+            return jsonify({"error": "Document setting not found"}), 404
+
+        doc = setting.document
+        result = {
+            "id": setting.id,
+            "current_location": setting.current_location,
+            "iteration": setting.iteration,
+            "updated_at": setting.updated_at,
+            "document_id": setting.document_id,
+            "document_name": doc.name if doc else None,
+            "document_created_at": doc.created_at if doc else None,
+            "document_description": doc.description if doc else None,
+            "download_url": f"/api/document/download_file/{doc.id}" if doc else None
+        }
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
