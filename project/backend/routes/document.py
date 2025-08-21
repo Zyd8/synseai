@@ -148,3 +148,31 @@ def view_file(doc_id):
         return jsonify({"error": str(e)}), 500
 
 
+@document_bp.route('/get_all', methods=['GET'])
+@jwt_required()
+def get_all_documents():
+    try:
+        documents = Document.query.all()
+
+        if not documents:
+            return jsonify({"message": "No documents found"}), 404
+
+        result = []
+        for doc in documents:
+            result.append({
+                "id": doc.id,
+                "name": doc.name,
+                "file_url": doc.file,
+                "type": doc.type,
+                "description": doc.description,
+                "is_bpi": doc.is_bpi,
+                "proposal_id": doc.proposal_id,
+                "created_at": doc.created_at,
+                "download_url": f"/api/document/download_file/{doc.id}",
+                "view_url": f"/api/document/view_file/{doc.id}"
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
