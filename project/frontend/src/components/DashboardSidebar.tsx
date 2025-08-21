@@ -26,6 +26,7 @@ export default function DashboardSidebar() {
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
     { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
+    { href: "/companylist", icon: "/images/Folder_del.png", label: "Companies" },
   ];
 
   // Pick which menu to show
