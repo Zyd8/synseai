@@ -143,7 +143,7 @@ export default function CollabFiles() {
         setexpectedSupport(proposal.description);
         setCompanyData({
           companyName: company.name,
-          companyLogo: company.logo ? `data:image/png;base64,${company.logo}` : "/logo/synsei_icon.png",
+          companyLogo: company.logo ? `${company.logo}` : "/logo/synsei_icon.png",
         });
 
 
