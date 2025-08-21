@@ -161,7 +161,7 @@ export default function CompanyProfile() {
     };
 
     const renderReasonings = (items: string[]) => {
-        const shades = ["#B11016", "#800b10", "#60080c"];
+        const shades = ["#B11016", "#60080c"];
         return items.map((text, idx) => (
             <div
                 key={idx}
