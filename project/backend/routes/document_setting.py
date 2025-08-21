@@ -47,8 +47,16 @@ def create_document_setting():
 def get_all():
     try:
         settings = Document_setting.query.all()
-        results = [setting.to_dict() for setting in settings]
+
+        results = []
+        for setting in settings:
+            results.append({
+                "id": setting.id,
+                "document_id": setting.document_id,
+                "document_name": setting.document.name if setting.document else None
+            })
 
         return jsonify(results), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+

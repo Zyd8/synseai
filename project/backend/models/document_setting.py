@@ -19,6 +19,8 @@ class Document_setting(db.Model):
     #Foreign Key to proposal
     document_id = db.Column(db.String(36), db.ForeignKey('documents.id'), nullable=False)
 
+    document = db.relationship("Document", backref="settings")
+
     def to_dict(self):
         return {
             "id": self.id,
