@@ -4,17 +4,19 @@ import Sidebar from "@/components/DashboardSidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FaUsers, FaUserTie, FaUserFriends, FaFileAlt, FaBuilding, FaUserShield } from "react-icons/fa"; 
 
 interface User {
-    id: number;
-    name: string;
-    email: string;
-    role: 'employee' | 'user' | 'admin';
-    status: 'active' | 'inactive' | 'suspended';
-    department?: string;
-    last_login?: string;
-    created_at: string;
-    updated_at: string;
+  id: number;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  email: string;
+  contact_number?: string;
+  role: "employee" | "user" | "admin";
+  position?: string;
+  department_id?: number;
+  created_at: string;
 }
 
 export default function UserManagement() {
@@ -31,6 +33,9 @@ export default function UserManagement() {
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const router = useRouter();
 
+    const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+    const [departmentFilter, setDepartmentFilter] = useState("all");
+
     // New user form state
     const [newUser, setNewUser] = useState({
         name: '',
@@ -41,29 +46,53 @@ export default function UserManagement() {
     });
 
     useEffect(() => {
-        const fetchAllUsers = async () => {
-            const token = sessionStorage.getItem("access_token");
-            try {
-                const res = await fetch(`${API}/api/users`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                });
+  const fetchDepartments = async () => {
+    const token = sessionStorage.getItem("access_token");
+    try {
+      const deptRes = await fetch(`${API}/api/department`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-                if (!res.ok) throw new Error("Failed to fetch users");
-                const data = await res.json();
+      if (!deptRes.ok) throw new Error("Failed to fetch departments");
 
-                setUsers(Array.isArray(data.users) ? data.users : []);
-            } catch (err) {
-                console.error("Error fetching users:", err);
-                setUsers([]);
-            } finally {
-                setLoading(false);
-            }
-        };
+      const data = await deptRes.json();
+      setDepartments(data.departments || []);
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      setDepartments([]);
+    }
+  };
 
-        fetchAllUsers();
+  fetchDepartments();
+}, [API]);
+
+    useEffect(() => {
+    const fetchAllUsers = async () => {
+        const token = sessionStorage.getItem("access_token");
+        try {
+        const res = await fetch(`${API}/api/user`, {
+            headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            },
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+
+        setUsers(Array.isArray(data) ? data : []); // backend returns an array
+        } catch (err) {
+        console.error("Error fetching users:", err);
+        setUsers([]);
+        } finally {
+        setLoading(false);
+        }
+    };
+
+    fetchAllUsers();
     }, [API]);
 
     const formatDate = (dateString: string) => {
@@ -80,14 +109,18 @@ export default function UserManagement() {
     };
 
     // Filter users based on search and filters
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            user.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-        const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-        
-        return matchesSearch && matchesRole && matchesStatus;
-    });
+   const filteredUsers = users.filter(user => {
+  const matchesSearch =
+    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+  const matchesRole = roleFilter === "all" || user.role === roleFilter;
+
+  const matchesDepartment =
+    departmentFilter === "all" || String(user.department_id) === departmentFilter;
+
+  return matchesSearch && matchesRole && matchesDepartment;
+});
 
     // Handle role change for single user
     const handleRoleChange = async (userId: number, newRole: string) => {
@@ -162,6 +195,8 @@ export default function UserManagement() {
             setUpdating(null);
         }
     };
+
+    
 
     // Handle bulk role assignment
     const handleBulkRoleAssignment = async () => {
@@ -263,12 +298,16 @@ export default function UserManagement() {
     };
 
     const getRoleColor = (role: string) => {
-        switch (role) {
-            case 'admin': return 'bg-red-100 text-red-800';
-            case 'employee': return 'bg-blue-100 text-blue-800';
-            case 'user': return 'bg-green-100 text-green-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
+    switch (role) {
+        case "admin":
+        return "bg-red-100 text-red-800";
+        case "employee":
+        return "bg-blue-100 text-blue-800";
+        case "user":
+        return "bg-green-100 text-green-800";
+        default:
+        return "bg-gray-100 text-gray-800";
+    }
     };
 
     const getStatusColor = (status: string) => {
@@ -282,7 +321,7 @@ export default function UserManagement() {
 
     return (
         <ProtectedRoute allowedRoles={["admin"]}>
-            <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
+            <div className="flex min-h-screen  overflow-x-hidden">
                 {/* Sidebar */}
                 <Sidebar />
 
@@ -295,30 +334,35 @@ export default function UserManagement() {
 
                     {/* Summary Stats */}
                     <div className="mt-5 grid grid-cols-1 sm:grid-cols-4 gap-4">
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                        <div className="bg-white p-4 rounded-lg border border-gray-500 text-center drop-shadow-md">
                             <div className="text-2xl font-bold text-blue-600">{users.length}</div>
                             <div className="text-sm text-gray-600">Total Users</div>
+                            <FaUsers className="text-3xl text-blue-600 mx-auto mt-2" />
                         </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                        <div className="bg-white p-4 rounded-lg border border-gray-500 text-center drop-shadow-md">
                             <div className="text-2xl font-bold text-green-600">{users.filter(u => u.role === 'user').length}</div>
                             <div className="text-sm text-gray-600">Collaborators</div>
+                            <FaUserFriends className="text-3xl text-green-600 mx-auto mt-2" />
                         </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                        <div className="bg-white p-4 rounded-lg border border-gray-500 text-center drop-shadow-md">
                             <div className="text-2xl font-bold text-purple-600">{users.filter(u => u.role === 'employee').length}</div>
                             <div className="text-sm text-gray-600">Employees</div>
+                            <FaUserTie className="text-3xl text-purple-600 mx-auto mt-2" />
                         </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-                            <div className="text-2xl font-bold text-red-600">{users.filter(u => u.status === 'active').length}</div>
-                            <div className="text-sm text-gray-600">Active Users</div>
+                        <div className="bg-white p-4 rounded-lg border border-gray-500 text-center drop-shadow-md">
+                            <div className="text-2xl font-bold text-yellow-500">{users.filter(u => u.role === 'admin').length}</div>
+                            <div className="text-sm text-gray-600">Administrators</div>
+                            <FaUserShield className="text-3xl text-yellow-500 mx-auto mt-2" />
                         </div>
+                   
                     </div>
 
                     {/* Controls Section */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-4 mt-5 mb-5">
+                    <div className="bg-white rounded-lg border border-gray-500 p-5 mt-5 mb-5 drop-shadow-md">
                         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
                             {/* Search */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Search Users</label>
+                                <label className="block text-sm font-medium text-[#B11016] mb-2">Search Users</label>
                                 <input
                                     type="text"
                                     placeholder="Search by name or email..."
@@ -330,7 +374,7 @@ export default function UserManagement() {
 
                             {/* Role Filter */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
+                                <label className="block text-sm font-medium text-[#B11016] mb-2">Filter by Role</label>
                                 <select
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                                     value={roleFilter}
@@ -343,27 +387,31 @@ export default function UserManagement() {
                                 </select>
                             </div>
 
-                            {/* Status Filter */}
+                            {/* Department Filter */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                >
-                                    <option value="all">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="suspended">Suspended</option>
-                                </select>
+                            <label className="block text-sm font-medium text-[#B11016] mb-2">
+                                Filter by Department
+                            </label>
+                            <select
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                value={departmentFilter}
+                                onChange={(e) => setDepartmentFilter(e.target.value)}
+                            >
+                                <option value="all">All Departments</option>
+                                {departments.map((dept) => (
+                                <option key={dept.id} value={dept.id}>
+                                    {dept.name}
+                                </option>
+                                ))}
+                            </select>
                             </div>
 
                             {/* Actions */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Actions</label>
+                                <label className="block text-sm font-medium text-[#B11016] mb-1">Actions</label>
                                 <button
                                     onClick={() => setShowCreateModal(true)}
-                                    className="w-full px-4 py-2.5 bg-[#B11016] text-white rounded-md hover:bg-red-700 transition text-sm"
+                                    className="w-full px-4 mt-0.5 py-2.5 bg-[#B11016] border border-2 text-white rounded-md hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition text-sm"
                                 >
                                     Create User
                                 </button>
@@ -423,7 +471,7 @@ export default function UserManagement() {
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Name</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Email</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Role</th>
-                                            <th className="p-3 text-left text-red-700 whitespace-nowrap">Status</th>
+                                         
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Department</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Created Date</th>
                                             <th className="p-3 text-center text-red-700 whitespace-nowrap">Actions</th>
@@ -441,33 +489,15 @@ export default function UserManagement() {
                                                     />
                                                 </td>
                                                 <td className="p-3 whitespace-nowrap">{user.id}</td>
-                                                <td className="p-3 font-medium">{user.name}</td>
+                                                <td className="p-3 font-medium">{user.full_name}</td>
                                                 <td className="p-3">{user.email}</td>
-                                                <td className="p-3">
-                                                    <select
-                                                        value={user.role}
-                                                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                                                        disabled={updating === user.id}
-                                                        className={`px-2 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-red-500 ${getRoleColor(user.role)}`}
-                                                    >
-                                                        <option value="user">Collaborator</option>
-                                                        <option value="employee">Employee</option>
-                                                        <option value="admin">Super Admin</option>
-                                                    </select>
+                                               <td className="p-3">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                                                    {user.role}
+                                                </span>
                                                 </td>
-                                                <td className="p-3">
-                                                    <select
-                                                        value={user.status}
-                                                        onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                                                        disabled={updating === user.id}
-                                                        className={`px-2 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-red-500 ${getStatusColor(user.status)}`}
-                                                    >
-                                                        <option value="active">Active</option>
-                                                        <option value="inactive">Inactive</option>
-                                                        <option value="suspended">Suspended</option>
-                                                    </select>
-                                                </td>
-                                                <td className="p-3">{user.department || 'N/A'}</td>
+                                              
+                                                <td className="p-3">{user.department_id || "N/A"}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatDate(user.created_at)}</td>
                                                 <td className="p-3 text-center">
                                                     <div className="flex items-center justify-center gap-2">
@@ -475,14 +505,14 @@ export default function UserManagement() {
                                                             onClick={() => router.push(`/super-admin/user-profile?id=${user.id}`)}
                                                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                                                         >
-                                                            View
+                                                            Change Role
                                                         </button>
                                                         <span className="text-gray-400">|</span>
                                                         <button
                                                             onClick={() => router.push(`/super-admin/edit-user?id=${user.id}`)}
-                                                            className="text-green-600 hover:text-green-800 text-sm font-medium"
+                                                            className="text-red-600 hover:text-red-800 text-sm font-medium"
                                                         >
-                                                            Edit
+                                                            Delete
                                                         </button>
                                                     </div>
                                                 </td>
