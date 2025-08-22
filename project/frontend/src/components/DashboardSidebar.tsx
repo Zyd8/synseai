@@ -29,6 +29,7 @@ export default function DashboardSidebar() {
     { href: "/companylist", icon: "/images/Folder_del.png", label: "Companies" },
     { href: "/bpifiles", icon: "/images/Folder_del.png", label: "Files" },
     { href: "/bpifilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
+    { href: "/bpifindcollab", icon: "/images/Folder_del.png", label: "Find Collaborators" },
   ];
 
   // Pick which menu to show

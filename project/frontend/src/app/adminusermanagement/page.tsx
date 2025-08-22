@@ -27,10 +27,15 @@ export default function UserManagement() {
     const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showRoleModal, setShowRoleModal] = useState(false);
+    const [showEditRoleModal, setShowEditRoleModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [bulkRole, setBulkRole] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null);
+    const [selectedUserForDelete, setSelectedUserForDelete] = useState<User | null>(null);
+    const [newRole, setNewRole] = useState<string>('');
     const router = useRouter();
 
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
@@ -38,11 +43,13 @@ export default function UserManagement() {
 
     // New user form state
     const [newUser, setNewUser] = useState({
-        name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         role: 'user',
         password: '',
-        department: ''
+        contact_number: '',
+        position: ''
     });
 
     useEffect(() => {
@@ -128,8 +135,8 @@ export default function UserManagement() {
         setUpdating(userId);
         
         try {
-            const res = await fetch(`${API}/api/users/${userId}/role`, {
-                method: 'PATCH',
+            const res = await fetch(`${API}/api/user/${userId}`, {
+                method: 'PUT',
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -139,8 +146,10 @@ export default function UserManagement() {
 
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.error || "Failed to update user role");
+                throw new Error(errorData.message || "Failed to update user role");
             }
+
+            const updatedUser = await res.json();
 
             // Update local state
             setUsers(prevUsers =>
@@ -196,21 +205,76 @@ export default function UserManagement() {
         }
     };
 
-    
+    // Open edit role modal
+    const openEditRoleModal = (user: User) => {
+        setSelectedUserForEdit(user);
+        setNewRole(user.role);
+        setShowEditRoleModal(true);
+    };
 
-    // Handle bulk role assignment
+    // Handle edit role submission
+    const handleEditRoleSubmit = async () => {
+        if (!selectedUserForEdit || !newRole) return;
+        
+        await handleRoleChange(selectedUserForEdit.id, newRole);
+        setShowEditRoleModal(false);
+        setSelectedUserForEdit(null);
+        setNewRole('');
+    };
+
+    // Open delete modal
+    const openDeleteModal = (user: User) => {
+        setSelectedUserForDelete(user);
+        setShowDeleteModal(true);
+    };
+
+    // Handle delete user
+    const handleDeleteUser = async () => {
+        if (!selectedUserForDelete) return;
+
+        const token = sessionStorage.getItem("access_token");
+        try {
+            const res = await fetch(`${API}/api/user/${selectedUserForDelete.id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Failed to delete user");
+            }
+
+            setUsers((prevUsers) => prevUsers.filter((user) => user.id !== selectedUserForDelete.id));
+            alert("User deleted successfully!");
+            
+        } catch (err) {
+            console.error("Error deleting user:", err);
+            alert(
+                `Error deleting user: ${
+                    err instanceof Error ? err.message : "Unknown error"
+                }`
+            );
+        } finally {
+            setShowDeleteModal(false);
+            setSelectedUserForDelete(null);
+        }
+    };
+
+    // Update bulk role assignment to use PUT /api/user/:id
     const handleBulkRoleAssignment = async () => {
         if (selectedUsers.size === 0 || !bulkRole) {
-            alert('Please select users and a role');
+            alert("Please select users and a role");
             return;
         }
 
         const token = sessionStorage.getItem("access_token");
-        
+
         try {
-            const promises = Array.from(selectedUsers).map(userId => 
-                fetch(`${API}/api/users/${userId}/role`, {
-                    method: 'PATCH',
+            const promises = Array.from(selectedUsers).map((userId) =>
+                fetch(`${API}/api/user/${userId}`, {
+                    method: "PUT",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -221,27 +285,29 @@ export default function UserManagement() {
 
             await Promise.all(promises);
 
-            // Update local state
-            setUsers(prevUsers =>
-                prevUsers.map(user =>
+            setUsers((prevUsers) =>
+                prevUsers.map((user) =>
                     selectedUsers.has(user.id) ? { ...user, role: bulkRole as any } : user
                 )
             );
 
             setSelectedUsers(new Set());
-            setBulkRole('');
+            setBulkRole("");
             setShowRoleModal(false);
-            alert(`Bulk role assignment completed!`);
-            
+            alert("Bulk role assignment completed!");
         } catch (err) {
             console.error("Error in bulk role assignment:", err);
-            alert(`Error in bulk assignment: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(
+                `Error in bulk assignment: ${
+                    err instanceof Error ? err.message : "Unknown error"
+                }`
+            );
         }
     };
 
     // Handle create new user
     const handleCreateUser = async () => {
-        if (!newUser.name || !newUser.email || !newUser.password) {
+        if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
             alert('Please fill in all required fields');
             return;
         }
@@ -249,23 +315,54 @@ export default function UserManagement() {
         const token = sessionStorage.getItem("access_token");
         
         try {
-            const res = await fetch(`${API}/api/users`, {
+            const res = await fetch(`${API}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(newUser),
+                body: JSON.stringify({
+                    first_name: newUser.first_name,
+                    last_name: newUser.last_name,
+                    email: newUser.email,
+                    password: newUser.password,
+                    role: newUser.role,
+                    contact_number: newUser.contact_number,
+                    position: newUser.position
+                }),
             });
 
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.error || "Failed to create user");
+                throw new Error(errorData.message || "Failed to create user");
             }
 
             const data = await res.json();
-            setUsers(prev => [...prev, data.user]);
-            setNewUser({ name: '', email: '', role: 'user', password: '', department: '' });
+            
+            // Create user object that matches the expected format for the frontend
+            const newUserForState: User = {
+                id: data.user.id,
+                first_name: data.user.first_name,
+                last_name: data.user.last_name,
+                full_name: `${data.user.first_name} ${data.user.last_name}`,
+                email: data.user.email,
+                contact_number: data.user.contact_number,
+                role: newUser.role as "employee" | "user" | "admin",
+                position: data.user.position,
+               
+                created_at: new Date().toISOString()
+            };
+            
+            setUsers(prev => [...prev, newUserForState]);
+            setNewUser({ 
+                first_name: '', 
+                last_name: '', 
+                email: '', 
+                role: 'user', 
+                password: '', 
+                contact_number: '', 
+                position: '' 
+            });
             setShowCreateModal(false);
             alert('User created successfully!');
             
@@ -501,15 +598,16 @@ export default function UserManagement() {
                                                 <td className="p-3 whitespace-nowrap">{formatDate(user.created_at)}</td>
                                                 <td className="p-3 text-center">
                                                     <div className="flex items-center justify-center gap-2">
-                                                        <button
-                                                            onClick={() => router.push(`/super-admin/user-profile?id=${user.id}`)}
+                                                       <button
+                                                            onClick={() => openEditRoleModal(user)}
                                                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                                            disabled={updating === user.id}
                                                         >
-                                                            Change Role
+                                                            {updating === user.id ? 'Updating...' : 'Edit Role'}
                                                         </button>
                                                         <span className="text-gray-400">|</span>
                                                         <button
-                                                            onClick={() => router.push(`/super-admin/edit-user?id=${user.id}`)}
+                                                            onClick={() => openDeleteModal(user)}
                                                             className="text-red-600 hover:text-red-800 text-sm font-medium"
                                                         >
                                                             Delete
@@ -535,12 +633,23 @@ export default function UserManagement() {
                         <h2 className="text-xl font-bold text-red-700 mb-4">Create New User</h2>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
                                 <input
                                     type="text"
-                                    value={newUser.name}
-                                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                                    value={newUser.first_name}
+                                    onChange={(e) => setNewUser({ ...newUser, first_name: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    placeholder="Enter first name"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                <input
+                                    type="text"
+                                    value={newUser.last_name}
+                                    onChange={(e) => setNewUser({ ...newUser, last_name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    placeholder="Enter last name"
                                 />
                             </div>
                             <div>
@@ -550,6 +659,7 @@ export default function UserManagement() {
                                     value={newUser.email}
                                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    placeholder="Enter email address"
                                 />
                             </div>
                             <div>
@@ -559,6 +669,27 @@ export default function UserManagement() {
                                     value={newUser.password}
                                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    placeholder="Enter password"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                                <input
+                                    type="text"
+                                    value={newUser.contact_number}
+                                    onChange={(e) => setNewUser({ ...newUser, contact_number: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    placeholder="Enter contact number"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                                <input
+                                    type="text"
+                                    value={newUser.position}
+                                    onChange={(e) => setNewUser({ ...newUser, position: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    placeholder="Enter position/job title"
                                 />
                             </div>
                             <div>
@@ -573,15 +704,6 @@ export default function UserManagement() {
                                     <option value="admin">Super Admin</option>
                                 </select>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                                <input
-                                    type="text"
-                                    value={newUser.department}
-                                    onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                />
-                            </div>
                         </div>
                         <div className="flex gap-3 mt-6">
                             <button
@@ -591,7 +713,101 @@ export default function UserManagement() {
                                 Create User
                             </button>
                             <button
-                                onClick={() => setShowCreateModal(false)}
+                                onClick={() => {
+                                    setShowCreateModal(false);
+                                    setNewUser({ 
+                                        first_name: '', 
+                                        last_name: '', 
+                                        email: '', 
+                                        role: 'user', 
+                                        password: '', 
+                                        contact_number: '', 
+                                        position: '' 
+                                    });
+                                }}
+                                className="flex-1 bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600 transition"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Role Modal */}
+            {showEditRoleModal && selectedUserForEdit && (
+                <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h2 className="text-xl font-bold text-red-700 mb-4">Edit User Role</h2>
+                        <p className="text-gray-600 mb-4">
+                            Change role for <span className="font-medium">{selectedUserForEdit.full_name}</span>
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Role</label>
+                            <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(selectedUserForEdit.role)}`}>
+                                {selectedUserForEdit.role}
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">New Role</label>
+                            <select
+                                value={newRole}
+                                onChange={(e) => setNewRole(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                            >
+                                <option value="user">Collaborator</option>
+                                <option value="employee">Employee</option>
+                                <option value="admin">Super Admin</option>
+                            </select>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleEditRoleSubmit}
+                                disabled={updating === selectedUserForEdit.id}
+                                className="flex-1 bg-[#B11016] text-white py-2 rounded-md hover:bg-red-700 transition disabled:opacity-50"
+                            >
+                                {updating === selectedUserForEdit.id ? 'Updating...' : 'Update Role'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowEditRoleModal(false);
+                                    setSelectedUserForEdit(null);
+                                    setNewRole('');
+                                }}
+                                className="flex-1 bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600 transition"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && selectedUserForDelete && (
+                <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h2 className="text-xl font-bold text-red-700 mb-4">Confirm Delete</h2>
+                        <p className="text-gray-600 mb-4">
+                            Are you sure you want to delete user <span className="font-medium">{selectedUserForDelete.full_name}</span>?
+                        </p>
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                            <p className="text-yellow-800 text-sm">
+                                <strong>Warning:</strong> This action cannot be undone. The user will be permanently removed from the system.
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleDeleteUser}
+                                className="flex-1 bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition"
+                            >
+                                Delete User
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setSelectedUserForDelete(null);
+                                }}
                                 className="flex-1 bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600 transition"
                             >
                                 Cancel
@@ -603,43 +819,43 @@ export default function UserManagement() {
 
             {/* Bulk Role Assignment Modal */}
             {showRoleModal && (
-                <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <h2 className="text-xl font-bold text-red-700 mb-4">Bulk Role Assignment</h2>
-                        <p className="text-gray-600 mb-4">
-                            Assign role to {selectedUsers.size} selected user(s)
-                        </p>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Role</label>
-                            <select
-                                value={bulkRole}
-                                onChange={(e) => setBulkRole(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                            >
-                                <option value="">Choose a role...</option>
-                                <option value="user">Collaborator</option>
-                                <option value="employee">Employee</option>
-                                <option value="admin">Super Admin</option>
-                            </select>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleBulkRoleAssignment}
-                                disabled={!bulkRole}
-                                className="flex-1 bg-[#B11016] text-white py-2 rounded-md hover:bg-red-700 transition disabled:opacity-50"
-                            >
-                                Assign Role
-                            </button>
-                            <button
-                                onClick={() => setShowRoleModal(false)}
-                                className="flex-1 bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600 transition"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
+            <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <h2 className="text-xl font-bold text-red-700 mb-4">Bulk Role Assignment</h2>
+                <p className="text-gray-600 mb-4">
+                    Assign role to {selectedUsers.size} selected user(s)
+                </p>
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Role</label>
+                    <select
+                    value={bulkRole}
+                    onChange={(e) => setBulkRole(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                    <option value="">Choose a role...</option>
+                    <option value="user">Collaborator</option>
+                    <option value="employee">Employee</option>
+                    <option value="admin">Super Admin</option>
+                    </select>
                 </div>
+                <div className="flex gap-3">
+                    <button
+                    onClick={handleBulkRoleAssignment}
+                    className="flex-1 bg-[#B11016] text-white py-2 rounded-md hover:bg-red-700 transition"
+                    >
+                    Assign Role
+                    </button>
+                    <button
+                    onClick={() => setShowRoleModal(false)}
+                    className="flex-1 bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600 transition"
+                    >
+                    Cancel
+                    </button>
+                </div>
+                </div>
+            </div>
             )}
+
         </ProtectedRoute>
     );
 }
