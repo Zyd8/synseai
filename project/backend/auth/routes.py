@@ -81,7 +81,8 @@ def login():
             'last_name': user.last_name,
             'contact_number': user.contact_number,
             'position': user.position,
-            'role': user.role.value
+            'role': user.role.value,
+            'department_id': user.department_id
         }
     }), 200
 
