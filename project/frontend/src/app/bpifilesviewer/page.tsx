@@ -173,15 +173,21 @@ const FileTable = ({
                         <td className="p-3">{file.id}</td>
                         <td className="p-3">{file.document_name}</td>
                         <td className="p-3 text-center">
-                            <button
-                                className="text-gray-600 hover:text-[#B11016]"
-                                onClick={(e) => {
-                                    e.stopPropagation(); 
-                                    console.log("Menu clicked");
-                                }}
-                            >
-                                ⋮
-                            </button>
+                            <div className="flex items-center justify-center">
+                                <svg
+                                    className="w-4 h-4 text-gray-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 5l7 7-7 7"
+                                    />
+                                </svg>
+                            </div>
                         </td>
                     </tr>
                 ))

@@ -49,17 +49,65 @@ export default function CompanyProfile() {
     // Get company ID from URL parameters - this is required for employee view
     const companyId = searchParams.get('id');
 
-    // ✅ Dummy data arrays
-    const files = [
-        { id: 1, title: "AI Hackathon Proposal", status: "Approved" },
-        { id: 2, title: "Cloud Integration Project", status: "Pending" },
-        { id: 3, title: "BPI Partnership Proposal", status: "Rejected" },
-    ];
+    const [approvedProposals, setApprovedProposals] = useState<{ id: number; title: string; status: string }[]>([]);
+    const [loadingApproved, setLoadingApproved] = useState(false);
+    const [approvedError, setApprovedError] = useState<string | null>(null);
+    const [pendingProposals, setPendingProposals] = useState<{ id: number; title: string; status: string }[]>([]);
+    const [loadingProposals, setLoadingProposals] = useState(false);
+    const [proposalError, setProposalError] = useState<string | null>(null);
 
-    const pendingFiles = [
-        { id: 4, title: "Startup Innovation Proposal", status: "Pending" },
-        { id: 5, title: "Data Security Initiative", status: "Pending" },
-    ];
+    useEffect(() => {
+        const token = sessionStorage.getItem("access_token");
+        if (!token || !companyId) return;
+
+        const fetchProposals = async () => {
+            if (activeTab === "pending") {
+                setLoadingProposals(true);
+                setProposalError(null);
+                try {
+                    const res = await fetch(`${API}/api/proposal/get_company/${companyId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        setPendingProposals(data.proposals || []);
+                    } else {
+                        const errData = await res.json();
+                        setProposalError(errData.error || "Failed to load proposals");
+                    }
+                } catch {
+                    setProposalError("Network error occurred while loading proposals.");
+                } finally {
+                    setLoadingProposals(false);
+                }
+            }
+
+            if (activeTab === "all") {
+                setLoadingApproved(true);
+                setApprovedError(null);
+                try {
+                    const res = await fetch(`${API}/api/proposal/get_company_filtered/${companyId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        setApprovedProposals(data.proposals || []);
+                    } else {
+                        const errData = await res.json();
+                        setApprovedError(errData.error || "No approved projects yet.");
+                    }
+                } catch {
+                    setApprovedError("Network error occurred while loading approved proposals.");
+                } finally {
+                    setLoadingApproved(false);
+                }
+            }
+        };
+
+        fetchProposals();
+    }, [activeTab, API, companyId]);
 
     const handleFilesClick = (proposalId: number) => {
         router.push(`/proposal-details?id=${proposalId}`); // ✅ Replace with your route
@@ -445,7 +493,7 @@ export default function CompanyProfile() {
                         </div>
                     )}
 
-                    <div className="w-full px-[10%]">
+                    <div className="w-full px-[10%] justify-center">
                         <div className="flex w-full border-b mb-4">
                             <button
                                 onClick={() => setActiveTab("pending")}
@@ -454,7 +502,7 @@ export default function CompanyProfile() {
                                     : "text-gray-600 hover:text-black"
                                     }`}
                             >
-                                Pending Proposals
+                                Proposals Submitted
                             </button>
                             <button
                                 onClick={() => setActiveTab("all")}
@@ -463,19 +511,50 @@ export default function CompanyProfile() {
                                     : "text-gray-600 hover:text-black"
                                     }`}
                             >
-                                All Proposals
+                                Projects Together
                             </button>
                         </div>
 
                         {/* Table */}
-                        <div className="w-full w-full bg-white shadow rounded-lg p-4 overflow-x-auto border border-gray-400">
-                            {activeTab === "all" ? (
-                                <FileTable files={files} onRowClick={handleFilesClick} emptyMessage="No proposals found." />
+                        <div className="w-full bg-white shadow rounded-lg p-4 overflow-x-auto border border-gray-400">
+                            {activeTab === "pending" ? (
+                                loadingProposals ? (
+                                    <p className="text-center">Loading proposals...</p>
+                                ) : proposalError ? (
+                                    <p className="text-center">{proposalError}</p>
+                                ) : (
+                                    <FileTable
+                                        files={pendingProposals}
+                                        onRowClick={handleFilesClick}
+                                        emptyMessage="No proposals submitted yet."
+                                    />
+                                )
                             ) : (
-                                <FileTable files={pendingFiles} onRowClick={handleFilesClick} emptyMessage="No pending proposals found." />
+                                loadingApproved ? (
+                                    <p className="text-center">Loading approved projects...</p>
+                                ) : approvedError ? (
+                                    <p className="text-center">{approvedError}</p>
+                                ) : (
+                                    <FileTable
+                                        files={approvedProposals}
+                                        onRowClick={handleFilesClick}
+                                        emptyMessage="No approved projects yet."
+                                    />
+                                )
                             )}
                         </div>
+
+                        {/* Centered Button */}
+                        <div className="flex justify-center mt-4">
+                            <button
+                                className="min-w-2xl cursor-pointer font-bold text-center py-4 px-6 text-white bg-[#B11016] border-2 border-[#B11016] rounded-md hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg"
+                                onClick={() => router.push("/login")}
+                            >
+                                Get Project Ideas
+                            </button>
+                        </div>
                     </div>
+
 
 
                 </div>
@@ -514,15 +593,21 @@ const FileTable = ({
                         <td className="p-3">{file.title}</td>
                         <td className="p-3">{file.status}</td>
                         <td className="p-3 text-center">
-                            <button
-                                className="text-gray-600 hover:text-[#B11016]"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    console.log("Menu clicked");
-                                }}
-                            >
-                                ⋮
-                            </button>
+                            <div className="flex items-center justify-center">
+                                <svg
+                                    className="w-4 h-4 text-gray-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 5l7 7-7 7"
+                                    />
+                                </svg>
+                            </div>
                         </td>
                     </tr>
                 ))
