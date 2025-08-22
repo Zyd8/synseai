@@ -81,6 +81,15 @@ def create_document():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@document_bp.route('/<int:doc_id>', methods=['GET'])
+@jwt_required()
+def get_document_by_id(doc_id):
+    try:
+        document = Document.query.get_or_404(doc_id)
+        return jsonify(document.to_dict()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @document_bp.route('/get_proposal_files/<int:proposal_id>', methods=['GET'])
 @jwt_required()
 def get_files_by_proposal(proposal_id):
