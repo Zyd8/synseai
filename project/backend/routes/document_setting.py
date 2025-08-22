@@ -29,12 +29,20 @@ def create_document_setting():
 
         current_location = iteration[0]
 
+        # Create new setting
         new_setting = Document_setting(
             current_location=current_location,
             iteration=iteration,
             document_id=document_id
         )
         db.session.add(new_setting)
+
+        # Update Document.is_assigned = True
+        document = Document.query.get(document_id)
+        if document:
+            document.is_assigned = True
+            db.session.add(document)
+
         db.session.commit()
 
         return jsonify(new_setting.to_dict()), 201
@@ -42,7 +50,6 @@ def create_document_setting():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
 
 
 @document_setting_bp.route('/get_all', methods=['GET'])

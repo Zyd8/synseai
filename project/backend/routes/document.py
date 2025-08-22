@@ -164,6 +164,7 @@ def get_all_documents():
                 "type": doc.type,
                 "description": doc.description,
                 "is_bpi": doc.is_bpi,
+                "is_assigned": doc.is_assigned,
                 "proposal_id": doc.proposal_id,
                 "created_at": doc.created_at,
                 "download_url": f"/api/document/download_file/{doc.id}",
@@ -174,3 +175,29 @@ def get_all_documents():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@document_bp.route('/get_unassigned', methods=['GET'])
+@jwt_required()
+def get_unassigned_documents():
+    try:
+        # Query all unassigned documents
+        documents = Document.query.filter_by(is_assigned=False).all()
+
+        if not documents:
+            return jsonify({"message": "No unassigned documents found"}), 404
+
+        # Only return id, name, file
+        result = [
+            {
+                "id": doc.id,
+                "name": doc.name,
+                "file": doc.file
+            }
+            for doc in documents
+        ]
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
