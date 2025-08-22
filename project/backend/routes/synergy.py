@@ -22,7 +22,9 @@ def _create_company_synergy(company_id, company_name):
             credibility_score=data['credibility_score'],
             referential_score=data['referential_score'],
             credibility_reasonings=data['credibility_reasoning'],
-            referential_reasonings=data['referential_reasoning']
+            referential_reasonings=data['referential_reasoning'],
+            compliance_score=data['compliance_score'],
+            compliance_reasonings=data['compliance_reasoning']
         )
         
         db.session.add(synergy)
@@ -77,6 +79,8 @@ def _update_company_synergy(company_id, company_name):
         synergy.referential_score = data['referential_score']
         synergy.credibility_reasonings = data['credibility_reasoning']
         synergy.referential_reasonings = data['referential_reasoning']
+        synergy.compliance_score = data['compliance_score']
+        synergy.compliance_reasonings = data['compliance_reasoning']
         
         db.session.commit()
         return True, synergy
