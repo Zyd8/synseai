@@ -82,6 +82,7 @@ export default function LoginPage() {
           setTimeout(() => {
             if (role === "user") router.push("/dashboard");
             else if (role === "employee") router.push("/bpidashboard");
+            else if (role === "admin") router.push("/admindashboard");
             else router.push("/collabhome");
           }, 800);
         } else {
