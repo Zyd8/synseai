@@ -380,8 +380,8 @@ useEffect(() => {
 
                         {/* Admins */}
                         <div className="text-center p-4 bg-gray-50 rounded-lg flex flex-col items-center">
-                            <FaUserShield className="text-3xl text-indigo-600 mb-2" />
-                            <div className="text-2xl font-bold text-indigo-600">{stats.totalAdmins}</div>
+                            <FaUserShield className="text-3xl text-yellow-500 mb-2" />
+                            <div className="text-2xl font-bold text-yellow-500">{stats.totalAdmins}</div>
                             <div className="text-sm text-gray-600">Admins</div>
                         </div>
 
