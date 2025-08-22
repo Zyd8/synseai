@@ -15,6 +15,7 @@ class Document(db.Model):
     file = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255), nullable=True)
     is_bpi = db.Column(db.Boolean, nullable=False, default=False)
+    is_assigned = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
 
     #Foreign Key to proposal
@@ -29,6 +30,7 @@ class Document(db.Model):
             "file": self.file,
             "description": self.description,
             "is_bpi": self.is_bpi,
+            "is_assigned": self.is_assigned,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "proposal_id": self.proposal_id
         }
