@@ -246,6 +246,35 @@ def delete_proposal(proposal_id):
 @proposal_bp.route('/get_company/<int:company_id>', methods=['GET'])
 @jwt_required()
 def get_company_proposals(company_id):
+    """Get all proposals for a specific company (EMPLOYEE or ADMIN only)"""
+    current_user_id = str(get_jwt_identity())
+    user = User.query.get(current_user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.role not in [UserRole.EMPLOYEE, UserRole.ADMIN]:
+        return jsonify({"error": "Unauthorized: Employee or Admin role required"}), 403
+
+    status = request.args.get('status')
+
+    query = Proposal.query.filter_by(company_id=company_id)
+    if status:
+        query = query.filter_by(status=status)
+
+    proposals = query.all()
+
+    if not proposals:
+        return jsonify({"message": "No proposals found for this company"}), 404
+
+    return jsonify({
+        "company_id": company_id,
+        "proposals": [proposal.to_dict() for proposal in proposals]
+    }), 200
+
+@proposal_bp.route('/get_company_filtered/<int:company_id>', methods=['GET'])
+@jwt_required()
+def get_company_proposals_filtered(company_id):
     """Get all approved proposals for a specific company (EMPLOYEE or ADMIN only)"""
     current_user_id = str(get_jwt_identity())
     user = User.query.get(current_user_id)
@@ -271,4 +300,3 @@ def get_company_proposals(company_id):
         "company_id": company_id,
         "proposals": [proposal.to_dict() for proposal in proposals]
     }), 200
-
