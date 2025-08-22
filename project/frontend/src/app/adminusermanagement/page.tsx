@@ -293,6 +293,26 @@ export default function UserManagement() {
                         Manage users, assign roles, and control user access across the system.
                     </p>
 
+                    {/* Summary Stats */}
+                    <div className="mt-5 grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                            <div className="text-2xl font-bold text-blue-600">{users.length}</div>
+                            <div className="text-sm text-gray-600">Total Users</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                            <div className="text-2xl font-bold text-green-600">{users.filter(u => u.role === 'user').length}</div>
+                            <div className="text-sm text-gray-600">Collaborators</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                            <div className="text-2xl font-bold text-purple-600">{users.filter(u => u.role === 'employee').length}</div>
+                            <div className="text-sm text-gray-600">Employees</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                            <div className="text-2xl font-bold text-red-600">{users.filter(u => u.status === 'active').length}</div>
+                            <div className="text-sm text-gray-600">Active Users</div>
+                        </div>
+                    </div>
+
                     {/* Controls Section */}
                     <div className="bg-white rounded-lg border border-gray-200 p-4 mt-5 mb-5">
                         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
@@ -474,25 +494,7 @@ export default function UserManagement() {
                         </div>
                     </div>
 
-                    {/* Summary Stats */}
-                    <div className="mt-5 grid grid-cols-1 sm:grid-cols-4 gap-4">
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-                            <div className="text-2xl font-bold text-blue-600">{users.length}</div>
-                            <div className="text-sm text-gray-600">Total Users</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-                            <div className="text-2xl font-bold text-green-600">{users.filter(u => u.role === 'user').length}</div>
-                            <div className="text-sm text-gray-600">Collaborators</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-                            <div className="text-2xl font-bold text-purple-600">{users.filter(u => u.role === 'employee').length}</div>
-                            <div className="text-sm text-gray-600">Employees</div>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-                            <div className="text-2xl font-bold text-red-600">{users.filter(u => u.status === 'active').length}</div>
-                            <div className="text-sm text-gray-600">Active Users</div>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
 
