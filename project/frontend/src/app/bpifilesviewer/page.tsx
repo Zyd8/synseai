@@ -9,8 +9,10 @@ const BpiFilesViewerPage = () => {
     const [activeTab, setActiveTab] = useState("all");
     const [files, setFiles] = useState<{ id: number; document_name: string }[]>([]);
     const [pendingFiles, setPendingFiles] = useState<{ id: number; document_name: string }[]>([]);
+    const [departmentId, setDepartmentId] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [departmentName, setDepartmentName] = useState<string>("");
 
     const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -22,14 +24,14 @@ const BpiFilesViewerPage = () => {
             setLoading(true);
             try {
                 // 1. Get current user details
-                const userResponse = await fetch(`${API}/api/auth/protected`, {
+                const userResponse = await fetch(`${API}/api/user/me`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
                 });
                 const userData = await userResponse.json();
-                const departmentId = userData?.user?.department_id;
+                const departmentId = userData?.department_id;
 
                 if (!departmentId) {
                     setError("Department ID not found.");
@@ -37,25 +39,35 @@ const BpiFilesViewerPage = () => {
                     return;
                 }
 
+                // 2. Fetch department name
+                const deptResponse = await fetch(`${API}/api/department/${departmentId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+                const deptData = await deptResponse.json();
+                if (deptResponse.ok && deptData?.name) {
+                    setDepartmentName(deptData.name);
+                }
+
+                // 3. Fetch files based on active tab
+                const url =
+                    activeTab === "all"
+                        ? `${API}/api/document_setting/included/${departmentId}`
+                        : `${API}/api/document_setting/current/${departmentId}`;
+
+                const res = await fetch(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+                const data = await res.json();
+
                 if (activeTab === "all") {
-                    // 2. Fetch all included files
-                    const res = await fetch(`${API}/api/document_setting/included/${departmentId}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            "Content-Type": "application/json",
-                        },
-                    });
-                    const data = await res.json();
                     setFiles(data);
-                } else if (activeTab === "pending") {
-                    // 3. Fetch pending files by current location
-                    const res = await fetch(`${API}/api/document_setting/current/${departmentId}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            "Content-Type": "application/json",
-                        },
-                    });
-                    const data = await res.json();
+                } else {
                     setPendingFiles(data);
                 }
             } catch (err) {
@@ -81,7 +93,7 @@ const BpiFilesViewerPage = () => {
                 </button>
                 <div className="text-center w-full">
                     <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-[#B11016] pb-2 sm:pb-4">
-                        Technology Department
+                        {departmentName || "Loading Department..."}
                     </h1>
                     <p className="text-sm sm:text-md text-black mb-4 sm:mb-6 px-4">
                         Files
@@ -137,7 +149,7 @@ const FileTable = ({
     emptyMessage: string;
 }) => (
     <table className="w-full text-sm rounded-lg overflow-hidden min-w-[600px]">
-        <thead className="bg-gray-100">
+        <thead>
             <tr>
                 <th className="p-3 text-left text-red-700 whitespace-nowrap">ID</th>
                 <th className="p-3 text-left text-red-700 whitespace-nowrap">Document Name</th>
