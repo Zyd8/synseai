@@ -71,10 +71,20 @@ def get_by_id(setting_id):
             return jsonify({"error": "Document setting not found"}), 404
 
         doc = setting.document
+
+        # Convert iteration IDs -> Department names
+        iteration_text = []
+        if setting.iteration:
+            from models import Department  # import here to avoid circular issues
+            depts = Department.query.filter(Department.id.in_(setting.iteration)).all()
+            dept_map = {d.id: d.name for d in depts}
+            iteration_text = [dept_map.get(i, f"Unknown ({i})") for i in setting.iteration]
+
         result = {
             "id": setting.id,
             "current_location": setting.current_location,
             "iteration": setting.iteration,
+            "iteration_text": iteration_text,  # 👈 department names
             "updated_at": setting.updated_at,
             "document_id": setting.document_id,
             "document_name": doc.name if doc else None,
@@ -87,6 +97,8 @@ def get_by_id(setting_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 
 @document_setting_bp.route('/update/<int:setting_id>', methods=['POST'])
 @jwt_required()
