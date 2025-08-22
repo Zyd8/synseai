@@ -2,36 +2,83 @@
 
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const BpiFilesViewerPage = () => {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState("all"); 
+    const [activeTab, setActiveTab] = useState("all");
+    const [files, setFiles] = useState<{ id: number; document_name: string }[]>([]);
+    const [pendingFiles, setPendingFiles] = useState<{ id: number; document_name: string }[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // Dummy proposals data
-    const proposals = [
-        { id: 1, title: "AI-Powered System", status: "Pending" },
-        { id: 2, title: "Mobile Banking Upgrade", status: "Approved" },
-        { id: 3, title: "Cloud Migration Plan", status: "Pending" },
-        { id: 4, title: "Cybersecurity Enhancement", status: "Rejected" },
-    ];
+    const API = process.env.NEXT_PUBLIC_API_URL;
+
+    useEffect(() => {
+        const token = sessionStorage.getItem("access_token");
+        if (!token) return;
+
+        const fetchFiles = async () => {
+            setLoading(true);
+            try {
+                // 1. Get current user details
+                const userResponse = await fetch(`${API}/api/auth/protected`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+                const userData = await userResponse.json();
+                const departmentId = userData?.user?.department_id;
+
+                if (!departmentId) {
+                    setError("Department ID not found.");
+                    setLoading(false);
+                    return;
+                }
+
+                if (activeTab === "all") {
+                    // 2. Fetch all included files
+                    const res = await fetch(`${API}/api/document_setting/included/${departmentId}`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+                    const data = await res.json();
+                    setFiles(data);
+                } else if (activeTab === "pending") {
+                    // 3. Fetch pending files by current location
+                    const res = await fetch(`${API}/api/document_setting/current/${departmentId}`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+                    const data = await res.json();
+                    setPendingFiles(data);
+                }
+            } catch (err) {
+                setError("Error fetching files.");
+                console.error(err);
+            }
+            setLoading(false);
+        };
+
+        fetchFiles();
+    }, [activeTab, API]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
             {/* Header */}
             <div className="relative flex items-center w-full mt-2 mb-4">
-                {/* Back Button */}
                 <button
-                    onClick={() => {
-                        router.push("/bpidashboard");
-                    }}
+                    onClick={() => router.push("/bpidashboard")}
                     className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
                 >
                     <FaArrowLeft className="mr-2" />
                     <span className="hidden sm:inline">Back</span>
                 </button>
-
-                {/* Title */}
                 <div className="text-center w-full">
                     <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-[#B11016] pb-2 sm:pb-4">
                         Technology Department
@@ -47,78 +94,76 @@ const BpiFilesViewerPage = () => {
             <div className="flex w-full max-w-4xl border-b">
                 <button
                     onClick={() => setActiveTab("pending")}
-                    className={`flex-1 text-center py-2 font-semibold transition ${
-                        activeTab === "pending"
-                            ? "bg-[#B11016] text-white rounded-t"
-                            : "text-gray-600 hover:text-black"
-                    }`}
+                    className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "pending"
+                        ? "bg-[#B11016] text-white rounded-t"
+                        : "text-gray-600 hover:text-black"
+                        }`}
                 >
                     Files Pending
                 </button>
                 <button
                     onClick={() => setActiveTab("all")}
-                    className={`flex-1 text-center py-2 font-semibold transition ${
-                        activeTab === "all"
-                            ? "bg-[#B11016] text-white rounded-t"
-                            : "text-gray-600 hover:text-black"
-                    }`}
+                    className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "all"
+                        ? "bg-[#B11016] text-white rounded-t"
+                        : "text-gray-600 hover:text-black"
+                        }`}
                 >
                     All Files
                 </button>
             </div>
 
-            {/* Tab Content */}
+            {/* Content */}
             <div className="w-full max-w-4xl mt-6 bg-white shadow rounded-lg p-4 overflow-x-auto border border-gray-400">
-                {activeTab === "pending" && (
-                    <table className="w-full text-sm rounded-lg overflow-hidden min-w-[600px]">
-                        <thead>
-                            <tr>
-                                <th className="p-3 text-left text-red-700 whitespace-nowrap">Proposal ID</th>
-                                <th className="p-3 text-left text-red-700 whitespace-nowrap">Proposal Title</th>
-                                <th className="p-3 text-left text-red-700 whitespace-nowrap">Status</th>
-                                <th className="p-3 text-center text-red-700 whitespace-nowrap">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {proposals
-                                .filter((p) => p.status === "Pending")
-                                .map((p, i) => (
-                                    <tr key={i} className="border-t">
-                                        <td className="p-3 whitespace-nowrap">{p.id}</td>
-                                        <td className="p-3">{p.title}</td>
-                                        <td className="p-3">{p.status}</td>
-                                        <td className="p-3 text-center">⋮</td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                )}
-
-                {activeTab === "all" && (
-                    <table className="w-full text-sm rounded-lg overflow-hidden min-w-[600px]">
-                        <thead>
-                            <tr>
-                                <th className="p-3 text-left text-red-700 whitespace-nowrap">Proposal ID</th>
-                                <th className="p-3 text-left text-red-700 whitespace-nowrap">Proposal Title</th>
-                                <th className="p-3 text-left text-red-700 whitespace-nowrap">Status</th>
-                                <th className="p-3 text-center text-red-700 whitespace-nowrap">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {proposals.map((p, i) => (
-                                <tr key={i} className="border-t">
-                                    <td className="p-3 whitespace-nowrap">{p.id}</td>
-                                    <td className="p-3">{p.title}</td>
-                                    <td className="p-3">{p.status}</td>
-                                    <td className="p-3 text-center">⋮</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                {loading ? (
+                    <p className="text-center">Loading files...</p>
+                ) : error ? (
+                    <p className="text-center text-red-500">{error}</p>
+                ) : activeTab === "all" ? (
+                    <FileTable files={files} emptyMessage="No files found." />
+                ) : (
+                    <FileTable files={pendingFiles} emptyMessage="No pending files found." />
                 )}
             </div>
         </div>
     );
 };
+
+// ✅ Reusable Table Component
+const FileTable = ({
+    files,
+    emptyMessage,
+}: {
+    files: { id: number; document_name: string }[];
+    emptyMessage: string;
+}) => (
+    <table className="w-full text-sm rounded-lg overflow-hidden min-w-[600px]">
+        <thead className="bg-gray-100">
+            <tr>
+                <th className="p-3 text-left text-red-700 whitespace-nowrap">ID</th>
+                <th className="p-3 text-left text-red-700 whitespace-nowrap">Document Name</th>
+                <th className="p-3 text-center text-red-700 whitespace-nowrap">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {files.length > 0 ? (
+                files.map((file, i) => (
+                    <tr key={i} className="border-t hover:bg-gray-100 transition">
+                        <td className="p-3">{file.id}</td>
+                        <td className="p-3">{file.document_name}</td>
+                        <td className="p-3 text-center">
+                            <button className="text-gray-600 hover:text-[#B11016]">⋮</button>
+                        </td>
+                    </tr>
+                ))
+            ) : (
+                <tr>
+                    <td colSpan={3} className="text-center py-4">
+                        {emptyMessage}
+                    </td>
+                </tr>
+            )}
+        </tbody>
+    </table>
+);
 
 export default BpiFilesViewerPage;
