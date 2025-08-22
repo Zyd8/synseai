@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 interface Department {
-  id: string;
+  id: number;
   name: string;
   isActive: boolean;
   isCompleted: boolean;
@@ -21,6 +21,8 @@ interface FileItem {
   isSelected: boolean;
   department: string;
   downloadUrl?: string;
+  currentLocation?: number;
+  iteration?: number[];
 }
 
 interface DocumentSetting {
@@ -39,7 +41,7 @@ export default function FilesPusher() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const settingId = searchParams?.get("id");
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; // Provide fallback
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   const [proposalTitle, setProposalTitle] = useState<string>("");
   const [proposalDetails, setProposalDetails] = useState<string>("");
@@ -48,12 +50,8 @@ export default function FilesPusher() {
   const [documentSetting, setDocumentSetting] = useState<DocumentSetting | null>(null);
   const [userDepartmentId, setUserDepartmentId] = useState<number | null>(null);
   const [canInteract, setCanInteract] = useState<boolean>(false);
-
-  const [departments, setDepartments] = useState<Department[]>([
-    { id: "1", name: "Technology Department", isActive: true, isCompleted: false },
-    { id: "2", name: "Operations Department", isActive: false, isCompleted: false },
-    { id: "3", name: "Finance Department", isActive: false, isCompleted: false },
-  ]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [allDepartments, setAllDepartments] = useState<{id: number, name: string}[]>([]);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -63,6 +61,37 @@ export default function FilesPusher() {
   const [isPushing, setIsPushing] = useState(false);
 
   const [files, setFiles] = useState<FileItem[]>([]);
+
+  // Fetch all departments from database
+  const fetchDepartments = async () => {
+    try {
+      const token = sessionStorage.getItem('access_token');
+      if (!token) throw new Error("No token found.");
+
+      const res = await fetch(`${API}/api/department`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch departments: ${res.status}`);
+      }
+
+      const response = await res.json();
+      console.log("Fetched departments response:", response);
+      
+      // Extract departments array from the response
+      const departmentsData = response.departments || [];
+      setAllDepartments(departmentsData);
+      return departmentsData;
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      throw error; // Re-throw to handle in calling function
+    }
+  };
 
   // Get user's department ID from session storage
   useEffect(() => {
@@ -207,6 +236,13 @@ export default function FilesPusher() {
     }
   };
 
+  // Check if document is at the final department
+  const isAtFinalDepartment = () => {
+    if (!documentSetting) return false;
+    const currentIndex = documentSetting.iteration.indexOf(documentSetting.current_location);
+    return currentIndex >= documentSetting.iteration.length - 1;
+  };
+
   // Push handler - moves document to next department in iteration
   const handlePushDocument = async () => {
     if (!settingId || !documentSetting) {
@@ -220,8 +256,7 @@ export default function FilesPusher() {
     }
 
     // Check if we're at the last department
-    const currentIndex = documentSetting.iteration.indexOf(documentSetting.current_location);
-    if (currentIndex >= documentSetting.iteration.length - 1) {
+    if (isAtFinalDepartment()) {
       alert("This document is already at the final department.");
       return;
     }
@@ -257,6 +292,33 @@ export default function FilesPusher() {
     }
   };
 
+  // Helper function to get department name by ID
+  const getDepartmentNameById = (deptId: number) => {
+    const dept = allDepartments.find(d => d.id === deptId);
+    return dept ? dept.name : `Department ${deptId}`;
+  };
+
+  // Update department status based on iteration and current location
+  const updateDepartmentStatus = (iteration: number[], currentLocation: number) => {
+    if (!allDepartments.length) return;
+
+    // Create departments array based on iteration order
+    const orderedDepartments: Department[] = iteration.map((deptId) => {
+      const deptInfo = allDepartments.find(d => d.id === deptId);
+      const currentIndex = iteration.indexOf(currentLocation);
+      const deptIndex = iteration.indexOf(deptId);
+      
+      return {
+        id: deptId,
+        name: deptInfo ? deptInfo.name : `Department ${deptId}`,
+        isActive: deptId === currentLocation,
+        isCompleted: deptIndex < currentIndex
+      };
+    });
+
+    setDepartments(orderedDepartments);
+  };
+
   // Fetch document setting and files data
   useEffect(() => {
     if (!settingId) {
@@ -269,6 +331,15 @@ export default function FilesPusher() {
       try {
         setLoading(true);
         setError("");
+
+        // First fetch departments
+        try {
+          await fetchDepartments();
+        } catch (deptError) {
+          console.error("Failed to fetch departments:", deptError);
+          setError("Failed to load departments. Please try again.");
+          return;
+        }
 
         const token = sessionStorage.getItem('access_token');
         
@@ -308,28 +379,6 @@ export default function FilesPusher() {
         setProposalTitle(documentSetting.document_name || `Document Setting ${settingId}`);
         setProposalDetails(documentSetting.document_description || "Push the files to the departments for review and approval");
 
-        // Create a file item for the main document if it exists
-        if (documentSetting.document_name && documentSetting.document_id) {
-          const mainFile: FileItem = {
-            id: documentSetting.document_id.toString(),
-            name: documentSetting.document_name,
-            details: documentSetting.document_description || "Main document file",
-            dateCreated: documentSetting.document_created_at 
-              ? new Date(documentSetting.document_created_at).toISOString().split('T')[0]
-              : new Date().toISOString().split('T')[0],
-            isSelected: false,
-            department: getDepartmentNameByLocation(documentSetting.current_location),
-            downloadUrl: `${API}/api/document/download_file/${documentSetting.document_id}`,
-          };
-
-          setFiles([mainFile]);
-        } else {
-          setFiles([]);
-        }
-
-        // Update departments based on iteration and current_location
-        updateDepartmentStatus(documentSetting.iteration, documentSetting.current_location);
-
       } catch (err) {
         console.error("Error fetching document setting:", err);
         const errorMessage = err instanceof Error ? err.message : "Failed to fetch document data";
@@ -344,7 +393,36 @@ export default function FilesPusher() {
     };
 
     fetchDocumentSettingAndFiles();
-  }, [settingId, API]); // Back to including API in dependency array
+  }, [settingId, API]);
+
+  // Update departments when we have both document setting and departments data
+  useEffect(() => {
+    if (documentSetting && allDepartments.length > 0) {
+      updateDepartmentStatus(documentSetting.iteration, documentSetting.current_location);
+      
+      // Create file items for each department in iteration
+      const fileItems: FileItem[] = documentSetting.iteration.map((deptId, index) => {
+        const deptName = getDepartmentNameById(deptId);
+        const currentIndex = documentSetting.iteration.indexOf(documentSetting.current_location);
+        
+        return {
+          id: `${documentSetting.document_id}-${deptId}`,
+          name: documentSetting.document_name,
+          details: documentSetting.document_description || "Document file",
+          dateCreated: documentSetting.document_created_at 
+            ? new Date(documentSetting.document_created_at).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
+          isSelected: false,
+          department: deptName,
+          downloadUrl: `${API}/api/document/download_file/${documentSetting.document_id}`,
+          currentLocation: documentSetting.current_location,
+          iteration: documentSetting.iteration
+        };
+      });
+
+      setFiles(fileItems);
+    }
+  }, [documentSetting, allDepartments]);
 
   // Check if user can interact with document (update/push)
   useEffect(() => {
@@ -355,42 +433,10 @@ export default function FilesPusher() {
     }
   }, [documentSetting, userDepartmentId]);
 
-  // Update department status based on iteration and current location
-  const updateDepartmentStatus = (iteration: number[], currentLocation: number) => {
-    setDepartments(prev => prev.map((dept, index) => {
-      const deptId = index + 1; // Assuming department IDs are 1-indexed
-      const currentIndex = iteration.indexOf(currentLocation);
-      const deptIndex = iteration.indexOf(deptId);
-      
-      return {
-        ...dept,
-        isActive: deptId === currentLocation,
-        isCompleted: deptIndex !== -1 && deptIndex < currentIndex
-      };
-    }));
-  };
-
-  // Get current active department
-  const currentDepartment = departments.find((dept) => dept.isActive);
-
   const handleFileSelect = (file: FileItem) => {
     setFiles((prev) =>
       prev.map((f) => (f.id === file.id ? { ...f, isSelected: !f.isSelected } : f))
     );
-  };
-
-  const currentDepartmentFiles = files.filter(
-    (file) => file.department === currentDepartment?.name
-  );
-
-  // Helper function to get department name by location index
-  const getDepartmentNameByLocation = (location: number) => {
-    const departmentNames = [
-      "Technology Department",
-      "Operations Department", 
-      "Finance Department"
-    ];
-    return departmentNames[location - 1] || "Technology Department"; // Assuming 1-indexed
   };
 
   // Download function
@@ -402,6 +448,29 @@ export default function FilesPusher() {
     
     console.log("Opening download URL:", file.downloadUrl);
     window.open(file.downloadUrl, "_blank");
+  };
+
+  // Get file card image based on department status
+  const getFileCardImage = (file: FileItem) => {
+    if (!documentSetting) return "/images/file-card.png";
+    
+    const currentIndex = documentSetting.iteration.indexOf(documentSetting.current_location);
+    const fileDeptIndex = documentSetting.iteration.findIndex(deptId => 
+      getDepartmentNameById(deptId) === file.department
+    );
+    
+    // If this department has been completed (file passed through)
+    if (fileDeptIndex < currentIndex) {
+      return "/images/file-card-black.png";
+    }
+    
+    // If this is the current department
+    if (fileDeptIndex === currentIndex) {
+      return "/images/file-card.png";
+    }
+    
+    // If this department hasn't been reached yet
+    return "/images/file-card.png";
   };
 
   if (loading) {
@@ -465,7 +534,7 @@ export default function FilesPusher() {
         {!canInteract && documentSetting && userDepartmentId !== null && (
           <div className="w-full max-w-6xl mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
             <p className="text-sm">
-              This document is currently at {getDepartmentNameByLocation(documentSetting.current_location)}. 
+              This document is currently at {getDepartmentNameById(documentSetting.current_location)}. 
               You can only update or push documents that are at your department (Department ID: {userDepartmentId}).
             </p>
           </div>
@@ -481,10 +550,10 @@ export default function FilesPusher() {
           </div>
         </div>
 
-        {/* Department Navigation */}
-        <div className="w-full max-w-6xl mt-6">
+        {/* Department Navigation with File Cards Below */}
+        <div className="w-full max-w-6xl mt-6 mb-8">
           {/* Department Progress Indicator */}
-          <div className="flex space-x-2 w-full">
+          <div className="flex space-x-2 w-full mb-6">
             {departments.map((dept) => (
               <div
                 key={dept.id}
@@ -496,59 +565,75 @@ export default function FilesPusher() {
                     : "bg-gray-300 text-gray-700"
                 }`}
               >
-                {dept.name}
+                <span className="text-center px-1 truncate" title={dept.name}>
+                  {dept.name}
+                </span>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* File Cards Grid */}
-        <div className="w-full max-w-6xl mb-8">
-          {currentDepartmentFiles.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {currentDepartmentFiles.map((file) => (
-                <div key={file.id} className="text-center">
-                  <div
-                    className={`cursor-pointer transition-all duration-200 ${
-                      file.isSelected ? "transform scale-105" : ""
-                    }`}
-                    onClick={() => handleFileSelect(file)}
-                  >
-                    <div className="relative mb-4">
-                      <Image
-                        src={file.isSelected ? "/images/file-card-black.png" : "/images/file-card.png"}
-                        alt="File Card"
-                        width={150}
-                        height={180}
-                        className="mx-auto"
-                      />
+          {/* File Cards positioned below each department column */}
+          <div className="flex space-x-2 w-full">
+            {departments.map((dept) => {
+              const deptFile = files.find(file => file.department === dept.name);
+              
+              return (
+                <div key={dept.id} className="flex-1 flex flex-col items-center">
+                  {deptFile ? (
+                    <div className="text-center">
+                      <div
+                        className={`cursor-pointer transition-all duration-200 ${
+                          deptFile.isSelected ? "transform scale-105" : ""
+                        }`}
+                        onClick={() => handleFileSelect(deptFile)}
+                      >
+                        <div className="relative mb-4">
+                          <Image
+                            src={deptFile.isSelected ? "/images/file-card-black.png" : getFileCardImage(deptFile)}
+                            alt="File Card"
+                            width={120}
+                            height={144}
+                            className="mx-auto"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="text-xs font-medium text-gray-800 mb-2 truncate px-1" title={deptFile.name}>
+                        {deptFile.name}
+                      </div>
+                      
+                      {/* Download Button */}
+                      <button 
+                        onClick={() => handleDownload(deptFile)}
+                        className="px-3 py-1 bg-[#B11016] text-white text-xs rounded hover:bg-[#800b10] transition-colors flex items-center justify-center mx-auto"
+                        disabled={!deptFile.downloadUrl}
+                      >
+                        <FaDownload className="mr-1" size={10} />
+                        Download
+                      </button>
                     </div>
-                  </div>
-
-                  <div className="text-sm font-medium text-gray-800 mb-1 truncate" title={file.name}>
-                    {file.name}
-                  </div>
-                  
-                  {/* Download Button */}
-                  <button 
-                    onClick={() => handleDownload(file)}
-                    className="mt-2 px-4 py-2 bg-[#B11016] text-white text-sm rounded hover:bg-[#800b10] transition-colors flex items-center justify-center mx-auto"
-                    disabled={!file.downloadUrl}
-                  >
-                    <FaDownload className="mr-2" size={12} />
-                    Download
-                  </button>
+                  ) : (
+                    <div className="text-center py-8 text-gray-400">
+                      <FaFileAlt className="mx-auto text-2xl mb-2 opacity-30" />
+                      <p className="text-xs">
+                        No file
+                      </p>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
+              );
+            })}
+          </div>
+
+          {/* Show message if no files at all */}
+          {files.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               <FaFileAlt className="mx-auto text-4xl mb-4 opacity-30" />
               <p className="text-sm sm:text-base">
-                No files available for {currentDepartment?.name || "this department"}
+                No document available
               </p>
               <p className="text-xs text-gray-400 mt-2">
-                Files will appear here when they are assigned to this department
+                Document will appear here when loaded
               </p>
             </div>
           )}
@@ -560,7 +645,7 @@ export default function FilesPusher() {
             <button
               onClick={() => setIsUploadModalOpen(true)}
               disabled={!canInteract || userDepartmentId === null}
-              className={`w-full px-6 py-3 rounded transition-colors ${
+              className={`${isAtFinalDepartment() ? 'w-full max-w-md' : 'w-full max-w-xs'} px-6 py-3 rounded transition-colors ${
                 canInteract && userDepartmentId !== null
                   ? "bg-[#333333] text-white hover:bg-[#0f0f0f]" 
                   : "bg-gray-400 text-gray-600 cursor-not-allowed"
@@ -568,17 +653,21 @@ export default function FilesPusher() {
             >
               Update
             </button>
-            <button 
-              onClick={handlePushDocument}
-              disabled={!canInteract || isPushing || userDepartmentId === null}
-              className={`w-full px-6 py-3 rounded transition-colors ${
-                canInteract && !isPushing && userDepartmentId !== null
-                  ? "bg-[#B11016] text-white hover:bg-[#800b10]" 
-                  : "bg-gray-400 text-gray-600 cursor-not-allowed"
-              }`}
-            >
-              {isPushing ? "Pushing..." : "Push"}
-            </button>
+            
+            {/* Only show Push button if not at final department */}
+            {!isAtFinalDepartment() && (
+              <button 
+                onClick={handlePushDocument}
+                disabled={!canInteract || isPushing || userDepartmentId === null}
+                className={`w-full max-w-xs px-6 py-3 rounded transition-colors ${
+                  canInteract && !isPushing && userDepartmentId !== null
+                    ? "bg-[#B11016] text-white hover:bg-[#800b10]" 
+                    : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                }`}
+              >
+                {isPushing ? "Pushing..." : "Push"}
+              </button>
+            )}
           </div>
           
           {/* Help text */}
@@ -587,17 +676,22 @@ export default function FilesPusher() {
               <p>Department information not available. Please check your login setup.</p>
             ) : !canInteract ? (
               <p>You can only update or push documents that are currently at your department.</p>
+            ) : isAtFinalDepartment() ? (
+              <p>Document has reached the final department. Only updates are allowed.</p>
             ) : null}
             
-            {/* Debug info - remove in production */}
+            {/* Debug info - remove in production
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs text-gray-400 mt-2">
                 <p>Debug: User Dept ID: {userDepartmentId || 'Not set'}</p>
                 {documentSetting && (
-                  <p>Debug: Document at Dept: {documentSetting.current_location}</p>
+                  <>
+                    <p>Debug: Document at Dept: {documentSetting.current_location}</p>
+                    <p>Debug: Is at final dept: {isAtFinalDepartment()}</p>
+                  </>
                 )}
               </div>
-            )}
+            )} */}
           </div>
         </div>
 

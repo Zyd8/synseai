@@ -81,6 +81,61 @@ def extract_clean_text(soup):
         
     return text
 
+def company_project_reccomender(company_name):
+    """Scrape project recommendation context for a company"""
+    config = get_configuration()
+    if not config:
+        return {"error": "Configuration not found"}
+        
+    search_settings = config.get('search_settings', {})
+    pr_config = config.get('project_recommendation', {})
+    
+    # Format context queries with the company name
+    context_queries = [
+        query.format(company_name=company_name)
+        for query in pr_config.get('context', [])
+    ]
+    
+    if not context_queries:
+        return {"error": "No project recommendation context queries found in config"}
+    
+    results = []
+    
+    for query in context_queries:
+        search_query = query  
+        search_results = list(search(
+            search_query,
+            num_results=search_settings.get('num_results'),
+            sleep_interval=random.uniform(
+                search_settings.get('min_delay'),
+                search_settings.get('max_delay')
+            )
+        ))
+        
+        for url in search_results:
+            try:
+                url = ensure_url_scheme(url)
+                response = fetch_url(url, search_settings.get('timeout'))
+                if not response:
+                    continue
+                    
+                soup = BeautifulSoup(response.text, 'html.parser')
+                clean_text = extract_clean_text(soup)
+                
+                results.append({
+                    'url': url,
+                    'title': soup.title.string if soup.title else 'No title',
+                    'content': clean_text
+                })
+                
+            except Exception as e:
+                print(f"Error processing {url}: {str(e)}")
+                continue
+    
+    return {
+        'context': results
+    }
+
 def company_webscraper(company):
 
     config = get_configuration()
