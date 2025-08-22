@@ -110,7 +110,7 @@ export default function CompanyProfile() {
     }, [activeTab, API, companyId]);
 
     const handleFilesClick = (proposalId: number) => {
-        router.push(`/proposal-details?id=${proposalId}`); // ✅ Replace with your route
+        router.push(`/bpiproposaltracking?id=${proposalId}`); 
     };
 
     // Convert company size string to display format
