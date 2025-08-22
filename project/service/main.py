@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from webscrape import company_webscraper
+from webscrape import company_webscraper, company_project_reccomender
 from llm import SynsaiLLM
 
 app = Flask(__name__)
@@ -16,11 +16,11 @@ def scrape():
     compliance_scores = []
 
     try:
-        result = company_webscraper(company)
+        scraped_pages = company_webscraper(company)
 
         synsai_llm = SynsaiLLM(company)
 
-        for pages in result:
+        for pages in scraped_pages:
             if pages['criteria'] == 'credibility':
                 credibility_score = synsai_llm.get_company_score(pages, 'credibility')
                 credibility_scores.append(credibility_score)
@@ -62,6 +62,33 @@ def scrape():
             'message': str(e)
         }), 500
 
-    
+@app.route('/project_recommendation', methods=['POST'])
+def project_recommendation():
+    company = request.json.get('company')
+    if not company:
+        return jsonify({'error': 'Company is required'}), 400
+
+    try:
+
+        scraped_pages = company_project_reccomender(company)
+        if 'error' in scraped_pages:
+            return jsonify({'error': scraped_pages['error']}), 400    
+
+        print(scraped_pages) 
+ 
+        synsai_llm = SynsaiLLM(company)
+
+        title, description = synsai_llm.project_recommendation(scraped_pages)
+
+        return jsonify({
+            'title': title,
+            'description': description,
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

@@ -13,3 +13,10 @@ criteria:
 
   compliance:
     - What are the compliance papers of
+
+project_recommendation:
+  context:
+    - What is the company {company_name}?
+  
+  objective:
+    - what future projects can you reccomend between BPI and the company named {company_name}?

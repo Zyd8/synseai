@@ -11,4 +11,5 @@ from .document import Document  # noqa
 from .document_setting import Document_setting  # noqa
 from .synergy import Synergy  # noqa
 from .department_preset import DepartmentPreset  # noqa
+from .project_recommendation import ProjectRecommendation  # noqa
 
