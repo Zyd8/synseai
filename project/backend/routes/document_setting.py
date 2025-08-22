@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz
 import os
 
-from models import db, Document_setting
+from models import db, Document_setting, Reverted_document
 
 document_setting_bp = Blueprint('document_setting', __name__)
 
@@ -99,7 +99,6 @@ def get_by_id(setting_id):
         return jsonify({"error": str(e)}), 500
 
 
-
 @document_setting_bp.route('/update/<int:setting_id>', methods=['POST'])
 @jwt_required()
 def update_document_setting(setting_id):
@@ -133,17 +132,37 @@ def update_document_setting(setting_id):
         new_filename = f"{document.id}_{safe_filename}"
         new_file_path = os.path.join(folder_name, new_filename)
 
+        tz = pytz.timezone(os.getenv('APP_TIMEZONE', 'UTC'))
+
+        # --- HANDLE OLD FILE ---
         if document.file and os.path.exists(document.file):
-            prev_file_path = os.path.join(previous_folder, os.path.basename(document.file))
-            if os.path.exists(prev_file_path):
-                os.remove(prev_file_path)
-            os.rename(document.file, prev_file_path)
+            # Check if this document already has a reverted record
+            reverted_doc = Reverted_document.query.filter_by(document_id=document.id).first()
+            if reverted_doc:
+                # If yes, delete the old reverted file
+                if os.path.exists(reverted_doc.file):
+                    os.remove(reverted_doc.file)
+                # Update record with new path
+                prev_file_path = os.path.join(previous_folder, os.path.basename(document.file))
+                os.rename(document.file, prev_file_path)
+                reverted_doc.file = prev_file_path
+                reverted_doc.last_revert = datetime.now(tz)
+            else:
+                # Create new reverted record
+                prev_file_path = os.path.join(previous_folder, os.path.basename(document.file))
+                os.rename(document.file, prev_file_path)
+                reverted_doc = Reverted_document(
+                    file=prev_file_path,
+                    last_revert=datetime.now(tz),
+                    document_id=document.id
+                )
+                db.session.add(reverted_doc)
 
+        # --- SAVE NEW FILE ---
         file.save(new_file_path)
-
         document.file = new_file_path
 
-        tz = pytz.timezone(os.getenv('APP_TIMEZONE', 'UTC'))
+        # Update timestamp
         setting.updated_at = datetime.now(tz)
 
         db.session.commit()
@@ -158,6 +177,7 @@ def update_document_setting(setting_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
 
 @document_setting_bp.route('/push/<int:setting_id>', methods=['POST'])
 @jwt_required()

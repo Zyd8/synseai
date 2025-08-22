@@ -21,7 +21,7 @@ class Reverted_document(db.Model):
         return {
             "id": self.id,
             "file": self.file,
-            "last_revert": self.last_revert.isoformat() if self.created_at else None,
+            "last_revert": self.last_revert.isoformat() if self.last_revert else None,
             "document_id": self.document_id
         }
 
