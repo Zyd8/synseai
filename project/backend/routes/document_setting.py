@@ -146,3 +146,33 @@ def update_document_setting(setting_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@document_setting_bp.route('/push/<int:setting_id>', methods=['POST'])
+@jwt_required()
+def push_document_setting(setting_id):
+    try:
+        setting = Document_setting.query.get_or_404(setting_id)
+
+        if setting.current_location not in setting.iteration:
+            return jsonify({"error": "Current location is not in iteration list"}), 400
+
+        current_index = setting.iteration.index(setting.current_location)
+        if current_index >= len(setting.iteration) - 1:
+            return jsonify({
+                "message": "Already at the last iteration",
+                "current_location": setting.current_location
+            }), 200
+
+        setting.current_location = setting.iteration[current_index + 1]
+
+        db.session.commit()
+
+        return jsonify({
+            "message": "Current location updated to next iteration",
+            "current_location": setting.current_location
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+

@@ -44,20 +44,46 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok && data.access_token) {
+        // ✅ Store access token
         sessionStorage.setItem("access_token", data.access_token);
 
+        // ✅ Store complete user data
+        if (data.user) {
+          sessionStorage.setItem("user", JSON.stringify(data.user));
+          sessionStorage.setItem("user_id", data.user.id.toString());
+
+          if (data.user.department_id !== null && data.user.department_id !== undefined) {
+            sessionStorage.setItem("department_id", data.user.department_id.toString());
+          }
+        }
+
         const role = data.user?.role;
+
         if (role) {
           sessionStorage.setItem("role", role);
           setMessage("Login successful!");
           setMessageType("success");
 
-          // Redirect after short delay
+          // ✅ Check company info before redirecting
+          const token = data.access_token;
+          const companyRes = await fetch(`${API}/api/company`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!companyRes.ok) {
+            console.warn("Company fetch failed with status:", companyRes.status);
+            router.replace("/collabhome"); 
+            return;
+          }
+
           setTimeout(() => {
             if (role === "user") router.push("/dashboard");
             else if (role === "employee") router.push("/bpidashboard");
-            else router.push("/collabhome"); 
-          }, 1000);
+            else router.push("/collabhome");
+          }, 800);
         } else {
           setMessage("No role found, redirecting...");
           setMessageType("error");
@@ -73,6 +99,7 @@ export default function LoginPage() {
       setMessageType("error");
     }
   };
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-4 py-6 sm:py-8">
@@ -103,9 +130,8 @@ export default function LoginPage() {
             {/* Message Box */}
             {message && (
               <div
-                className={`px-4 py-2 rounded-md text-white text-sm sm:text-base font-medium ${
-                  messageType === "error" ? "bg-red-500" : "bg-green-500"
-                }`}
+                className={`px-4 py-2 rounded-md text-white text-sm sm:text-base font-medium ${messageType === "error" ? "bg-red-500" : "bg-green-500"
+                  }`}
               >
                 {message}
               </div>
