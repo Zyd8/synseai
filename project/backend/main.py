@@ -17,6 +17,7 @@ from routes.document_setting import document_setting_bp
 from routes.synergy import synergy_bp
 from routes.department_preset import department_preset_bp
 from routes.project_recommendation import bp as project_recommendation_bp
+from routes.user import user_bp
 
 # Load environment variables
 load_dotenv()
@@ -49,6 +50,7 @@ def create_app():
     app.register_blueprint(proposal_bp, url_prefix='/api/proposal')
     app.register_blueprint(department_bp, url_prefix='/api/department')
     app.register_blueprint(document_bp, url_prefix='/api/document')
+    app.register_blueprint(user_bp, url_prefix='/api/user')
     app.register_blueprint(synergy_bp, url_prefix='/api/synergy')
     app.register_blueprint(project_recommendation_bp)
     app.register_blueprint(document_setting_bp, url_prefix='/api/document_setting')
