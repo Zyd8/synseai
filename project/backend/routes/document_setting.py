@@ -4,9 +4,10 @@ from werkzeug.utils import secure_filename
 from flask import send_file
 from datetime import datetime
 import pytz
+import shutil
 import os
 
-from models import db, Document_setting, Reverted_document
+from models import db, Document_setting, Reverted_document, Document
 
 document_setting_bp = Blueprint('document_setting', __name__)
 
@@ -172,6 +173,84 @@ def update_document_setting(setting_id):
             "document": document.to_dict(),
             "id": setting.id,
             "updated_at": setting.updated_at
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@document_setting_bp.route('/revert/<int:document_id>', methods=['POST'])
+@jwt_required()
+def revert_document(document_id):
+    try:
+        # Load models
+        document = Document.query.get_or_404(document_id)
+        setting = Document_setting.query.filter_by(document_id=document_id).first()
+        if not setting:
+            return jsonify({"error": "Associated document setting not found"}), 404
+
+        revert = Reverted_document.query.filter_by(document_id=document_id).first()
+        if not revert:
+            return jsonify({"error": "No reverted document found for this document"}), 404
+
+        # Determine folders (same logic you use on upload/update)
+        base_uploaded = "uploaded_files"
+        base_previous = "previous_files"
+        if (document.type or "").lower() == "team":
+            sub_folder = "team_files"
+        elif (document.type or "").lower() == "proposal":
+            sub_folder = "proposal_files"
+        else:
+            sub_folder = "others"
+
+        uploaded_dir = os.path.join(base_uploaded, sub_folder)
+        previous_dir = os.path.join(base_previous, sub_folder)
+        os.makedirs(uploaded_dir, exist_ok=True)
+        os.makedirs(previous_dir, exist_ok=True)
+
+        # Current paths
+        current_doc_path = document.file
+        current_rev_path = revert.file
+
+        # Validate current files exist
+        if not current_doc_path or not os.path.exists(current_doc_path):
+            return jsonify({"error": f"Original document file not found: {current_doc_path}"}), 404
+        if not current_rev_path or not os.path.exists(current_rev_path):
+            return jsonify({"error": f"Reverted document file not found: {current_rev_path}"}), 404
+
+        # Desired new paths (swap locations + keep their own basenames)
+        new_doc_path = os.path.join(uploaded_dir, os.path.basename(current_rev_path))  # previous -> uploaded
+        new_rev_path = os.path.join(previous_dir, os.path.basename(current_doc_path))  # current  -> previous
+
+        # If destination files already exist, remove them (ensure clean swap)
+        if os.path.exists(new_doc_path):
+            os.remove(new_doc_path)
+        if os.path.exists(new_rev_path):
+            os.remove(new_rev_path)
+
+        # --- Physical move: swap locations ---
+        # Move current (uploaded) -> previous
+        shutil.move(current_doc_path, new_rev_path)
+        # Move previous -> uploaded
+        shutil.move(current_rev_path, new_doc_path)
+
+        # --- Update DB paths to match new physical locations ---
+        document.file = new_doc_path
+        revert.file = new_rev_path
+
+        # Update timestamps
+        tz = pytz.timezone(os.getenv('APP_TIMEZONE', 'UTC'))
+        setting.updated_at = datetime.now(tz)
+        revert.last_revert = datetime.now(tz)
+
+        db.session.commit()
+
+        return jsonify({
+            "message": "Revert successful: previous moved to uploaded, current moved to previous",
+            "document": document.to_dict(),
+            "reverted": revert.to_dict(),
+            "updated_at": setting.updated_at,
+            "last_revert": revert.last_revert
         }), 200
 
     except Exception as e:
