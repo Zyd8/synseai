@@ -80,6 +80,10 @@ const BpiFilesViewerPage = () => {
         fetchFiles();
     }, [activeTab, API]);
 
+    const handleFilesClick = (settingId: number) => {
+        router.push(`/filespusher?id=${settingId}`);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
             {/* Header */}
@@ -131,9 +135,9 @@ const BpiFilesViewerPage = () => {
                 ) : error ? (
                     <p className="text-center text-red-500">{error}</p>
                 ) : activeTab === "all" ? (
-                    <FileTable files={files} emptyMessage="No files found." />
+                    <FileTable files={files} onRowClick={handleFilesClick} emptyMessage="No files found." />
                 ) : (
-                    <FileTable files={pendingFiles} emptyMessage="No pending files found." />
+                    <FileTable files={pendingFiles} onRowClick={handleFilesClick} emptyMessage="No pending files found." />
                 )}
             </div>
         </div>
@@ -144,9 +148,11 @@ const BpiFilesViewerPage = () => {
 const FileTable = ({
     files,
     emptyMessage,
+    onRowClick,
 }: {
     files: { id: number; document_name: string }[];
     emptyMessage: string;
+    onRowClick: (id: number) => void;
 }) => (
     <table className="w-full text-sm rounded-lg overflow-hidden min-w-[600px]">
         <thead>
@@ -159,11 +165,23 @@ const FileTable = ({
         <tbody>
             {files.length > 0 ? (
                 files.map((file, i) => (
-                    <tr key={i} className="border-t hover:bg-gray-100 transition">
+                    <tr
+                        key={i}
+                        className="border-t hover:bg-gray-100 transition cursor-pointer"
+                        onClick={() => onRowClick(file.id)}
+                    >
                         <td className="p-3">{file.id}</td>
                         <td className="p-3">{file.document_name}</td>
                         <td className="p-3 text-center">
-                            <button className="text-gray-600 hover:text-[#B11016]">⋮</button>
+                            <button
+                                className="text-gray-600 hover:text-[#B11016]"
+                                onClick={(e) => {
+                                    e.stopPropagation(); 
+                                    console.log("Menu clicked");
+                                }}
+                            >
+                                ⋮
+                            </button>
                         </td>
                     </tr>
                 ))
