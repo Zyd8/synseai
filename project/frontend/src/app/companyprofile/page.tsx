@@ -44,8 +44,26 @@ export default function CompanyProfile() {
 
     const [synergyData, setSynergyData] = useState<any | null>(null);
 
+    const [activeTab, setActiveTab] = useState("all");
+
     // Get company ID from URL parameters - this is required for employee view
     const companyId = searchParams.get('id');
+
+    // ✅ Dummy data arrays
+    const files = [
+        { id: 1, title: "AI Hackathon Proposal", status: "Approved" },
+        { id: 2, title: "Cloud Integration Project", status: "Pending" },
+        { id: 3, title: "BPI Partnership Proposal", status: "Rejected" },
+    ];
+
+    const pendingFiles = [
+        { id: 4, title: "Startup Innovation Proposal", status: "Pending" },
+        { id: 5, title: "Data Security Initiative", status: "Pending" },
+    ];
+
+    const handleFilesClick = (proposalId: number) => {
+        router.push(`/proposal-details?id=${proposalId}`); // ✅ Replace with your route
+    };
 
     // Convert company size string to display format
     const formatCompanySize = (size?: string): string => {
@@ -370,16 +388,17 @@ export default function CompanyProfile() {
                             </div>
                         )}
                     </div>
+
                     {/* Synergy Score */}
                     {synergyData && (
-                        <div className="text-center my-12">
+                        <div className="text-center my-12 border-b-2 border-gray-800 pb-10">
                             <h3 className="text-2xl font-bold text-red-700 mb-6">Synergy Score</h3>
 
                             {/* Circular Progress */}
                             <div className="w-48 h-48 mx-auto mb-12">
                                 <CircularProgressbar
                                     value={overallSynergy}
-                                    text={`${formatScore(overallSynergy / 100)}`} 
+                                    text={`${formatScore(overallSynergy / 100)}`}
                                     styles={buildStyles({
                                         textSize: "20px",
                                         textColor: "#111827",
@@ -426,7 +445,37 @@ export default function CompanyProfile() {
                         </div>
                     )}
 
+                    <div className="w-full px-[10%]">
+                        <div className="flex w-full border-b mb-4">
+                            <button
+                                onClick={() => setActiveTab("pending")}
+                                className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "pending"
+                                    ? "bg-[#B11016] text-white rounded-t"
+                                    : "text-gray-600 hover:text-black"
+                                    }`}
+                            >
+                                Pending Proposals
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("all")}
+                                className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "all"
+                                    ? "bg-[#B11016] text-white rounded-t"
+                                    : "text-gray-600 hover:text-black"
+                                    }`}
+                            >
+                                All Proposals
+                            </button>
+                        </div>
 
+                        {/* Table */}
+                        <div className="w-full w-full bg-white shadow rounded-lg p-4 overflow-x-auto border border-gray-400">
+                            {activeTab === "all" ? (
+                                <FileTable files={files} onRowClick={handleFilesClick} emptyMessage="No proposals found." />
+                            ) : (
+                                <FileTable files={pendingFiles} onRowClick={handleFilesClick} emptyMessage="No pending proposals found." />
+                            )}
+                        </div>
+                    </div>
 
 
                 </div>
@@ -434,3 +483,56 @@ export default function CompanyProfile() {
         </ProtectedRoute>
     );
 }
+
+const FileTable = ({
+    files,
+    emptyMessage,
+    onRowClick,
+}: {
+    files: { id: number; title: string; status: string }[];
+    emptyMessage: string;
+    onRowClick: (id: number) => void;
+}) => (
+    <table className="w-full text-sm rounded-lg overflow-hidden min-w-[600px]">
+        <thead>
+            <tr>
+                <th className="p-3 text-left text-red-700 whitespace-nowrap">Proposal ID</th>
+                <th className="p-3 text-left text-red-700 whitespace-nowrap">Proposal Title</th>
+                <th className="p-3 text-left text-red-700 whitespace-nowrap">Status</th>
+                <th className="p-3 text-center text-red-700 whitespace-nowrap">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {files.length > 0 ? (
+                files.map((file, i) => (
+                    <tr
+                        key={i}
+                        className="border-t hover:bg-gray-100 transition cursor-pointer"
+                        onClick={() => onRowClick(file.id)}
+                    >
+                        <td className="p-3">{file.id}</td>
+                        <td className="p-3">{file.title}</td>
+                        <td className="p-3">{file.status}</td>
+                        <td className="p-3 text-center">
+                            <button
+                                className="text-gray-600 hover:text-[#B11016]"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log("Menu clicked");
+                                }}
+                            >
+                                ⋮
+                            </button>
+                        </td>
+                    </tr>
+                ))
+            ) : (
+                <tr>
+                    <td colSpan={4} className="text-center py-4">
+                        {emptyMessage}
+                    </td>
+                </tr>
+            )}
+        </tbody>
+    </table>
+);
