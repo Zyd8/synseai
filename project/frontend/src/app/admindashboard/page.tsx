@@ -5,8 +5,10 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { FaUsers, FaUserTie, FaUserFriends, FaFileAlt, FaBuilding, FaUserShield } from "react-icons/fa"; 
+import { FaUsers, FaUserTie, FaUserFriends, FaFileAlt, FaBuilding, FaUserShield } from "react-icons/fa";
 import { ReactElement } from "react";
+import CreateDepartmentModal from "@/components/CreateDepartmentModal";
+import ManageDepartmentModal from "@/components/ManageDepartmentModal";
 
 interface User {
     id: number;
@@ -55,6 +57,8 @@ export default function SuperAdminDashboard() {
     const [activeSection, setActiveSection] = useState<string | null>(null);
     const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [showCreateDeptModal, setShowCreateDeptModal] = useState(false);
+    const [showManageDeptModal, setShowManageDeptModal] = useState(false);
 
     // Statistics
     const [stats, setStats] = useState({
@@ -68,148 +72,148 @@ export default function SuperAdminDashboard() {
 
     // Fetch all data
     // Fetch all data
-useEffect(() => {
-    const fetchAllData = async () => {
-        const token = sessionStorage.getItem("access_token");
-        
-        if (!token) {
-            setError("No access token found. Please login again.");
-            setLoading(false);
-            return;
-        }
+    useEffect(() => {
+        const fetchAllData = async () => {
+            const token = sessionStorage.getItem("access_token");
 
-        try {
-            setError(null);
+            if (!token) {
+                setError("No access token found. Please login again.");
+                setLoading(false);
+                return;
+            }
 
-            // ---------------- Users ----------------
-            let usersList: User[] = [];
             try {
-                const usersRes = await fetch(`${API}/api/user`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
+                setError(null);
+
+                // ---------------- Users ----------------
+                let usersList: User[] = [];
+                try {
+                    const usersRes = await fetch(`${API}/api/user`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if (usersRes.ok) {
+                        const usersData = await usersRes.json();
+                        // backend returns an array directly
+                        console.log("Fetched users:", usersData);
+                        usersList = Array.isArray(usersData) ? usersData : [];
+                    } else {
+                        console.warn("Failed to fetch users:", usersRes.status);
+                    }
+                } catch (err) {
+                    console.warn("Could not fetch users:", err);
+                }
+                setUsers(usersList);
+
+                // ---------------- Departments ----------------
+                let deptList: Department[] = [];
+                try {
+                    const deptRes = await fetch(`${API}/api/department`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if (deptRes.ok) {
+                        const deptData = await deptRes.json();
+                        // backend returns { departments: [...] }
+                        deptList = deptData.departments ?? [];
+                    } else {
+                        console.warn("Failed to fetch departments:", deptRes.status);
+                    }
+                } catch (err) {
+                    console.warn("Could not fetch departments:", err);
+                }
+                setDepartments(deptList);
+
+                // ---------------- Documents ----------------
+                let docsList: Document[] = [];
+                try {
+                    const docsRes = await fetch(`${API}/api/document/get_all`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if (docsRes.ok) {
+                        const docsData = await docsRes.json();
+                        // since backend returns [] (list of documents), not {documents: [...]}
+                        docsList = Array.isArray(docsData) ? docsData : [];
+                    }
+                } catch (docsError) {
+                    console.warn("Could not fetch documents:", docsError);
+                }
+                setDocuments(docsList);
+
+                // ---------------- Stats ----------------
+                const collaborators = usersList.filter((u: User) => u.role === "user");
+                const employees = usersList.filter((u: User) => u.role === "employee");
+                const admins = usersList.filter((u: User) => u.role === "admin");
+
+                setStats({
+                    totalUsers: usersList.length,
+                    totalCollaborators: collaborators.length,
+                    totalEmployees: employees.length,
+                    totalAdmins: admins.length,
+                    totalDocuments: docsList.length,
+                    totalDepartments: deptList.length,
                 });
 
-                if (usersRes.ok) {
-                    const usersData = await usersRes.json();
-                    // backend returns an array directly
-                    console.log("Fetched users:", usersData);
-                    usersList = Array.isArray(usersData) ? usersData : [];
-                } else {
-                    console.warn("Failed to fetch users:", usersRes.status);
-                }
+                // ---------------- Activities ----------------
+                const activities: Activity[] = [
+                    // Collaborators
+                    ...collaborators.slice(0, 2).map((user) => ({
+                        type: "user",
+                        title: `New collaborator registered: ${user.full_name || `${user.first_name} ${user.last_name}`}`,
+                        description: `Email: ${user.email} | Position: ${user.position || "Not specified"}`,
+                        timestamp: user.created_at || new Date().toISOString(),
+                        icon: <FaUsers className="text-2xl" />,
+                    })),
+                    // Employees
+                    ...employees.slice(0, 2).map((user) => ({
+                        type: "employee",
+                        title: `New employee registered: ${user.full_name || `${user.first_name} ${user.last_name}`}`,
+                        description: `Email: ${user.email} | Position: ${user.position || "Not specified"}`,
+                        timestamp: user.created_at || new Date().toISOString(),
+                        icon: <FaUserTie className="text-3xl text-purple-600 mb-2" />,
+
+                    })),
+                    // Documents
+                    ...docsList.slice(0, 2).map((doc) => ({
+                        type: "document",
+                        title: `Document uploaded: ${doc.name || "Untitled"}`,
+                        description: `Type: ${doc.type || "Unknown"}`,
+                        timestamp: doc.created_at || new Date().toISOString(),
+                        icon: <FaFileAlt className="text-2xl" />,
+                    })),
+                    // Departments
+                    ...deptList.slice(0, 1).map((dept) => ({
+                        type: "department",
+                        title: `Department: ${dept.name}`,
+                        description: `${dept.employee_count || 0} employees`,
+                        timestamp: dept.created_at || new Date().toISOString(),
+                        icon: <FaBuilding className="text-2xl" />,
+                    })),
+                ]
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                    .slice(0, 5);
+
+                setRecentActivities(activities);
             } catch (err) {
-                console.warn("Could not fetch users:", err);
+                console.error("Error fetching data:", err);
+                setError(err instanceof Error ? err.message : "An error occurred while fetching data");
+            } finally {
+                setLoading(false);
             }
-            setUsers(usersList);
+        };
 
-            // ---------------- Departments ----------------
-            let deptList: Department[] = [];
-            try {
-                const deptRes = await fetch(`${API}/api/department`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (deptRes.ok) {
-                    const deptData = await deptRes.json();
-                    // backend returns { departments: [...] }
-                    deptList = deptData.departments ?? [];
-                } else {
-                    console.warn("Failed to fetch departments:", deptRes.status);
-                }
-            } catch (err) {
-                console.warn("Could not fetch departments:", err);
-            }
-            setDepartments(deptList);
-
-            // ---------------- Documents ----------------
-            let docsList: Document[] = [];
-            try {
-                const docsRes = await fetch(`${API}/api/document/get_all`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-                
-                if (docsRes.ok) {
-                    const docsData = await docsRes.json();
-                    // since backend returns [] (list of documents), not {documents: [...]}
-                    docsList = Array.isArray(docsData) ? docsData : [];
-                }
-            } catch (docsError) {
-                console.warn("Could not fetch documents:", docsError);
-            }
-            setDocuments(docsList);
-
-            // ---------------- Stats ----------------
-            const collaborators = usersList.filter((u: User) => u.role === "user");
-            const employees = usersList.filter((u: User) => u.role === "employee");
-            const admins = usersList.filter((u: User) => u.role === "admin");
-
-            setStats({
-                totalUsers: usersList.length,
-                totalCollaborators: collaborators.length,
-                totalEmployees: employees.length,
-                totalAdmins: admins.length,
-                totalDocuments: docsList.length,
-                totalDepartments: deptList.length,
-            });
-
-            // ---------------- Activities ----------------
-            const activities: Activity[] = [
-                // Collaborators
-                ...collaborators.slice(0, 2).map((user) => ({
-                    type: "user",
-                    title: `New collaborator registered: ${user.full_name || `${user.first_name} ${user.last_name}`}`,
-                    description: `Email: ${user.email} | Position: ${user.position || "Not specified"}`,
-                    timestamp: user.created_at || new Date().toISOString(),
-                     icon: <FaUsers className="text-2xl" />,
-                })),
-                // Employees
-                ...employees.slice(0, 2).map((user) => ({
-                    type: "employee",
-                    title: `New employee registered: ${user.full_name || `${user.first_name} ${user.last_name}`}`,
-                    description: `Email: ${user.email} | Position: ${user.position || "Not specified"}`,
-                    timestamp: user.created_at || new Date().toISOString(),
-                    icon: <FaUserTie className="text-3xl text-purple-600 mb-2" />,
-                    
-                })),
-                // Documents
-                ...docsList.slice(0, 2).map((doc) => ({
-                    type: "document",
-                    title: `Document uploaded: ${doc.name || "Untitled"}`,
-                    description: `Type: ${doc.type || "Unknown"}`,
-                    timestamp: doc.created_at || new Date().toISOString(),
-                    icon: <FaFileAlt className="text-2xl" />,
-                })),
-                // Departments
-                ...deptList.slice(0, 1).map((dept) => ({
-                    type: "department",
-                    title: `Department: ${dept.name}`,
-                    description: `${dept.employee_count || 0} employees`,
-                    timestamp: dept.created_at || new Date().toISOString(),
-                    icon: <FaBuilding className="text-2xl" />,
-                })),
-            ]
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                .slice(0, 5);
-
-            setRecentActivities(activities);
-        } catch (err) {
-            console.error("Error fetching data:", err);
-            setError(err instanceof Error ? err.message : "An error occurred while fetching data");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    fetchAllData();
-}, [API]);
+        fetchAllData();
+    }, [API]);
 
 
     // Management sections
@@ -245,9 +249,9 @@ useEffect(() => {
     const handleActionClick = (action: string) => {
         setActiveSection(activeSection === action ? null : action);
         console.log(`Navigating to: ${action}`);
-        
+
         // Example navigation (you can customize these routes)
-        switch(action) {
+        switch (action) {
             case 'assign-role':
                 router.push('/super-admin/assign-role');
                 break;
@@ -255,13 +259,15 @@ useEffect(() => {
                 router.push('/adminusermanagement');
                 break;
             case 'create-department':
-                router.push('/super-admin/create-department');
-                break;
+                if (action === "create-department") {
+                    setShowCreateDeptModal(true);
+                    return;
+                }
             case 'assign-employee':
                 router.push('/super-admin/assign-employee');
                 break;
             case 'manage-departments':
-                router.push('/super-admin/manage-departments');
+                setShowManageDeptModal(true);
                 break;
             case 'upload-document':
                 router.push('/super-admin/upload-document');
@@ -280,6 +286,10 @@ useEffect(() => {
     const handleRefresh = () => {
         setLoading(true);
         window.location.reload();
+    };
+
+        const handleSuccess = () => {
+            return
     };
 
     if (loading) {
@@ -404,7 +414,7 @@ useEffect(() => {
                 {/* Management Sections */}
                 <div className="mt-8">
                     <h2 className="text-xl font-bold text-gray-800 mb-6">Management Center</h2>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {managementSections.map((section, i) => (
                             <div key={i} className="bg-white rounded-lg drop-shadow-lg border border-gray-200 overflow-hidden">
@@ -440,7 +450,7 @@ useEffect(() => {
                 {recentActivities.length > 0 && (
                     <div className="mt-8">
                         <h2 className="text-xl font-bold text-gray-800 mb-6">Recent Activities</h2>
-                        
+
                         <div className="bg-white rounded-lg drop-shadow-lg border border-gray-200 p-6">
                             <div className="space-y-4">
                                 {recentActivities.map((activity, index) => (
@@ -461,6 +471,20 @@ useEffect(() => {
                     </div>
                 )}
             </main>
+            <CreateDepartmentModal
+                isOpen={showCreateDeptModal}
+                onClose={() => setShowCreateDeptModal(false)}
+                onSuccess={handleSuccess}
+                apiUrl={API ?? ""}
+            />
+            <ManageDepartmentModal
+                isOpen={showManageDeptModal}
+                onClose={() => setShowManageDeptModal(false)}
+                onSuccess={handleSuccess}
+                apiUrl={API ?? ""}
+            />
         </div>
+
     );
+
 }

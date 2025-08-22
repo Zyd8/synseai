@@ -340,7 +340,7 @@ export default function CollabProposalTracking() {
             <div className="relative flex items-center w-full mt-2 mb-10">
                 {/* Back Button */}
                 <button
-                    onClick={() => router.push("/dashboard")}
+                    onClick={() => router.back}
                     className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] transition-colors"
                 >
                     <FaArrowLeft className="mr-2" />
