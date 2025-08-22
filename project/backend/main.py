@@ -12,6 +12,7 @@ from routes.company import company_bp
 from routes.proposal import proposal_bp
 from routes.department import department_bp
 from routes.document import document_bp
+from routes.reverted_document import reverted_document_bp
 from routes.document_setting import document_setting_bp
 from routes.synergy import synergy_bp
 from routes.department_preset import department_preset_bp
@@ -54,6 +55,7 @@ def create_app():
     app.register_blueprint(project_recommendation_bp)
     app.register_blueprint(document_setting_bp, url_prefix='/api/document_setting')
     app.register_blueprint(department_preset_bp, url_prefix='/api/department_preset')
+    app.register_blueprint(reverted_document_bp, url_prefix='/api/reverted_document')
     
     # Create database tables
     with app.app_context():

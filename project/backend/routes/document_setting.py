@@ -71,10 +71,20 @@ def get_by_id(setting_id):
             return jsonify({"error": "Document setting not found"}), 404
 
         doc = setting.document
+
+        # Convert iteration IDs -> Department names
+        iteration_text = []
+        if setting.iteration:
+            from models import Department  # import here to avoid circular issues
+            depts = Department.query.filter(Department.id.in_(setting.iteration)).all()
+            dept_map = {d.id: d.name for d in depts}
+            iteration_text = [dept_map.get(i, f"Unknown ({i})") for i in setting.iteration]
+
         result = {
             "id": setting.id,
             "current_location": setting.current_location,
             "iteration": setting.iteration,
+            "iteration_text": iteration_text,  # 👈 department names
             "updated_at": setting.updated_at,
             "document_id": setting.document_id,
             "document_name": doc.name if doc else None,
@@ -87,6 +97,8 @@ def get_by_id(setting_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 
 @document_setting_bp.route('/update/<int:setting_id>', methods=['POST'])
 @jwt_required()
@@ -175,4 +187,48 @@ def push_document_setting(setting_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@document_setting_bp.route('/current/<int:location_id>', methods=['GET'])
+@jwt_required()
+def get_by_current_location(location_id):
+    try:
+        # Query all settings where current_location matches
+        settings = Document_setting.query.filter_by(current_location=location_id).all()
+
+        if not settings:
+            return jsonify([]), 200  # return empty array if none found
+
+        result = []
+        for setting in settings:
+            result.append({
+                "id": setting.id,
+                "document_name": setting.document.name if setting.document else None
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@document_setting_bp.route('/included/<int:check_id>', methods=['GET'])
+@jwt_required()
+def get_if_included(check_id):
+    try:
+        # Fetch all settings
+        settings = Document_setting.query.all()
+
+        result = []
+        for setting in settings:
+            if setting.iteration and check_id in setting.iteration:
+                result.append({
+                    "id": setting.id,
+                    "document_name": setting.document.name if setting.document else None,
+                })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
