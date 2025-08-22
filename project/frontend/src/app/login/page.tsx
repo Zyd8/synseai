@@ -42,9 +42,20 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
-
       if (response.ok && data.access_token) {
+        // Store access token
         sessionStorage.setItem("access_token", data.access_token);
+        
+        // Store complete user data (including department_id)
+        if (data.user) {
+          sessionStorage.setItem("user", JSON.stringify(data.user));
+          sessionStorage.setItem("user_id", data.user.id.toString());
+          
+          // Store department_id separately for easy access
+          if (data.user.department_id !== null && data.user.department_id !== undefined) {
+            sessionStorage.setItem("department_id", data.user.department_id.toString());
+          }
+        }
 
         const role = data.user?.role;
         if (role) {

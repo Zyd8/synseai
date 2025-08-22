@@ -20,19 +20,34 @@ interface FileItem {
   dateCreated: string;
   isSelected: boolean;
   department: string;
-  downloadUrl?: string; // Add download URL field
+  downloadUrl?: string;
+}
+
+interface DocumentSetting {
+  id: number;
+  current_location: number;
+  iteration: number[];
+  updated_at: string;
+  document_id: number;
+  document_name: string;
+  document_created_at: string;
+  document_description: string;
+  download_url: string;
 }
 
 export default function FilesPusher() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const settingId = searchParams?.get("id"); // Get document_setting ID from URL
-  const API = process.env.NEXT_PUBLIC_API_URL;
+  const settingId = searchParams?.get("id");
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; // Provide fallback
 
   const [proposalTitle, setProposalTitle] = useState<string>("");
   const [proposalDetails, setProposalDetails] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [documentSetting, setDocumentSetting] = useState<DocumentSetting | null>(null);
+  const [userDepartmentId, setUserDepartmentId] = useState<number | null>(null);
+  const [canInteract, setCanInteract] = useState<boolean>(false);
 
   const [departments, setDepartments] = useState<Department[]>([
     { id: "1", name: "Technology Department", isActive: true, isCompleted: false },
@@ -45,8 +60,87 @@ export default function FilesPusher() {
   const [fileName, setFileName] = useState<string>('');
   const [fileDescription, setFileDescription] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isPushing, setIsPushing] = useState(false);
 
   const [files, setFiles] = useState<FileItem[]>([]);
+
+  // Get user's department ID from session storage
+  useEffect(() => {
+    const fetchUserDepartment = () => {
+      try {
+        console.log("=== DEBUG: Checking for department_id ===");
+        
+        // Check all sessionStorage items for debugging
+        const allSessionItems: Record<string, string | null> = {};
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key) {
+            allSessionItems[key] = sessionStorage.getItem(key);
+          }
+        }
+        console.log("All sessionStorage items:", allSessionItems);
+
+        // Method 1: Try to get department_id directly
+        const storedDeptId = sessionStorage.getItem("department_id");
+        console.log("Direct department_id lookup:", storedDeptId);
+        
+        if (storedDeptId && storedDeptId !== "null" && storedDeptId !== "undefined") {
+          const deptId = parseInt(storedDeptId);
+          console.log("✅ Found department_id directly:", deptId);
+          setUserDepartmentId(deptId);
+          return;
+        }
+
+        // Method 2: Try to get from stored user data (common key names)
+        const possibleUserKeys = ['user', 'userData', 'currentUser'];
+        for (const userKey of possibleUserKeys) {
+          const storedUserData = sessionStorage.getItem(userKey);
+          if (storedUserData && storedUserData !== "null" && storedUserData !== "undefined") {
+            try {
+              const userData = JSON.parse(storedUserData);
+              console.log(`Found user data in '${userKey}':`, userData);
+              
+              if (userData && typeof userData === 'object' && userData.department_id !== undefined && userData.department_id !== null) {
+                console.log("✅ Found department_id in user data:", userData.department_id);
+                setUserDepartmentId(userData.department_id);
+                // Store it directly for future use
+                sessionStorage.setItem("department_id", userData.department_id.toString());
+                return;
+              }
+            } catch (parseError) {
+              console.warn(`Error parsing '${userKey}' data:`, parseError);
+            }
+          }
+        }
+
+        // Method 3: Check if we have user_id and can make assumptions
+        const userId = sessionStorage.getItem("user_id");
+        const role = sessionStorage.getItem("role");
+        
+        console.log("Available session data:", {
+          user_id: userId,
+          role: role,
+          allKeys: Object.keys(allSessionItems)
+        });
+
+        console.warn("❌ Department ID not found in sessionStorage.");
+        console.warn("Your login response includes department_id, but it's not being stored in sessionStorage.");
+        console.warn("Please update your login process to store the user data:");
+        console.warn("Example: sessionStorage.setItem('user', JSON.stringify(loginResponse.user))");
+        console.warn("Or: sessionStorage.setItem('department_id', loginResponse.user.department_id)");
+        
+        // For immediate testing, suggest the manual approach
+        if (role === 'employee') {
+          console.warn("🔧 For testing, run this in console: sessionStorage.setItem('department_id', '1')");
+        }
+        
+      } catch (error) {
+        console.error("Error getting user department from sessionStorage:", error);
+      }
+    };
+
+    fetchUserDepartment();
+  }, []);
 
   // Handle file selection from input or drag & drop
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,106 +156,106 @@ export default function FilesPusher() {
     }
   };
 
-// NEW: update handler
-const handleFileUpdate = async () => {
-  if (!selectedFile || !settingId) {
-    alert("Please select a file first.");
-    return;
-  }
-
-  try {
-    const token = sessionStorage.getItem("access_token");
-    if (!token) throw new Error("No token found.");
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
-    const res = await fetch(`${API}/api/document_setting/update/${settingId}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    const responseText = await res.text();
-    console.log("Update response:", responseText);
-
-    if (!res.ok) {
-      throw new Error(`Update failed: ${responseText}`);
+  // Update handler
+  const handleFileUpdate = async () => {
+    if (!selectedFile || !settingId) {
+      alert("Please select a file first.");
+      return;
     }
 
-    alert("File updated successfully!");
-    setIsUploadModalOpen(false);
-    setSelectedFile(null);
-    setFileName("");
-    setFileDescription("");
-    window.location.reload(); // refresh data
-  } catch (err) {
-    if (err instanceof Error) {
-      console.error(err.message);
-      alert(`Error updating file: ${err.message}`);
-    } else {
-      console.error(err);
-      alert("Error updating file.");
-    }
-  }
-};
-
-
-  // Upload handler
-const handleFileUpload = async () => {
-  if (!selectedFile || !settingId) {
-    alert("Please select a file first.");
-    return;
-  }
-
-  try {
-    const token = sessionStorage.getItem("access_token");
-    if (!token) throw new Error("No token found.");
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("setting_id", settingId);
-
-    // Add file name and description if provided
-    if (fileName) formData.append("name", fileName);
-    if (fileDescription) formData.append("description", fileDescription);
-
-    const res = await fetch(`${API}/api/document/upload_file`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    // Debug: log backend response
-    const responseText = await res.text();
-    console.log("Upload response:", responseText);
-
-    if (!res.ok) {
-      throw new Error(`Upload failed: ${responseText}`);
+    if (!canInteract) {
+      alert("You can only update documents that are currently at your department.");
+      return;
     }
 
-    alert("File uploaded successfully!");
-    setIsUploadModalOpen(false);
-    setSelectedFile(null);
-    setFileName("");
-    setFileDescription("");
-    // Refresh files list after upload
-    window.location.reload();
- } catch (err) {
-  if (err instanceof Error) {
-    console.error(err.message);
-    alert(`Error uploading file: ${err.message}`);
-  } else {
-    console.error(err);
-    alert("Error uploading file.");
-  }
-}
-};
+    try {
+      const token = sessionStorage.getItem("access_token");
+      if (!token) throw new Error("No token found.");
 
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const res = await fetch(`${API}/api/document_setting/update/${settingId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const responseText = await res.text();
+      console.log("Update response:", responseText);
+
+      if (!res.ok) {
+        throw new Error(`Update failed: ${responseText}`);
+      }
+
+      alert("File updated successfully!");
+      setIsUploadModalOpen(false);
+      setSelectedFile(null);
+      setFileName("");
+      setFileDescription("");
+      window.location.reload();
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        alert(`Error updating file: ${err.message}`);
+      } else {
+        console.error(err);
+        alert("Error updating file.");
+      }
+    }
+  };
+
+  // Push handler - moves document to next department in iteration
+  const handlePushDocument = async () => {
+    if (!settingId || !documentSetting) {
+      alert("No document setting found.");
+      return;
+    }
+
+    if (!canInteract) {
+      alert("You can only push documents that are currently at your department.");
+      return;
+    }
+
+    // Check if we're at the last department
+    const currentIndex = documentSetting.iteration.indexOf(documentSetting.current_location);
+    if (currentIndex >= documentSetting.iteration.length - 1) {
+      alert("This document is already at the final department.");
+      return;
+    }
+
+    try {
+      setIsPushing(true);
+      const token = sessionStorage.getItem("access_token");
+      if (!token) throw new Error("No token found.");
+
+      const res = await fetch(`${API}/api/document_setting/push/${settingId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Push failed: ${errorText}`);
+      }
+
+      const result = await res.json();
+      alert("Document pushed to next department successfully!");
+      
+      // Refresh the page to get updated data
+      window.location.reload();
+    } catch (err) {
+      console.error("Error pushing document:", err);
+      alert(`Error pushing document: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setIsPushing(false);
+    }
+  };
 
   // Fetch document setting and files data
   useEffect(() => {
@@ -176,7 +270,6 @@ const handleFileUpload = async () => {
         setLoading(true);
         setError("");
 
-        // Get token from sessionStorage
         const token = sessionStorage.getItem('access_token');
         
         if (!token) {
@@ -185,7 +278,6 @@ const handleFileUpload = async () => {
 
         console.log("Attempting to fetch from:", `${API}/api/document_setting/${settingId}`);
 
-        // Get specific document setting by ID using the new endpoint
         const res = await fetch(`${API}/api/document_setting/${settingId}`, {
           method: 'GET',
           headers: {
@@ -198,7 +290,6 @@ const handleFileUpload = async () => {
         console.log("Response status:", res.status);
 
         if (!res.ok) {
-          // Try to get error details from response
           let errorMessage = `Failed to fetch document setting: ${res.status}`;
           try {
             const errorData = await res.json();
@@ -211,6 +302,7 @@ const handleFileUpload = async () => {
 
         const documentSetting = await res.json();
         console.log("Received document setting:", documentSetting);
+        setDocumentSetting(documentSetting);
 
         // Set title and details from the actual document data
         setProposalTitle(documentSetting.document_name || `Document Setting ${settingId}`);
@@ -227,7 +319,7 @@ const handleFileUpload = async () => {
               : new Date().toISOString().split('T')[0],
             isSelected: false,
             department: getDepartmentNameByLocation(documentSetting.current_location),
-            downloadUrl: `${API}/api/document/download_file/${documentSetting.document_id}`, // Use full URL like CollabFiles
+            downloadUrl: `${API}/api/document/download_file/${documentSetting.document_id}`,
           };
 
           setFiles([mainFile]);
@@ -235,22 +327,14 @@ const handleFileUpload = async () => {
           setFiles([]);
         }
 
-        // Update departments based on current_location if needed
-        if (documentSetting.current_location !== undefined) {
-          const locationIndex = documentSetting.current_location;
-          setDepartments(prev => prev.map((dept, index) => ({
-            ...dept,
-            isActive: index === locationIndex,
-            isCompleted: index < locationIndex
-          })));
-        }
+        // Update departments based on iteration and current_location
+        updateDepartmentStatus(documentSetting.iteration, documentSetting.current_location);
 
       } catch (err) {
         console.error("Error fetching document setting:", err);
         const errorMessage = err instanceof Error ? err.message : "Failed to fetch document data";
         setError(errorMessage);
         
-        // Set fallback data
         setProposalTitle(`Document Setting ${settingId}`);
         setProposalDetails("Push the files to the departments for review and approval");
         setFiles([]);
@@ -260,11 +344,34 @@ const handleFileUpload = async () => {
     };
 
     fetchDocumentSettingAndFiles();
-  }, [settingId, API]);
+  }, [settingId, API]); // Back to including API in dependency array
+
+  // Check if user can interact with document (update/push)
+  useEffect(() => {
+    if (documentSetting && userDepartmentId !== null) {
+      const canUserInteract = documentSetting.current_location === userDepartmentId;
+      setCanInteract(canUserInteract);
+      console.log("Can user interact:", canUserInteract, "Current location:", documentSetting.current_location, "User dept:", userDepartmentId);
+    }
+  }, [documentSetting, userDepartmentId]);
+
+  // Update department status based on iteration and current location
+  const updateDepartmentStatus = (iteration: number[], currentLocation: number) => {
+    setDepartments(prev => prev.map((dept, index) => {
+      const deptId = index + 1; // Assuming department IDs are 1-indexed
+      const currentIndex = iteration.indexOf(currentLocation);
+      const deptIndex = iteration.indexOf(deptId);
+      
+      return {
+        ...dept,
+        isActive: deptId === currentLocation,
+        isCompleted: deptIndex !== -1 && deptIndex < currentIndex
+      };
+    }));
+  };
 
   // Get current active department
   const currentDepartment = departments.find((dept) => dept.isActive);
-  const currentDepartmentIndex = departments.findIndex((dept) => dept.isActive);
 
   const handleFileSelect = (file: FileItem) => {
     setFiles((prev) =>
@@ -283,30 +390,10 @@ const handleFileUpload = async () => {
       "Operations Department", 
       "Finance Department"
     ];
-    return departmentNames[location] || "Technology Department";
+    return departmentNames[location - 1] || "Technology Department"; // Assuming 1-indexed
   };
 
-  const handleNextDepartment = () => {
-    if (currentDepartmentIndex < departments.length - 1) {
-      setDepartments(prev => prev.map((dept, index) => ({
-        ...dept,
-        isActive: index === currentDepartmentIndex + 1,
-        isCompleted: index === currentDepartmentIndex ? true : dept.isCompleted
-      })));
-    }
-  };
-
-  const handlePreviousDepartment = () => {
-    if (currentDepartmentIndex > 0) {
-      setDepartments(prev => prev.map((dept, index) => ({
-        ...dept,
-        isActive: index === currentDepartmentIndex - 1,
-        isCompleted: index === currentDepartmentIndex - 1 ? false : dept.isCompleted
-      })));
-    }
-  };
-
-  // Download function matching CollabFiles implementation exactly
+  // Download function
   const handleDownload = (file: FileItem) => {
     if (!file.downloadUrl) {
       alert("No download URL available for this file");
@@ -364,62 +451,56 @@ const handleFileUpload = async () => {
             <p className="text-sm">{error}</p>
           </div>
         )}
-{/* File Info Headers */}
+
+        {/* Access Control Notice */}
+        {userDepartmentId === null && (
+          <div className="w-full max-w-6xl mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded">
+            <p className="text-sm">
+              <strong>Note:</strong> Department information not found. Make sure your login process stores 'department_id' in sessionStorage.
+              For testing, you can manually add it: <code>sessionStorage.setItem('department_id', '1')</code>
+            </p>
+          </div>
+        )}
+        
+        {!canInteract && documentSetting && userDepartmentId !== null && (
+          <div className="w-full max-w-6xl mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+            <p className="text-sm">
+              This document is currently at {getDepartmentNameByLocation(documentSetting.current_location)}. 
+              You can only update or push documents that are at your department (Department ID: {userDepartmentId}).
+            </p>
+          </div>
+        )}
+
+        {/* File Info Headers */}
         <div className="w-full max-w-6xl mt-2 grid grid-cols-3 gap-4 text-lg font-semibold text-gray-800">
           <div><span className="text-[#B11016] font-bold">File Name:</span> {proposalTitle}</div>
           <div><span className="text-[#B11016] font-bold">File Description:</span>  {proposalDetails}</div>
           <div>
             <span className="text-[#B11016] font-bold">Date created:</span>{" "}
             {files.length > 0 ? files[0].dateCreated : "N/A"}
-            </div>
-        </div>
-        {/* Department Navigation */}
-        <div className="w-full max-w-6xl mt-6">
-          
-
-          {/* Department Progress Indicator */}
-         <div className="flex space-x-2 w-full">
-      {departments.map((dept) => (
-        <div
-          key={dept.id}
-          className={`flex-1 h-10 rounded flex items-center justify-center text-xs font-medium transition-colors duration-300 ${
-            dept.isCompleted
-              ? "bg-[#333333] text-white"
-              : dept.isActive
-              ? "bg-[#B11016] text-white"
-              : "bg-gray-300 text-gray-700"
-          }`}
-        >
-          {dept.name}
-        </div>
-      ))}
-    </div>
-
-
-          <div className="flex items-center justify-between mt-4 mb-5">
-            <button
-              onClick={handlePreviousDepartment}
-              disabled={currentDepartmentIndex === 0}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
-            >
-              Previous
-            </button>
-            
-            <h2 className="text-xl font-semibold text-[#B11016]">
-              {currentDepartment?.name}
-            </h2>
-            
-            <button
-              onClick={handleNextDepartment}
-              disabled={currentDepartmentIndex === departments.length - 1}
-              className="px-4 py-2 bg-[#B11016] text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#800b10]"
-            >
-              Next
-            </button>
           </div>
         </div>
 
-        
+        {/* Department Navigation */}
+        <div className="w-full max-w-6xl mt-6">
+          {/* Department Progress Indicator */}
+          <div className="flex space-x-2 w-full">
+            {departments.map((dept) => (
+              <div
+                key={dept.id}
+                className={`flex-1 h-10 rounded flex items-center justify-center text-xs font-medium transition-colors duration-300 ${
+                  dept.isCompleted
+                    ? "bg-[#333333] text-white"
+                    : dept.isActive
+                    ? "bg-[#B11016] text-white"
+                    : "bg-gray-300 text-gray-700"
+                }`}
+              >
+                {dept.name}
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* File Cards Grid */}
         <div className="w-full max-w-6xl mb-8">
@@ -474,23 +555,53 @@ const handleFileUpload = async () => {
         </div>
 
         {/* Action Buttons */}
-        
-          <div className="w-full max-w-6xl mb-8">
-            <div className="flex justify-center space-x-4">
-                <button
+        <div className="w-full max-w-6xl mb-8">
+          <div className="flex justify-center space-x-4">
+            <button
               onClick={() => setIsUploadModalOpen(true)}
-              className="w-full px-6 py-3 bg-[#333333] text-white rounded hover:bg-[#0f0f0f] transition-colors"
+              disabled={!canInteract || userDepartmentId === null}
+              className={`w-full px-6 py-3 rounded transition-colors ${
+                canInteract && userDepartmentId !== null
+                  ? "bg-[#333333] text-white hover:bg-[#0f0f0f]" 
+                  : "bg-gray-400 text-gray-600 cursor-not-allowed"
+              }`}
             >
               Update
             </button>
-              <button className="w-full px-6 py-3 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors">
-                Push
-              </button>
-              
-            </div>
+            <button 
+              onClick={handlePushDocument}
+              disabled={!canInteract || isPushing || userDepartmentId === null}
+              className={`w-full px-6 py-3 rounded transition-colors ${
+                canInteract && !isPushing && userDepartmentId !== null
+                  ? "bg-[#B11016] text-white hover:bg-[#800b10]" 
+                  : "bg-gray-400 text-gray-600 cursor-not-allowed"
+              }`}
+            >
+              {isPushing ? "Pushing..." : "Push"}
+            </button>
           </div>
+          
+          {/* Help text */}
+          <div className="text-center text-sm text-gray-500 mt-2 space-y-1">
+            {userDepartmentId === null ? (
+              <p>Department information not available. Please check your login setup.</p>
+            ) : !canInteract ? (
+              <p>You can only update or push documents that are currently at your department.</p>
+            ) : null}
+            
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-gray-400 mt-2">
+                <p>Debug: User Dept ID: {userDepartmentId || 'Not set'}</p>
+                {documentSetting && (
+                  <p>Debug: Document at Dept: {documentSetting.current_location}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
-          {/* Upload Modal with Drag & Drop */}
+        {/* Upload Modal with Drag & Drop */}
         {isUploadModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative mx-4">
@@ -508,10 +619,8 @@ const handleFileUpload = async () => {
               </button>
 
               <h2 className="text-xl font-semibold text-[#B11016] mb-4">
-                Upload File
+                Update File
               </h2>
-
-              
 
               {/* Drag and Drop Area */}
               <div
@@ -550,18 +659,17 @@ const handleFileUpload = async () => {
                 </div>
               )}
 
-              {/* Upload Button */}
+              {/* Update Button */}
               <button
-  onClick={handleFileUpdate}   // <-- changed here
-  disabled={!selectedFile}
-  className="w-full px-4 py-2 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
->
-  Update File
-</button>
+                onClick={handleFileUpdate}
+                disabled={!selectedFile}
+                className="w-full px-4 py-2 bg-[#B11016] text-white rounded hover:bg-[#800b10] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Update File
+              </button>
             </div>
           </div>
         )}
-      
       </div>
     </ProtectedRoute>
   );
