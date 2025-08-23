@@ -12,7 +12,7 @@ import {
     FaCalendarAlt
 } from "react-icons/fa";
 import ProtectedRoute from "@/components/ProtectedRoute";
-
+import ProjectRecommender from "@/components/ProjectRecommender";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
@@ -41,7 +41,6 @@ export default function CompanyProfile() {
     const [companyData, setCompanyData] = useState<CompanyData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
-
     const [synergyData, setSynergyData] = useState<any | null>(null);
 
     const [activeTab, setActiveTab] = useState("all");
@@ -56,10 +55,69 @@ export default function CompanyProfile() {
     const [loadingProposals, setLoadingProposals] = useState(false);
     const [proposalError, setProposalError] = useState<string | null>(null);
 
-    useEffect(() => {
+    const [recommendedProjects, setRecommendedProjects] = useState<{ title: string; description: string }[]>([]);
+    const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+    const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const fetchRecommendedProjects = async () => {
         const token = sessionStorage.getItem("access_token");
         if (!token || !companyId) return;
 
+        setLoadingRecommendations(true);
+        setRecommendationsError(null);
+
+        try {
+            const res = await fetch(`${API}/api/project_recommendation/company/${companyId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    const rec = data[0];
+
+                    const mappedProjects = [
+                        { title: rec.title1 || "Untitled Project", description: rec.description1 || "No description available." },
+                        { title: rec.title2 || "Untitled Project", description: rec.description2 || "No description available." },
+                        { title: rec.title3 || "Untitled Project", description: rec.description3 || "No description available." },
+                    ].filter(p => p.title && p.description);
+
+                    setRecommendedProjects(mappedProjects);
+                } else {
+                    setRecommendedProjects([]); // No data
+                }
+            } else {
+                const errData = await res.json();
+                setRecommendationsError(errData.error || "Failed to fetch recommended projects.");
+            }
+        } catch (error) {
+            console.error(error);
+            setRecommendationsError("Network error occurred while loading recommendations.");
+        } finally {
+            setLoadingRecommendations(false);
+        }
+    };
+
+
+    useEffect(() => {
+        if (companyId) {
+            fetchRecommendedProjects();
+        }
+    }, [companyId]);
+
+    const handleOpenModal = () => {
+        setIsModalOpen(true);
+    };
+
+    useEffect(() => {
+        const token = sessionStorage.getItem("access_token");
+        if (!token || !companyId) return;
+        console.log(token)
         const fetchProposals = async () => {
             if (activeTab === "pending") {
                 setLoadingProposals(true);
@@ -94,9 +152,11 @@ export default function CompanyProfile() {
                     if (res.ok) {
                         const data = await res.json();
                         setApprovedProposals(data.proposals || []);
+                    } else if (res.status === 404) {
+                        setApprovedProposals([]);
                     } else {
                         const errData = await res.json();
-                        setApprovedError(errData.error || "No approved projects yet.");
+                        setApprovedError(errData.error || "Failed to load approved projects.");
                     }
                 } catch {
                     setApprovedError("Network error occurred while loading approved proposals.");
@@ -110,7 +170,7 @@ export default function CompanyProfile() {
     }, [activeTab, API, companyId]);
 
     const handleFilesClick = (proposalId: number) => {
-        router.push(`/bpiproposaltracking?id=${proposalId}`); 
+        router.push(`/bpiproposaltracking?id=${proposalId}`);
     };
 
     // Convert company size string to display format
@@ -548,7 +608,7 @@ export default function CompanyProfile() {
                         <div className="flex justify-center mt-4">
                             <button
                                 className="min-w-2xl cursor-pointer font-bold text-center py-4 px-6 text-white bg-[#B11016] border-2 border-[#B11016] rounded-md hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg"
-                                onClick={() => router.push("/login")}
+                                onClick={handleOpenModal}
                             >
                                 Get Project Ideas
                             </button>
@@ -559,6 +619,11 @@ export default function CompanyProfile() {
 
                 </div>
             </div>
+            <ProjectRecommender
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                projects={recommendedProjects}
+            />
         </ProtectedRoute>
     );
 }
