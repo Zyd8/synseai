@@ -273,7 +273,7 @@ export default function SuperAdminDashboard() {
                 router.push('/super-admin/upload-document');
                 break;
             case 'assign-document':
-                router.push('/super-admin/assign-document');
+                router.push('/adminassigndocument');
                 break;
             case 'manage-documents':
                 router.push('/super-admin/manage-documents');

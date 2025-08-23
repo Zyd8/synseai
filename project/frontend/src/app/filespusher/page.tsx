@@ -487,7 +487,7 @@ export default function FilesPusher() {
   }
 
   return (
-    <ProtectedRoute allowedRoles={["user", "employee"]}>
+    <ProtectedRoute allowedRoles={["user", "employee, admin"]}>
       <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
         {/* Header */}
         <div className="relative flex items-center w-full mt-2 mb-4">
