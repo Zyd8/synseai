@@ -200,7 +200,15 @@ def get_unassigned_documents():
             {
                 "id": doc.id,
                 "name": doc.name,
-                "file": doc.file
+                "file_url": doc.file,
+                "type": doc.type,
+                "description": doc.description,
+                "is_bpi": doc.is_bpi,
+                "is_assigned": doc.is_assigned,
+                "proposal_id": doc.proposal_id,
+                "created_at": doc.created_at,
+                "download_url": f"/api/document/download_file/{doc.id}",
+                "view_url": f"/api/document/view_file/{doc.id}"
             }
             for doc in documents
         ]
@@ -209,4 +217,39 @@ def get_unassigned_documents():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+@document_bp.route('/get_assigned', methods=['GET'])
+@jwt_required()
+def get_assigned_documents():
+    try:
+        # Query all unassigned documents
+        documents = Document.query.filter_by(is_assigned=True).all()
+
+        if not documents:
+            return jsonify({"message": "Assigned documents found"}), 404
+
+        # Only return id, name, file
+        result = [
+            {
+                "id": doc.id,
+                "name": doc.name,
+                "file_url": doc.file,
+                "type": doc.type,
+                "description": doc.description,
+                "is_bpi": doc.is_bpi,
+                "is_assigned": doc.is_assigned,
+                "proposal_id": doc.proposal_id,
+                "created_at": doc.created_at,
+                "download_url": f"/api/document/download_file/{doc.id}",
+                "view_url": f"/api/document/view_file/{doc.id}"
+            }
+            for doc in documents
+        ]
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 

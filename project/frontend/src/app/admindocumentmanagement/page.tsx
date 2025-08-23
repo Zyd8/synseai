@@ -4,35 +4,35 @@ import Sidebar from "@/components/DashboardSidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaFileAlt, FaFolder, FaBuilding, FaUpload, FaDownload, FaEye, FaEdit, FaTrash } from "react-icons/fa"; 
+import { FaFileAlt, FaFolder, FaBuilding, FaUpload, FaDownload, FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
 interface Document {
-  id: number;
-  name: string;
-  file_url: string;
-  type: string;
-  description?: string;
-  is_bpi: boolean;
-  is_assigned: boolean;
-  proposal_id?: number;
-  created_at: string;
-  download_url: string;
-  view_url: string;
-  department_id?: number | null;
-  department_name?: string | null; // frontend only
-  
+    id: number;
+    name: string;
+    file_url: string;
+    type: string;
+    description?: string;
+    is_bpi: boolean;
+    is_assigned: boolean;
+    proposal_id?: number;
+    created_at: string;
+    download_url: string;
+    view_url: string;
+    department_id?: number | null;
+    department_name?: string | null; // frontend only
+
 }
 
 interface Department {
-  id: string;
-  name: string;
+    id: string;
+    name: string;
 }
 
 interface DocumentSetting {
-  id: number;
-  document_id: number;
-  document_name?: string;
-  current_location?: number;
+    id: number;
+    document_id: number;
+    document_name?: string;
+    current_location?: number;
 }
 
 export default function AdminDocumentManagement() {
@@ -63,7 +63,7 @@ export default function AdminDocumentManagement() {
 
         const dept = departments.find(d => parseInt(d.id) === setting.current_location);
         return dept ? dept.name : "Unknown Department";
-        };
+    };
 
     // Upload form state
     const [uploadForm, setUploadForm] = useState({
@@ -74,139 +74,6 @@ export default function AdminDocumentManagement() {
         proposal_id: '',
         file: null as File | null
     });
-
-    // Fetch departments
-    useEffect(() => {
-        const fetchDepartments = async () => {
-            const token = sessionStorage.getItem("access_token");
-            if (!token) {
-                console.error("No access token found");
-                return;
-            }
-            
-            console.log("Fetching departments from:", `${API}/api/departments`);
-            
-            try {
-                const deptRes = await fetch(`${API}/api/department`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                });
-
-
-                console.log("Department response status:", deptRes.status);
-                
-                if (!deptRes.ok) {
-                    const errorText = await deptRes.text();
-                    console.error("Department fetch error:", errorText);
-                    throw new Error(`Failed to fetch departments: ${deptRes.status}`);
-                }
-                
-                const data = await deptRes.json();
-                setDepartments(data.departments || []);
-
-            } catch (err) {
-                console.error("Error fetching departments:", err);
-                setDepartments([]);
-            }
-        };
-
-        if (API) {
-            fetchDepartments();
-        } else {
-            console.error("API URL is not defined");
-        }
-    }, [API]);
-
-    // Fetch all documents and document settings
-    useEffect(() => {
-        const fetchAllDocuments = async () => {
-            const token = sessionStorage.getItem("access_token");
-            if (!token) {
-                console.error("No access token found");
-                setLoading(false);
-                return;
-            }
-
-            console.log("Fetching documents from:", `${API}/api/document/get_all`);
-            
-            try {
-                // Fetch all documents
-                const docsRes = await fetch(`${API}/api/document/get_all`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                let allDocs: Document[] = [];
-                if (docsRes.ok) {
-                    allDocs = await docsRes.json();
-                    console.log("Documents fetched:", allDocs.length);
-                } else {
-                    console.error("Documents fetch failed:", docsRes.status);
-                }
-
-                console.log("Fetching document settings from:", `${API}/api/document_setting/get_all`);
-
-                // Fetch assigned (document settings)
-                const settingsRes = await fetch(`${API}/api/document_setting/get_all`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                let settings: DocumentSetting[] = [];
-                if (settingsRes.ok) {
-                    const settingsData = await settingsRes.json();
-                    settings = settingsData || [];
-                    setDocumentSettings(settings);
-                    console.log("Document settings fetched:", settings.length);
-                } else {
-                    console.error("Document settings fetch failed:", settingsRes.status);
-                }
-
-                // Create a map of all documents by ID for easy lookup
-                const docMap = new Map(allDocs.map(doc => [doc.id, doc]));
-                
-                // Extract assigned IDs from settings
-const assignedIds = new Set(settings.map(s => s.document_id));
-
-// Strictly unassigned = only docs not in document_settings
-const unassignedDocs = allDocs.filter(doc => !assignedIds.has(doc.id));
-
-// Strictly assigned = only docs that exist in settings
-const assignedDocs = settings
-  .map(setting => {
-    const originalDoc = docMap.get(setting.document_id);
-    return originalDoc
-      ? { ...originalDoc, is_assigned: true }
-      : null;
-  })
-  .filter((doc): doc is Document => doc !== null);
-
-setDocuments(unassignedDocs);
-setAssignedDocuments(assignedDocs);
-
-            } catch (err) {
-                console.error("Error fetching documents:", err);
-                setDocuments([]);
-                setDocumentSettings([]);
-                setAssignedDocuments([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (API) {
-            fetchAllDocuments();
-        } else {
-            console.error("API URL is not defined");
-            setLoading(false);
-        }
-    }, [API]);
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -229,27 +96,48 @@ setAssignedDocuments(assignedDocs);
     };
 
     const getAllDocumentsForDisplay = () => {
-    const unassignedDocs = documents.map(doc => ({
-        ...doc,
-        isAssigned: false,
-        assignedDepartment: "Unassigned",
-        assignedDepartmentId: null
-    }));
+        const unassignedDocs = documents.map(doc => ({
+            ...doc,
+            is_assigned: false,
+            assignedDepartment: "Unassigned",
+            assignedDepartmentId: null
+        }));
 
-    const assignedDocs = assignedDocuments.map(doc => {
-        const setting = documentSettings.find(s => s.document_id === doc.id);
-        const currentLocationId = setting?.current_location;
-        const deptName = currentLocationId ? getDepartmentNameFromSetting(doc.id) : "Unassigned";
-        
-        return {
-        ...doc,
-        isAssigned: true,
-        assignedDepartment: deptName,
-        assignedDepartmentId: currentLocationId || null
-        };
-    });
+        const assignedDocs = assignedDocuments.map(doc => {
+            const token = sessionStorage.getItem("access_token");
+            const setting = documentSettings.find(s => String(s.document_id) === String(doc.id));
+            const currentLocationId = setting ? Number(setting.current_location) : null;
 
-    return [...unassignedDocs, ...assignedDocs];
+            let deptName = "Unassigned";
+
+            if (currentLocationId) {
+                const dept = departments.find(d => Number(d.id) === currentLocationId);
+                if (dept) {
+                    deptName = dept.name;
+                } else {
+                    // fallback fetch if department is not in the local list
+                    fetch(`${API}/api/department/${currentLocationId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    })
+                        .then(res => res.ok ? res.json() : null)
+                        .then(data => {
+                            if (data) {
+                                setDepartments(prev => [...prev, data]);
+                            }
+                        });
+                }
+            }
+
+
+            return {
+                ...doc,
+                is_assigned: true,
+                assignedDepartment: deptName,
+                assignedDepartmentId: currentLocationId || null
+            };
+        });
+
+        return [...unassignedDocs, ...assignedDocs];
     };
 
 
@@ -258,16 +146,16 @@ setAssignedDocuments(assignedDocs);
 
     const filteredDocuments = allDocuments.filter((doc) => {
         const matchesSearch =
-            doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
+            (doc.name || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+            (doc.description || "").toLowerCase().includes((searchTerm || "").toLowerCase());
 
         const matchesType =
             typeFilter === "all" || doc.type === typeFilter;
 
         const matchesStatus =
             statusFilter === "all" ||
-            (statusFilter === "assigned" && doc.isAssigned) ||
-            (statusFilter === "unassigned" && !doc.isAssigned);
+            (statusFilter === "assigned" && doc.is_assigned) ||
+            (statusFilter === "unassigned" && !doc.is_assigned);
 
         const matchesDepartment =
             departmentFilter === "all" ||
@@ -276,20 +164,23 @@ setAssignedDocuments(assignedDocs);
         return matchesSearch && matchesType && matchesStatus && matchesDepartment;
     });
 
-    const totalDocs = documents.length;
-    const assignedCount = documents.filter(d => d.is_assigned).length;
-    const unassignedCount = totalDocs - assignedCount;
+    console.log("Filtered Documents: ", filteredDocuments)
 
-
+    const assignedCount = assignedDocuments.length;
+    console.log("Assigned Count: ", assignedCount)
+    const unassignedCount = documents.length;
+    console.log("Unassigned Count: ", unassignedCount)
+    const totalDocs = assignedCount + unassignedCount
 
     // Handle document upload
     const handleUploadDocument = async () => {
+        const token = sessionStorage.getItem("access_token");
         if (!uploadForm.name || !uploadForm.type || !uploadForm.file) {
             alert('Please fill in all required fields');
             return;
         }
 
-        const token = sessionStorage.getItem("access_token");
+
         const formData = new FormData();
         formData.append('name', uploadForm.name);
         formData.append('type', uploadForm.type);
@@ -313,7 +204,7 @@ setAssignedDocuments(assignedDocs);
             }
 
             const data = await res.json();
-            
+
             // Add the new document to the list
             const newDoc: Document = {
                 id: data.file.id,
@@ -328,7 +219,7 @@ setAssignedDocuments(assignedDocs);
                 download_url: `/api/document/download_file/${data.file.id}`,
                 view_url: `/api/document/view_file/${data.file.id}`
             };
-            
+
             setDocuments(prev => [newDoc, ...prev]);
             setUploadForm({
                 name: '',
@@ -340,7 +231,7 @@ setAssignedDocuments(assignedDocs);
             });
             setShowUploadModal(false);
             alert('Document uploaded successfully!');
-            
+
         } catch (err) {
             console.error("Error uploading document:", err);
             alert(`Error uploading document: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -364,16 +255,16 @@ setAssignedDocuments(assignedDocs);
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ 
-                        document_id: documentId, 
-                        iteration: [parseInt(bulkDepartment)] // Based on your backend API
+                    body: JSON.stringify({
+                        document_id: documentId,
+                        iteration: [parseInt(bulkDepartment)]
                     }),
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`Failed to assign document ${documentId}`);
                 }
-                
+
                 return response.json();
             });
 
@@ -390,12 +281,12 @@ setAssignedDocuments(assignedDocs);
             if (settingsRes.ok) {
                 const settingsData = await settingsRes.json();
                 setDocumentSettings(settingsData || []);
-                
+
                 // Remove assigned documents from unassigned list and add to assigned list
                 const assignedIds = new Set(Array.from(selectedDocuments));
                 const newlyAssignedDocs = documents.filter(doc => assignedIds.has(doc.id));
-setDocuments(prev => prev.filter(doc => !assignedIds.has(doc.id)));
-setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
+                setDocuments(prev => prev.filter(doc => !assignedIds.has(doc.id)));
+                setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
 
             }
 
@@ -406,8 +297,7 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
         } catch (err) {
             console.error("Error in bulk assignment:", err);
             alert(
-                `Error in bulk assignment: ${
-                    err instanceof Error ? err.message : "Unknown error"
+                `Error in bulk assignment: ${err instanceof Error ? err.message : "Unknown error"
                 }`
             );
         }
@@ -436,12 +326,11 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
             // Also remove from document settings
             setDocumentSettings(prevSettings => prevSettings.filter(setting => setting.document_id !== selectedDocumentForDelete.id));
             alert("Document deleted successfully!");
-            
+
         } catch (err) {
             console.error("Error deleting document:", err);
             alert(
-                `Error deleting document: ${
-                    err instanceof Error ? err.message : "Unknown error"
+                `Error deleting document: ${err instanceof Error ? err.message : "Unknown error"
                 }`
             );
         } finally {
@@ -480,7 +369,7 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
 
     // Get type color
     const getTypeColor = (type: string) => {
-        switch (type.toLowerCase()) {
+        switch ((type || "").toLowerCase()) {
             case "team":
                 return "bg-blue-100 text-blue-800";
             case "proposal":
@@ -491,9 +380,115 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
     };
 
     // Get status color
-    const getStatusColor = (isAssigned: boolean) => {
-        return isAssigned ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
+    const getStatusColor = (is_assigned: boolean) => {
+        return is_assigned ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
     };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = sessionStorage.getItem("access_token");
+            if (!token) {
+                console.error("No access token found");
+                setLoading(false);
+                return;
+            }
+
+            if (!API) {
+                console.error("API URL is not defined");
+                setLoading(false);
+                return;
+            }
+
+            try {
+                // Fetch unassigned documents
+                const unassignedRes = await fetch(`${API}/api/document/get_unassigned`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                let unassignedDocs: Document[] = [];
+                if (unassignedRes.ok) {
+                    unassignedDocs = await unassignedRes.json();
+                    // Add is_assigned = false to unassigned docs
+                    unassignedDocs = unassignedDocs.map(doc => ({ ...doc, is_assigned: false }));
+                    console.log("Unassigned documents fetched:", unassignedDocs.length);
+                } else {
+                    console.error("Unassigned fetch failed:", unassignedRes.status);
+                }
+
+                // Fetch assigned documents
+                console.log("Fetching assigned documents:", `${API}/api/document/get_assigned`);
+                const assignedRes = await fetch(`${API}/api/document/get_assigned`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                let assignedDocs: Document[] = [];
+                if (assignedRes.ok) {
+                    assignedDocs = await assignedRes.json();
+                    // Add is_assigned = true to assigned docs
+                    assignedDocs = assignedDocs.map(doc => ({ ...doc, is_assigned: true }));
+                    console.log("Assigned documents fetched:", assignedDocs.length);
+                } else {
+                    console.error("Assigned fetch failed:", assignedRes.status);
+                }
+
+                // Combine assigned and unassigned docs into one list if needed
+                setDocuments(unassignedDocs);
+                setAssignedDocuments(assignedDocs);
+
+                // Fetch document settings (still needed for UI)
+                console.log("Fetching document settings:", `${API}/api/document_setting/get_all`);
+                const settingsRes = await fetch(`${API}/api/document_setting/get_all`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (settingsRes.ok) {
+                    const settingsData = await settingsRes.json();
+                    setDocumentSettings(settingsData || []);
+                    console.log("Document settings fetched:", settingsData.length);
+                } else {
+                    console.error("Document settings fetch failed:", settingsRes.status);
+                }
+
+                // Fetch departments
+                console.log("Fetching departments:", `${API}/api/department`);
+                const deptRes = await fetch(`${API}/api/department`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (deptRes.ok) {
+                    const data = await deptRes.json();
+                    setDepartments(data.departments || []);
+                } else {
+                    const errorText = await deptRes.text();
+                    console.error("Department fetch error:", errorText);
+                }
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                setDocuments([]);
+                setAssignedDocuments([]);
+                setDocumentSettings([]);
+                setDepartments([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [API]);
+
+
 
     return (
         <ProtectedRoute allowedRoles={["admin"]}>
@@ -512,26 +507,26 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
                     <div className="mt-5 grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div className="bg-white p-4 rounded-lg border border-gray-500 text-center drop-shadow-md">
                             <div className="text-2xl font-bold text-blue-600">
-                            {documents.length}
+                                {totalDocs}
                             </div>
                             <div className="text-sm text-gray-600">Total Documents</div>
                             <FaFileAlt className="text-3xl text-blue-600 mx-auto mt-2" />
                         </div>
                         <div className="bg-white p-4 rounded-lg border border-gray-500 text-center drop-shadow-md">
                             <div className="text-2xl font-bold text-green-600">
-                            {documents.filter(d => d.is_assigned).length}
+                                {assignedCount}
                             </div>
                             <div className="text-sm text-gray-600">Assigned</div>
                             <FaBuilding className="text-3xl text-green-600 mx-auto mt-2" />
                         </div>
                         <div className="bg-white p-4 rounded-lg border border-gray-500 text-center drop-shadow-md">
                             <div className="text-2xl font-bold text-yellow-500">
-                            {documents.filter(d => !d.is_assigned).length}
+                                {documents.filter(d => !d.is_assigned).length}
                             </div>
                             <div className="text-sm text-gray-600">Unassigned</div>
                             <FaFolder className="text-3xl text-yellow-500 mx-auto mt-2" />
                         </div>
-                        </div>
+                    </div>
 
                     {/* Controls Section */}
                     <div className="bg-white rounded-lg border border-gray-500 p-5 mt-5 mb-5 drop-shadow-md">
@@ -616,16 +611,16 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
                                         {selectedDocuments.size} document(s) selected
                                     </span>
                                     {/* Only show assign button if there are unassigned documents selected */}
-                                    {Array.from(selectedDocuments).some(id => 
+                                    {Array.from(selectedDocuments).some(id =>
                                         documents.some(doc => doc.id === id)
                                     ) && (
-                                        <button
-                                            onClick={() => setShowAssignModal(true)}
-                                            className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                                        >
-                                            Assign to Department
-                                        </button>
-                                    )}
+                                            <button
+                                                onClick={() => setShowAssignModal(true)}
+                                                className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                                            >
+                                                Assign to Department
+                                            </button>
+                                        )}
                                     <button
                                         onClick={selectAllDocuments}
                                         className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
@@ -666,7 +661,7 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Name</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Type</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Description</th>
-                                            
+
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Status</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Department</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Created</th>
@@ -675,7 +670,7 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
                                     </thead>
                                     <tbody>
                                         {filteredDocuments.map((document, i) => (
-                                            <tr key={i} className="border-t hover:bg-gray-50 transition-colors">
+                                            <tr key={`${document.id}-${document.is_assigned ? "assigned" : "unassigned"}`} className="border-t hover:bg-gray-50 transition-colors">
                                                 <td className="p-3">
                                                     <input
                                                         type="checkbox"
@@ -692,18 +687,19 @@ setAssignedDocuments(prev => [...prev, ...newlyAssignedDocs]);
                                                     </span>
                                                 </td>
                                                 <td className="p-3 max-w-[200px] truncate">{document.description || "N/A"}</td>
-                                                
+
                                                 <td className="p-3">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(document.is_assigned)}`}>
-                                                    {document.is_assigned ? "Assigned" : "Unassigned"}
-                                                </span>
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(document.is_assigned)}`}>
+                                                        {document.is_assigned ? "Assigned" : "Unassigned"}
+                                                    </span>
                                                 </td>
-                                               <td className="p-3">{document.assignedDepartment || "Unassigned"}</td>
+                                                {/* Assigned Department */}
+                                                <td className="p-3">{document.assignedDepartment}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatDate(document.created_at)}</td>
                                                 <td className="p-3 text-center">
                                                     <div className="flex items-center justify-center gap-2">
-                                                       
-                                                  
+
+
                                                         <a
                                                             href={`${API}${document.download_url}`}
                                                             className="text-green-600 hover:text-green-800 text-sm"
