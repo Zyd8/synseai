@@ -300,11 +300,10 @@ def push_document_setting(setting_id):
 @jwt_required()
 def get_by_current_location(location_id):
     try:
-        # Query all settings where current_location matches
         settings = Document_setting.query.filter_by(current_location=location_id).all()
 
         if not settings:
-            return jsonify([]), 200  # return empty array if none found
+            return jsonify([]), 200 
 
         result = []
         for setting in settings:
