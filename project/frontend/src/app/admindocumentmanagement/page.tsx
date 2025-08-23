@@ -629,7 +629,7 @@ export default function AdminDocumentManagement() {
                                                 />
                                             </th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">ID</th>
-                                            <th className="p-3 text-left text-red-700 whitespace-nowrap">Name</th>
+                                            <th className="p-3 text-left text-red-700 whitespace-nowrap">Document Name</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Type</th>
                                             <th className="p-3 text-left text-red-700 whitespace-nowrap">Description</th>
 
