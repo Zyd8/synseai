@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaArrowLeft } from "react-icons/fa";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function CompanySetup() {
     const API = process.env.NEXT_PUBLIC_API_URL;
@@ -71,9 +72,10 @@ export default function CompanySetup() {
                     const userData = await resUser.json();
                     const user = userData.user;
 
-                    setFullname(`${user.first_name} ${user.last_name}`);
-                    setContactEmail(user.email);
-                    setPosition(user.position);
+                    setFullname(`${user.first_name || ""} ${user.last_name || ""}`);
+                    setContactEmail(user.email || "");
+                    setPosition(user.position || "");
+                    setContactNumber(user.contact_number || "");
                 }
 
                 // Try to fetch existing company data
@@ -161,6 +163,31 @@ export default function CompanySetup() {
             reader.onerror = error => reject(error);
         });
     };
+
+    const updateUserInfo = async (token: string) => {
+    try {
+        const res = await fetch(`${API}/api/auth/update_user`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                position,
+                contact_number: contactNumber,
+            }),
+        });
+
+        if (!res.ok) {
+            console.error("Failed to update user info");
+        } else {
+            console.log("User info updated successfully");
+        }
+    } catch (err) {
+        console.error("Error updating user info:", err);
+    }
+};
+
 
     // Handle Logo Upload
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -272,6 +299,8 @@ export default function CompanySetup() {
             const payload: any = {
                 name: companyName,
                 contact_email: contactEmail,
+                position: position,               // ✅ include position
+                contact_number: contactNumber
             };
 
             if (address.trim()) payload.address = address;
@@ -386,19 +415,43 @@ export default function CompanySetup() {
         }
     };
 
+    const pageVariants = {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+        exit: { opacity: 0, y: -30, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+    };
+
     return (
         <ProtectedRoute allowedRoles={["user"]}>
-        <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
+            <AnimatePresence mode="wait">
+                    <motion.div
+                        key="dashboard-page"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8"
+                    >
+        
             {/* Header */}
             <div className="relative flex items-center w-full mt-2 mb-10">
                 {/* Back Button */}
                 <button
-                    onClick={() => router.push("/dashboard")}
+                    onClick={() => {
+                        if (hasExistingCompany) {
+                        // ✅ User already has a company or updated it → Go to dashboard
+                        router.push("/dashboard");
+                        } else {
+                        // 🚫 No company yet → Must finish setup → Stay in collab flow
+                        router.push("/collabhome");
+                        }
+                    }}
                     className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10]"
-                >
+                    >
                     <FaArrowLeft className="mr-2" />
                     <span className="hidden sm:inline">Back</span>
                 </button>
+
 
                 {/* Title */}
                 <div className="text-center w-full">
@@ -815,7 +868,8 @@ export default function CompanySetup() {
                     )}
                 </div>
             </form>
-        </div>
+        </motion.div>
+            </AnimatePresence>
         </ProtectedRoute>
     );
     

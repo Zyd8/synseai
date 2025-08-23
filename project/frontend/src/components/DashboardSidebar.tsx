@@ -1,18 +1,18 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
 
-  // Example: retrieve role from localStorage (replace with your auth logic)
   useEffect(() => {
-    const storedRole = sessionStorage.getItem("role"); 
+    const storedRole = sessionStorage.getItem("role");
     setRole(storedRole);
   }, []);
 
-  // Menus for collab users
+  // Menus
   const collabMenu = [
     { href: "/dashboard", icon: "/images/Sidebar_home.png", label: "Home" },
     { href: "/collabapproved", icon: "/images/Folder_check.png", label: "Approved" },
@@ -20,7 +20,6 @@ export default function DashboardSidebar() {
     { href: "/collabrejected", icon: "/images/Folder_del.png", label: "Rejected" },
   ];
 
-  // Menus for employees (BPI side)
   const employeeMenu = [
     { href: "/bpidashboard", icon: "/images/Sidebar_home.png", label: "Home" },
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
@@ -42,11 +41,18 @@ export default function DashboardSidebar() {
     { href: "/bpifindcollab", icon: "/images/Folder_del.png", label: "Find Collaborators" },
   ];
 
-  // Pick which menu to show
-  const menuItems = role === "user" ? collabMenu : role === "employee" ? employeeMenu : role === "admin" ? adminMenu : [];
+  const menuItems =
+    role === "user" ? collabMenu : role === "employee" ? employeeMenu : role === "admin" ? adminMenu : [];
 
   return (
-    <aside
+    <motion.aside
+      initial={{ x: -250, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: -250, opacity: 0 }}
+      transition={{
+        duration: 0.2,
+        ease: [0.25, 0.1, 0.25, 1], // smooth cubic-bezier
+      }}
       className="pl-4 group relative bg-white border-r flex flex-col items-center items-start py-4 space-y-6 h-screen w-20 hover:w-56 transition-all duration-300 overflow-hidden"
     >
       {/* Logo */}
@@ -74,6 +80,6 @@ export default function DashboardSidebar() {
           </a>
         ))}
       </nav>
-    </aside>
+    </motion.aside>
   );
 }

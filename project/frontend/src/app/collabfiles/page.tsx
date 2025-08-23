@@ -6,6 +6,7 @@ import { FaArrowLeft, FaFileAlt, FaDownload } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface TimelineItem {
   id: string;
@@ -354,10 +355,25 @@ export default function CollabFiles() {
     }
   };
 
+  const pageVariants = {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+        exit: { opacity: 0, y: -30, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+    };
+
   return (
     <ProtectedRoute allowedRoles={["user", "employee"]}>
       <>
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
+      <AnimatePresence mode="wait">
+          <motion.div
+              key="dashboard-page"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8"
+          >
+     
           {/* Header */}
           <div className="relative flex items-center w-full mt-2 mb-4">
             {/* Back Button */}
@@ -621,7 +637,8 @@ export default function CollabFiles() {
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
+        </AnimatePresence>
       </>
     </ProtectedRoute>
   );

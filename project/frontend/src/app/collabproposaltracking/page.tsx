@@ -6,6 +6,7 @@ import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRout
 import { FaArrowLeft } from 'react-icons/fa';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { motion, AnimatePresence } from "framer-motion";
 
 interface TimelineItem {
   id: string;
@@ -331,16 +332,30 @@ export default function CollabProposalTracking() {
   const currentStep = getStepNumber(proposalData.status);
   const isRejected = proposalData.status.toUpperCase() === 'REJECTED';
 
+  const pageVariants = {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+        exit: { opacity: 0, y: -30, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+    };
+
   return (
     <ProtectedRoute allowedRoles={["user", "employee" ]}>
    
         <>
-          <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
+        <AnimatePresence mode="wait">
+          <motion.div
+              key="dashboard-page"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8"
+          >
             {/* Header */}
             <div className="relative flex items-center w-full mt-2 mb-10">
                 {/* Back Button */}
                 <button
-                    onClick={() => router.back}
+                    onClick={() => router.push("/dashboard")}
                     className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] transition-colors"
                 >
                     <FaArrowLeft className="mr-2" />
@@ -438,7 +453,7 @@ export default function CollabProposalTracking() {
             {/* Proposal Details */}
             <div className="w-full">
               {/* Proposal Title */}
-              <label className="block text-sm sm:text-base font-medium text-red-600 mb-4">
+              <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
                 PROPOSAL TITLE
               </label>
               <div className="relative w-full mb-6">
@@ -457,7 +472,7 @@ export default function CollabProposalTracking() {
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Type of Collaboration */}
                 <div className="flex-1">
-                  <label className="block text-sm sm:text-base font-medium text-red-600 mb-4">
+                  <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
                     TYPE OF COLLABORATION
                   </label>
                   <div className="relative w-full">
@@ -475,7 +490,7 @@ export default function CollabProposalTracking() {
                 
                 {/* Expected Support from BPI */}
                 <div className="flex-1">
-                  <label className="block text-sm sm:text-base font-medium text-red-600 mb-4">
+                  <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
                     EXPECTED SUPPORT FROM BPI
                   </label>
                   <div className="relative w-full">
@@ -588,7 +603,8 @@ export default function CollabProposalTracking() {
                 REFRESH STATUS
               </button> */}
             </div>
-          </div>
+          </motion.div>
+          </AnimatePresence>
         </>
       
     </ProtectedRoute>
