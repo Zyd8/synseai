@@ -63,7 +63,9 @@ def get_all():
             results.append({
                 "id": setting.id,
                 "document_id": setting.document_id,
-                "document_name": setting.document.name if setting.document else None
+                "current_location": setting.current_location,
+                "document_name": setting.document.name if setting.document else None,
+                "iteration": setting.iteration,
             })
 
         return jsonify(results), 200

@@ -2,7 +2,7 @@
 import Head from "next/head";
 import React, { useState, useEffect, useRef } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { FaArrowLeft, FaFileAlt, FaDownload, FaTimes } from "react-icons/fa";
+import { FaArrowLeft, FaFileAlt, FaDownload, FaTimes, FaCheck, FaTimes as FaReject } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -59,6 +59,8 @@ export default function FilesPusher() {
   const [fileDescription, setFileDescription] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPushing, setIsPushing] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const [files, setFiles] = useState<FileItem[]>([]);
 
@@ -93,82 +95,93 @@ export default function FilesPusher() {
     }
   };
 
-  // Get user's department ID from session storage
-  useEffect(() => {
-    const fetchUserDepartment = () => {
+  // Enhanced function to get and refresh user's department ID
+  const fetchUserDepartmentId = async () => {
+    try {
+      console.log("=== Fetching User Department ID ===");
+      
+      // First try to get from sessionStorage
+      const storedDeptId = sessionStorage.getItem("department_id");
+      if (storedDeptId && storedDeptId !== "null" && storedDeptId !== "undefined") {
+        const deptId = parseInt(storedDeptId);
+        console.log("✅ Found department_id in sessionStorage:", deptId);
+        setUserDepartmentId(deptId);
+        return deptId;
+      }
+
+      // If not in sessionStorage, try to fetch from user data or API
+      const token = sessionStorage.getItem('access_token');
+      const userId = sessionStorage.getItem('user_id');
+      
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      // Try to fetch user profile/info from API to get department_id
       try {
-        console.log("=== DEBUG: Checking for department_id ===");
-
-        // Check all sessionStorage items for debugging
-        const allSessionItems: Record<string, string | null> = {};
-        for (let i = 0; i < sessionStorage.length; i++) {
-          const key = sessionStorage.key(i);
-          if (key) {
-            allSessionItems[key] = sessionStorage.getItem(key);
-          }
-        }
-        console.log("All sessionStorage items:", allSessionItems);
-
-        // Method 1: Try to get department_id directly
-        const storedDeptId = sessionStorage.getItem("department_id");
-        console.log("Direct department_id lookup:", storedDeptId);
-
-        if (storedDeptId && storedDeptId !== "null" && storedDeptId !== "undefined") {
-          const deptId = parseInt(storedDeptId);
-          console.log("✅ Found department_id directly:", deptId);
-          setUserDepartmentId(deptId);
-          return;
-        }
-
-        // Method 2: Try to get from stored user data (common key names)
-        const possibleUserKeys = ['user', 'userData', 'currentUser'];
-        for (const userKey of possibleUserKeys) {
-          const storedUserData = sessionStorage.getItem(userKey);
-          if (storedUserData && storedUserData !== "null" && storedUserData !== "undefined") {
-            try {
-              const userData = JSON.parse(storedUserData);
-              console.log(`Found user data in '${userKey}':`, userData);
-
-              if (userData && typeof userData === 'object' && userData.department_id !== undefined && userData.department_id !== null) {
-                console.log("✅ Found department_id in user data:", userData.department_id);
-                setUserDepartmentId(userData.department_id);
-                // Store it directly for future use
-                sessionStorage.setItem("department_id", userData.department_id.toString());
-                return;
-              }
-            } catch (parseError) {
-              console.warn(`Error parsing '${userKey}' data:`, parseError);
-            }
-          }
-        }
-
-        // Method 3: Check if we have user_id and can make assumptions
-        const userId = sessionStorage.getItem("user_id");
-        const role = sessionStorage.getItem("role");
-
-        console.log("Available session data:", {
-          user_id: userId,
-          role: role,
-          allKeys: Object.keys(allSessionItems)
+        const userRes = await fetch(`${API}/api/user/profile`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         });
 
-        console.warn("❌ Department ID not found in sessionStorage.");
-        console.warn("Your login response includes department_id, but it's not being stored in sessionStorage.");
-        console.warn("Please update your login process to store the user data:");
-        console.warn("Example: sessionStorage.setItem('user', JSON.stringify(loginResponse.user))");
-        console.warn("Or: sessionStorage.setItem('department_id', loginResponse.user.department_id)");
-
-        // For immediate testing, suggest the manual approach
-        if (role === 'employee') {
-          console.warn("🔧 For testing, run this in console: sessionStorage.setItem('department_id', '1')");
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          console.log("Fetched user data from API:", userData);
+          
+          if (userData.department_id || userData.user?.department_id) {
+            const deptId = userData.department_id || userData.user.department_id;
+            console.log("✅ Found department_id from API:", deptId);
+            
+            // Store it for future use
+            sessionStorage.setItem("department_id", deptId.toString());
+            setUserDepartmentId(deptId);
+            return deptId;
+          }
         }
-
-      } catch (error) {
-        console.error("Error getting user department from sessionStorage:", error);
+      } catch (apiError) {
+        console.warn("Failed to fetch user data from API:", apiError);
       }
-    };
 
-    fetchUserDepartment();
+      // Alternative: Try to get from stored user data in sessionStorage
+      const possibleUserKeys = ['user', 'userData', 'currentUser', 'userInfo'];
+      for (const userKey of possibleUserKeys) {
+        const storedUserData = sessionStorage.getItem(userKey);
+        if (storedUserData && storedUserData !== "null" && storedUserData !== "undefined") {
+          try {
+            const userData = JSON.parse(storedUserData);
+            console.log(`Found user data in '${userKey}':`, userData);
+
+            if (userData && typeof userData === 'object' && userData.department_id !== undefined && userData.department_id !== null) {
+              console.log("✅ Found department_id in stored user data:", userData.department_id);
+              const deptId = userData.department_id;
+              sessionStorage.setItem("department_id", deptId.toString());
+              setUserDepartmentId(deptId);
+              return deptId;
+            }
+          } catch (parseError) {
+            console.warn(`Error parsing '${userKey}' data:`, parseError);
+          }
+        }
+      }
+
+      // If we reach here, department_id wasn't found
+      console.warn("❌ Department ID not found anywhere");
+      setUserDepartmentId(null);
+      return null;
+
+    } catch (error) {
+      console.error("Error fetching user department:", error);
+      setUserDepartmentId(null);
+      return null;
+    }
+  };
+
+  // Effect to fetch user department ID on component mount and when needed
+  useEffect(() => {
+    fetchUserDepartmentId();
   }, []);
 
   // Handle file selection from input or drag & drop
@@ -292,6 +305,88 @@ export default function FilesPusher() {
     }
   };
 
+  // Generic status update handler (similar to BpiDashboard pattern)
+  const handleStatusUpdate = async (newStatus: string, reason?: string) => {
+    if (!settingId || !documentSetting) {
+      alert("No document setting found.");
+      return;
+    }
+
+    if (!canInteract) {
+      alert("You can only update documents that are currently at your department.");
+      return;
+    }
+
+    try {
+      setIsApproving(newStatus === 'APPROVED');
+      setIsRejecting(newStatus === 'REJECTED');
+      
+      const token = sessionStorage.getItem("access_token");
+      if (!token) throw new Error("No token found.");
+
+      // Update document status in database (following BpiDashboard pattern)
+      const res = await fetch(`${API}/api/document_setting/${settingId}/status`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          ...(reason && { rejection_reason: reason })
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || `Failed to update document status`);
+      }
+
+      const result = await res.json();
+      
+      // Update local state with new status
+      setDocumentSetting(prev => prev ? {
+        ...prev,
+        status: result.document_setting?.status || newStatus,
+        updated_at: new Date().toISOString()
+      } : null);
+
+      const statusLabel = newStatus === 'APPROVED' ? 'approved' : 
+                         newStatus === 'REJECTED' ? 'rejected' : 'updated';
+      alert(`Document ${statusLabel} successfully!`);
+
+      // Refresh the page to get updated data
+      window.location.reload();
+    } catch (err) {
+      console.error(`Error updating document status:`, err);
+      alert(`Error updating document status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setIsApproving(false);
+      setIsRejecting(false);
+    }
+  };
+
+  // Approve handler for final department
+  const handleApproveDocument = async () => {
+    if (!isAtFinalDepartment()) {
+      alert("You can only approve documents at the final department.");
+      return;
+    }
+    
+    await handleStatusUpdate('APPROVED');
+  };
+
+  // Reject handler for final department
+  const handleRejectDocument = async () => {
+    if (!isAtFinalDepartment()) {
+      alert("You can only reject documents at the final department.");
+      return;
+    }
+
+    const reason = prompt("Please provide a reason for rejection (optional):");
+    await handleStatusUpdate('REJECTED', reason || "No reason provided");
+  };
+
   // Helper function to get department name by ID
   const getDepartmentNameById = (deptId: number) => {
     const dept = allDepartments.find(d => d.id === deptId);
@@ -317,6 +412,25 @@ export default function FilesPusher() {
     });
 
     setDepartments(orderedDepartments);
+  };
+
+  // Refresh user access when document or user department changes
+  const refreshUserAccess = async () => {
+    console.log("Refreshing user access...");
+    
+    // Re-fetch department ID to ensure it's current
+    await fetchUserDepartmentId();
+    
+    // Re-check interaction permissions
+    if (documentSetting && userDepartmentId !== null) {
+      const canUserInteract = documentSetting.current_location === userDepartmentId;
+      setCanInteract(canUserInteract);
+      console.log("Updated access:", {
+        canInteract: canUserInteract,
+        currentLocation: documentSetting.current_location,
+        userDept: userDepartmentId
+      });
+    }
   };
 
   // Fetch document setting and files data
@@ -379,6 +493,9 @@ export default function FilesPusher() {
         setProposalTitle(documentSetting.document_name || `Document Setting ${settingId}`);
         setProposalDetails(documentSetting.document_description || "Push the files to the departments for review and approval");
 
+        // Refresh user access after loading document
+        setTimeout(() => refreshUserAccess(), 100);
+
       } catch (err) {
         console.error("Error fetching document setting:", err);
         const errorMessage = err instanceof Error ? err.message : "Failed to fetch document data";
@@ -424,7 +541,7 @@ export default function FilesPusher() {
     }
   }, [documentSetting, allDepartments]);
 
-  // Check if user can interact with document (update/push)
+  // Check if user can interact with document (update/push/approve/reject)
   useEffect(() => {
     if (documentSetting && userDepartmentId !== null) {
       const canUserInteract = documentSetting.current_location === userDepartmentId;
@@ -530,8 +647,13 @@ export default function FilesPusher() {
         {userDepartmentId === null && (
           <div className="w-full max-w-6xl mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded">
             <p className="text-sm">
-              <strong>Note:</strong> Department information not found. Make sure your login process stores 'department_id' in sessionStorage.
-              For testing, you can manually add it: <code>sessionStorage.setItem('department_id', '1')</code>
+              <strong>Note:</strong> Department information not found. 
+              <button 
+                onClick={refreshUserAccess} 
+                className="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+              >
+                Refresh Access
+              </button>
             </p>
           </div>
         )}
@@ -540,7 +662,13 @@ export default function FilesPusher() {
           <div className="w-full max-w-6xl mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
             <p className="text-sm">
               This document is currently at {getDepartmentNameById(documentSetting.current_location)}.
-              You can only update or push documents that are at your department (Department ID: {userDepartmentId}).
+              You can only interact with documents that are at your department (Department ID: {userDepartmentId}).
+              <button 
+                onClick={refreshUserAccess} 
+                className="ml-2 px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
+              >
+                Refresh Access
+              </button>
             </p>
           </div>
         )}
@@ -648,7 +776,7 @@ export default function FilesPusher() {
             <button
               onClick={() => setIsUploadModalOpen(true)}
               disabled={!canInteract || userDepartmentId === null}
-              className={`${isAtFinalDepartment() ? 'w-full max-w-md' : 'w-full max-w-xs'} px-6 py-3 rounded transition-colors ${canInteract && userDepartmentId !== null
+              className={`${isAtFinalDepartment() ? 'w-full max-w-xs' : 'w-full max-w-xs'} px-6 py-3 rounded transition-colors ${canInteract && userDepartmentId !== null
                   ? "bg-[#333333] text-white hover:bg-[#0f0f0f]"
                   : "bg-gray-400 text-gray-600 cursor-not-allowed"
                 }`}
@@ -656,7 +784,7 @@ export default function FilesPusher() {
               Update
             </button>
 
-            {/* Only show Push button if not at final department */}
+            {/* Show Push button if not at final department */}
             {!isAtFinalDepartment() && (
               <button
                 onClick={handlePushDocument}
@@ -669,30 +797,48 @@ export default function FilesPusher() {
                 {isPushing ? "Pushing..." : "Push"}
               </button>
             )}
+
+            {/* Show Approve/Reject buttons if at final department */}
+            {isAtFinalDepartment() && (
+              <>
+                <button
+                  onClick={handleApproveDocument}
+                  disabled={!canInteract || isApproving || userDepartmentId === null}
+                  className={`w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ${canInteract && !isApproving && userDepartmentId !== null
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    }`}
+                >
+                  <FaCheck className="mr-2" />
+                  {isApproving ? "Approving..." : "Approve"}
+                </button>
+
+                <button
+                  onClick={handleRejectDocument}
+                  disabled={!canInteract || isRejecting || userDepartmentId === null}
+                  className={`w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ${canInteract && !isRejecting && userDepartmentId !== null
+                      ? "bg-red-600 text-white hover:bg-red-700"
+                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    }`}
+                >
+                  <FaReject className="mr-2" />
+                  {isRejecting ? "Rejecting..." : "Reject"}
+                </button>
+              </>
+            )}
           </div>
 
           {/* Help text */}
           <div className="text-center text-sm text-gray-500 mt-2 space-y-1">
             {userDepartmentId === null ? (
-              <p>Department information not available. Please check your login setup.</p>
+              <p>Department information not available. Please check your login setup or refresh access.</p>
             ) : !canInteract ? (
-              <p>You can only update or push documents that are currently at your department.</p>
+              <p>You can only interact with documents that are currently at your department.</p>
             ) : isAtFinalDepartment() ? (
-              <p>Document has reached the final department. Only updates are allowed.</p>
-            ) : null}
-
-            {/* Debug info - remove in production
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-gray-400 mt-2">
-                <p>Debug: User Dept ID: {userDepartmentId || 'Not set'}</p>
-                {documentSetting && (
-                  <>
-                    <p>Debug: Document at Dept: {documentSetting.current_location}</p>
-                    <p>Debug: Is at final dept: {isAtFinalDepartment()}</p>
-                  </>
-                )}
-              </div>
-            )} */}
+              <p>Document has reached the final department. You can update, approve, or reject the document.</p>
+            ) : (
+              <p>You can update the document or push it to the next department.</p>
+            )}
           </div>
         </div>
 
