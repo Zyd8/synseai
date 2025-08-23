@@ -340,7 +340,7 @@ export default function CollabProposalTracking() {
             <div className="relative flex items-center w-full mt-2 mb-10">
                 {/* Back Button */}
                 <button
-                    onClick={() => router.back}
+                    onClick={() => router.push("/dashboard")}
                     className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] transition-colors"
                 >
                     <FaArrowLeft className="mr-2" />
@@ -438,7 +438,7 @@ export default function CollabProposalTracking() {
             {/* Proposal Details */}
             <div className="w-full">
               {/* Proposal Title */}
-              <label className="block text-sm sm:text-base font-medium text-red-600 mb-4">
+              <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
                 PROPOSAL TITLE
               </label>
               <div className="relative w-full mb-6">
@@ -457,7 +457,7 @@ export default function CollabProposalTracking() {
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Type of Collaboration */}
                 <div className="flex-1">
-                  <label className="block text-sm sm:text-base font-medium text-red-600 mb-4">
+                  <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
                     TYPE OF COLLABORATION
                   </label>
                   <div className="relative w-full">
@@ -475,7 +475,7 @@ export default function CollabProposalTracking() {
                 
                 {/* Expected Support from BPI */}
                 <div className="flex-1">
-                  <label className="block text-sm sm:text-base font-medium text-red-600 mb-4">
+                  <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
                     EXPECTED SUPPORT FROM BPI
                   </label>
                   <div className="relative w-full">

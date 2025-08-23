@@ -6,10 +6,23 @@ import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRout
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { GiConsoleController } from "react-icons/gi";
+import Modal from "@/components/Modal";
 
 export default function ProposalForm() {
     const API = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
+
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
+    const [modalMessage, setModalMessage] = useState("");
+
+    const showModal = (title: string, message: string) => {
+        setModalTitle(title);
+        setModalMessage(message);
+        setModalOpen(true);
+    };
+
+
     useEffect(() => {
         const fetchData = async () => {
             const token = sessionStorage.getItem("access_token");
@@ -73,6 +86,18 @@ export default function ProposalForm() {
     const [fileDescription, setFileDescription] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const isFormValid =
+        salutation.trim() !== "" &&
+        gender.trim() !== "" &&
+        fullname.trim() !== "" &&
+        email.trim() !== "" &&
+        companyName.trim() !== "" &&
+        title.trim() !== "" &&
+        collabType.trim() !== "" &&
+        description.trim() !== "" &&
+        uploadedFile !== null &&
+        confirm === true;
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             setUploadedFile(e.target.files[0]);
@@ -91,7 +116,7 @@ export default function ProposalForm() {
 
         const token = sessionStorage.getItem("access_token");
         if (!token) {
-            alert("You must be logged in to submit a proposal.");
+            showModal("Unauthorized", "You must be logged in to submit a proposal.");
             return;
         }
 
@@ -112,7 +137,7 @@ export default function ProposalForm() {
 
             if (!res.ok) {
                 const error = await res.json();
-                alert(error.error || "Failed to submit proposal.");
+                showModal("Error", error.error || "Failed to submit proposal.");
                 return;
             }
 
@@ -143,7 +168,7 @@ export default function ProposalForm() {
 
                     if (!fileRes.ok) {
                         const error = await fileRes.json(); 
-                        alert(error.error || "File upload failed.");
+                        showModal("File Upload Failed", error.error || "File upload failed.");
                         return;
                     }
 
@@ -153,7 +178,8 @@ export default function ProposalForm() {
             }
 
             
-            alert("Proposal submitted successfully!");
+            
+            showModal("Congratulations", "Proposal submitted successfully!");
             setTitle("");
             setDescription("");
             setCollabType("");
@@ -162,11 +188,14 @@ export default function ProposalForm() {
             setUploadedFile(null);
             setConfirm(false);
 
-            router.push(`/collabproposaltracking?id=${proposal.id}`);
+            // ✅ Delay navigation for 2 seconds (adjust as you like)
+            setTimeout(() => {
+                router.push(`/collabproposaltracking?id=${proposal.id}`);
+            }, 2000);
 
         } catch (err) {
             console.error("Error submitting proposal:", err);
-            alert("Something went wrong. Please try again.");
+            showModal("Error", "Something went wrong. Please try again.");
         }
     };
 
@@ -556,9 +585,14 @@ export default function ProposalForm() {
                             <div className="col-span-1 md:col-span-2">
                                 <button
                                     type="submit"
-                                    className="mt-2 sm:mt-4 w-full flex justify-center py-3 sm:py-3 px-3 border border-transparent 
-                rounded-md text-xs font-bold text-white bg-[#B11016] hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105"
-                                >
+                                    disabled={!isFormValid}
+                                    className={`mt-2 sm:mt-4 w-full flex justify-center py-3 px-3 border rounded-md text-xs font-bold transition-all duration-300 ease-in-out transform
+                                        ${
+                                        isFormValid
+                                            ? "bg-[#B11016] text-white border-transparent hover:text-[#B11016] hover:bg-white hover:border-[#B11016] hover:scale-105"
+                                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        }`}
+                                    >
                                     SUBMIT PROPOSAL
                                 </button>
                             </div>
@@ -566,6 +600,12 @@ export default function ProposalForm() {
 
 
                     </div>
+                    <Modal
+                        isOpen={modalOpen}
+                        title={modalTitle}
+                        message={modalMessage}
+                        onClose={() => setModalOpen(false)}
+                    />
                 </form>
             </CollabCompanyProtectedRoute>
         </ProtectedRoute>
