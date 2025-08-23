@@ -62,6 +62,9 @@ const AdminAssignDocument = () => {
   const [fileDescription, setFileDescription] = useState("");
   const searchParams = useSearchParams();
   const proposalId = searchParams?.get("proposalId");
+  const [showPresetModal, setShowPresetModal] = useState(false);
+  const [presetName, setPresetName] = useState("");
+
   const handleFileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -334,14 +337,16 @@ const AdminAssignDocument = () => {
   };
 
   // Save as preset
-  const handleSavePreset = async () => {
-    if (!token) return;
+  const handleSavePreset = () => {
     if (queue.length === 0) {
       alert("Add at least one department to save a preset.");
       return;
     }
-    const name = prompt("Preset name:");
-    if (!name) return;
+    setShowPresetModal(true); // ✅ Open modal
+  };
+
+  const confirmSavePreset = async () => {
+    if (!presetName.trim()) return;
 
     setSavingPreset(true);
     try {
@@ -352,16 +357,18 @@ const AdminAssignDocument = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
+          name: presetName.trim(),
           department_queues: queue.map((d) => d.id),
         }),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to save preset");
-      // refresh presets
+
       setPresets((prev) => [...prev, data.department_preset]);
       setSelectedPresetId(data.department_preset?.id ?? "");
-      alert("Preset saved.");
+      setShowPresetModal(false); // ✅ Close modal
+      setPresetName(""); // ✅ Reset input
     } catch (e: any) {
       alert(e.message || "Error saving preset");
     } finally {
@@ -506,28 +513,29 @@ Debug info:
       <div className="w-full flex items-center justify-between gap-4">
         <div className="flex gap-6">
           <button
-            className={`p-2 px-6 text-sm sm:text-base rounded-md ${activeTab === "view" ? "bg-[#B11016] text-white font-semibold" : "border-2 border-[#B11016] text-[#B11016]"
+            className={`p-2 px-6 text-sm sm:text-base rounded-md transition-all duration-300 ease-in-out transform ${activeTab === "view"
+                ? "bg-[#B11016] text-white font-semibold shadow-lg hover:bg-[#8B0C11] hover:shadow-xl hover:scale-105"
+                : "border-2 border-[#B11016] text-[#B11016] bg-transparent hover:bg-[#B11016] hover:text-white hover:shadow-lg hover:scale-105 hover:border-[#8B0C11]"
               }`}
             onClick={() => {
               setActiveTab("view");
-              setShowFilesModal(true); 
+              setShowFilesModal(true);
             }}
           >
             VIEW FILES
           </button>
           <button
-            className={`p-2 px-6 text-sm sm:text-base rounded-md ${activeTab === "upload"
-                ? "bg-[#B11016] text-white font-semibold"
-                : "border-2 border-[#B11016] text-[#B11016]"
+            className={`p-2 px-6 text-sm sm:text-base rounded-md transition-all duration-300 ease-in-out transform ${activeTab === "upload"
+                ? "bg-[#B11016] text-white font-semibold shadow-lg hover:bg-[#8B0C11] hover:shadow-xl hover:scale-105"
+                : "border-2 border-[#B11016] text-[#B11016] bg-transparent hover:bg-[#B11016] hover:text-white hover:shadow-lg hover:scale-105 hover:border-[#8B0C11]"
               }`}
             onClick={() => {
               setActiveTab("upload");
-              setShowUploadModal(true); // ✅ open modal
+              setShowUploadModal(true); 
             }}
           >
             UPLOAD
           </button>
-
         </div>
 
         <div className="flex items-center gap-2">
@@ -888,6 +896,98 @@ Debug info:
             <button className="text-white/80" onClick={() => setError(null)}>
               ✕
             </button>
+          </div>
+        </div>
+      )}
+
+      {showPresetModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {/* Blurred backdrop */}
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowPresetModal(false)}
+          />
+
+          {/* Modal content */}
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all duration-300 ease-out scale-100 opacity-100">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Save Preset</h2>
+                  <p className="text-sm text-gray-500">Create a reusable configuration</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPresetModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200"
+                disabled={savingPreset}
+              >
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <div className="space-y-2">
+                <label htmlFor="preset-name" className="block text-sm font-medium text-gray-700">
+                  Preset Name
+                </label>
+                <input
+                  id="preset-name"
+                  type="text"
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !savingPreset && presetName.trim()) {
+                      confirmSavePreset();
+                    }
+                    if (e.key === 'Escape') {
+                      setShowPresetModal(false);
+                    }
+                  }}
+                  placeholder="e.g., My Custom Configuration"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                  disabled={savingPreset}
+                  autoFocus
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Choose a descriptive name for easy identification later
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end space-x-3 p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+              <button
+                onClick={() => setShowPresetModal(false)}
+                className="px-6 py-2.5 rounded-xl text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={savingPreset}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSavePreset}
+                disabled={savingPreset || !presetName.trim()}
+                className="px-6 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                {savingPreset ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </div>
+                ) : (
+                  "Save Preset"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
