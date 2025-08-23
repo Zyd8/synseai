@@ -13,7 +13,7 @@ export default function BpiDashboard() {
     const API = process.env.NEXT_PUBLIC_API_URL;
 
     const [proposals, setProposals] = useState<any[]>([]);
-    const [companies, setCompanies] = useState<{[key: number]: any}>({});
+    const [companies, setCompanies] = useState<{ [key: number]: any }>({});
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<number | null>(null);
     const [openRow, setOpenRow] = useState<number | null>(null);
@@ -56,7 +56,7 @@ export default function BpiDashboard() {
                 console.warn(`Failed to fetch company ${companyId}`);
                 return null;
             }
-            
+
             const data = await res.json();
             return data.company;
         } catch (err) {
@@ -80,11 +80,11 @@ export default function BpiDashboard() {
                 if (!res.ok) throw new Error("Failed to fetch proposals");
                 const data = await res.json();
                 console.log("Full API Response:", data);
-                
+
                 // Extract proposals from the response structure
                 const proposalsList = data.proposals || data || [];
                 console.log("Extracted proposals list:", proposalsList);
-                
+
                 setProposals(Array.isArray(proposalsList) ? proposalsList : []);
 
                 // Extract unique company IDs and fetch company data
@@ -102,9 +102,9 @@ export default function BpiDashboard() {
                 });
 
                 const companyResults = await Promise.all(companyPromises);
-                
+
                 // Create companies lookup object
-                const companiesLookup: {[key: number]: any} = {};
+                const companiesLookup: { [key: number]: any } = {};
                 companyResults.forEach(({ id, company }) => {
                     if (company) {
                         companiesLookup[id] = company;
@@ -113,7 +113,7 @@ export default function BpiDashboard() {
 
                 console.log("Companies lookup:", companiesLookup);
                 setCompanies(companiesLookup);
-                
+
             } catch (err) {
                 console.error("Error fetching proposals:", err);
                 setProposals([]);
@@ -147,25 +147,25 @@ export default function BpiDashboard() {
 
     // Compute summary counts based on mapped status
     const summary = [
-        { 
-            label: "Submitted", 
-            count: proposals.filter(p => mapStatus(p.status) === "Submitted").length, 
-            img: "/images/db_submitted.png" 
+        {
+            label: "Submitted",
+            count: proposals.filter(p => mapStatus(p.status) === "Submitted").length,
+            img: "/images/db_submitted.png"
         },
-        { 
-            label: "In Progress", 
-            count: proposals.filter(p => mapStatus(p.status) === "In Progress").length, 
-            img: "/images/db_inprogress.png" 
+        {
+            label: "In Progress",
+            count: proposals.filter(p => mapStatus(p.status) === "In Progress").length,
+            img: "/images/db_inprogress.png"
         },
-        { 
-            label: "Approved", 
-            count: proposals.filter(p => mapStatus(p.status) === "Approved").length, 
-            img: "/images/db_approved.png" 
+        {
+            label: "Approved",
+            count: proposals.filter(p => mapStatus(p.status) === "Approved").length,
+            img: "/images/db_approved.png"
         },
-        { 
-            label: "Rejected", 
-            count: proposals.filter(p => mapStatus(p.status) === "Rejected").length, 
-            img: "/images/db_rejected.png" 
+        {
+            label: "Rejected",
+            count: proposals.filter(p => mapStatus(p.status) === "Rejected").length,
+            img: "/images/db_rejected.png"
         },
     ];
 
@@ -208,7 +208,7 @@ export default function BpiDashboard() {
     const handleStatusUpdate = async (proposalId: number, newStatus: string) => {
         const token = sessionStorage.getItem("access_token");
         setUpdating(proposalId);
-        
+
         try {
             const res = await fetch(`${API}/api/proposal/${proposalId}/status`, {
                 method: 'PATCH',
@@ -216,8 +216,8 @@ export default function BpiDashboard() {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ 
-                    status: mapStatusToBackend(newStatus) 
+                body: JSON.stringify({
+                    status: mapStatusToBackend(newStatus)
                 }),
             });
 
@@ -227,7 +227,7 @@ export default function BpiDashboard() {
             }
 
             const data = await res.json();
-            
+
             // Update the local state
             setProposals(prevProposals =>
                 prevProposals.map(p =>
@@ -237,7 +237,7 @@ export default function BpiDashboard() {
 
             alert(`Proposal status updated to: ${newStatus}`);
             setOpenRow(null);
-            
+
         } catch (err) {
             console.error("Error updating proposal status:", err);
             alert(`Error updating proposal status: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -254,7 +254,7 @@ export default function BpiDashboard() {
 
     const handleActionClick = (e: React.MouseEvent, rowIndex: number) => {
         e.stopPropagation();
-        
+
         if (openRow === rowIndex) {
             setOpenRow(null);
             return;
@@ -265,13 +265,13 @@ export default function BpiDashboard() {
         const rect = button.getBoundingClientRect();
         const scrollY = window.scrollY;
         const scrollX = window.scrollX;
-        
+
         // Position dropdown to the left of the button (since it's the last column)
         setDropdownPosition({
             top: rect.bottom + scrollY + 5, // 5px gap below button
             left: rect.right + scrollX - 160 // Align right edge of dropdown with right edge of button
         });
-        
+
         setOpenRow(rowIndex);
     };
 
@@ -322,69 +322,69 @@ export default function BpiDashboard() {
                     </div>
 
                     {/* Activities */}
-<div className="bg-white rounded-lg drop-shadow-lg sm:p-8 p-6 border border-gray-500 h-[350px] flex flex-col">
-  <h3 className="text-red-700 font-bold text-xl mb-4 border-b border-black pb-2 sm:pb-4">
-    Recent Activities
-  </h3>
+                    <div className="bg-white rounded-lg drop-shadow-lg sm:p-8 p-6 border border-gray-500 h-[350px] flex flex-col">
+                        <h3 className="text-red-700 font-bold text-xl mb-4 border-b border-black pb-2 sm:pb-4">
+                            Recent Activities
+                        </h3>
 
-  {/* Scrollable container */}
-  <div
-    className="relative flex-1 overflow-y-auto pr-2"
-    style={{ "--dot-size": "0.75rem" } as React.CSSProperties}
-  >
-    {activities.length === 0 ? (
-      <p className="text-gray-500 text-center mt-6">No recent activities</p>
-    ) : (
-      <div className="space-y-0">
-        {activities.map((a, i, arr) => (
-          <div key={i} className="relative flex items-start">
-            {/* Dot */}
-            <div
-              className="relative z-10 rounded-full flex-shrink-0 bg-[#B11016]"
-              style={{
-                width: "var(--dot-size)",
-                height: "var(--dot-size)",
-                marginTop: "0.5rem",
-              }}
-            ></div>
+                        {/* Scrollable container */}
+                        <div
+                            className="relative flex-1 overflow-y-auto pr-2"
+                            style={{ "--dot-size": "0.75rem" } as React.CSSProperties}
+                        >
+                            {activities.length === 0 ? (
+                                <p className="text-gray-500 text-center mt-6">No recent activities</p>
+                            ) : (
+                                <div className="space-y-0">
+                                    {activities.map((a, i, arr) => (
+                                        <div key={i} className="relative flex items-start">
+                                            {/* Dot */}
+                                            <div
+                                                className="relative z-10 rounded-full flex-shrink-0 bg-[#B11016]"
+                                                style={{
+                                                    width: "var(--dot-size)",
+                                                    height: "var(--dot-size)",
+                                                    marginTop: "0.5rem",
+                                                }}
+                                            ></div>
 
-            {/* Vertical line */}
-            {i < arr.length - 1 && (
-              <div
-                className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-300"
-                style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
-              ></div>
-            )}
+                                            {/* Vertical line */}
+                                            {i < arr.length - 1 && (
+                                                <div
+                                                    className="absolute left-[calc(var(--dot-size)/2-1px)] top-[calc(var(--dot-size)+0.5rem)] w-0.5 bg-gray-300"
+                                                    style={{ height: "calc(100% - var(--dot-size) - 0rem)" }}
+                                                ></div>
+                                            )}
 
-            {/* Content */}
-            <div className="ml-4 pb-2">
-              <div className="font-semibold text-gray-900">{a.title}</div>
-              <div className="text-sm text-blue-600 mb-1">
-                {getCompanyName(a)}
-              </div>
-              <div className="font-bold text-gray-800 mb-1">
-                {mapStatus(a.status)}
-              </div>
-              <div className="text-gray-500 text-xs">
-                {new Date(a.created_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}{" "}
-                |{" "}
-                {new Date(a.created_at).toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                })}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-</div>
+                                            {/* Content */}
+                                            <div className="ml-4 pb-2">
+                                                <div className="font-semibold text-gray-900">{a.title}</div>
+                                                <div className="text-sm text-blue-600 mb-1">
+                                                    {getCompanyName(a)}
+                                                </div>
+                                                <div className="font-bold text-gray-800 mb-1">
+                                                    {mapStatus(a.status)}
+                                                </div>
+                                                <div className="text-gray-500 text-xs">
+                                                    {new Date(a.created_at).toLocaleDateString("en-US", {
+                                                        year: "numeric",
+                                                        month: "long",
+                                                        day: "numeric",
+                                                    })}{" "}
+                                                    |{" "}
+                                                    {new Date(a.created_at).toLocaleTimeString("en-US", {
+                                                        hour: "numeric",
+                                                        minute: "2-digit",
+                                                        hour12: true,
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                 </div>
 
@@ -392,9 +392,9 @@ export default function BpiDashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-[69%_30%] gap-4 mt-5 items-stretch">
                     <div className="sm:col-span-1 border border-gray-500 rounded-lg p-5 bg-white drop-shadow-xl relative">
                         <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-red-700 font-bold text-lg">Your Proposals</h3>
-                                    <span className="text-sm text-gray-600">Click on any row to view details</span>
-                                </div>
+                            <h3 className="text-red-700 font-bold text-lg">Your Proposals</h3>
+                            <span className="text-sm text-gray-600">Click on any row to view details</span>
+                        </div>
                         <div className="max-h-200 overflow-y-auto relative">
                             <table className="w-full text-sm rounded-lg overflow-hidden">
                                 <thead className="sticky top-0 bg-white z-10">
@@ -434,8 +434,8 @@ export default function BpiDashboard() {
                                                     <div className="font-medium">{p.title || 'No title'}</div>
                                                     {p.description && (
                                                         <div className="text-xs text-gray-500 truncate max-w-xs">
-                                                            {p.description.length > 50 
-                                                                ? `${p.description.substring(0, 50)}...` 
+                                                            {p.description.length > 50
+                                                                ? `${p.description.substring(0, 50)}...`
                                                                 : p.description
                                                             }
                                                         </div>
@@ -443,15 +443,14 @@ export default function BpiDashboard() {
                                                 </td>
                                                 <td className="p-3">
                                                     <span
-                                                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                            mapStatus(p.status) === "Approved"
+                                                        className={`px-2 py-1 rounded-full text-xs font-medium ${mapStatus(p.status) === "Approved"
                                                                 ? "bg-green-100 text-green-800"
                                                                 : mapStatus(p.status) === "Rejected"
-                                                                ? "bg-red-100 text-red-800"
-                                                                : mapStatus(p.status) === "In Progress"
-                                                                ? "bg-yellow-100 text-yellow-800"
-                                                                : "bg-gray-100 text-gray-800"
-                                                        }`}
+                                                                    ? "bg-red-100 text-red-800"
+                                                                    : mapStatus(p.status) === "In Progress"
+                                                                        ? "bg-yellow-100 text-yellow-800"
+                                                                        : "bg-gray-100 text-gray-800"
+                                                            }`}
                                                     >
                                                         {mapStatus(p.status)}
                                                     </span>
@@ -483,11 +482,11 @@ export default function BpiDashboard() {
 
                 {/* Dropdown Portal - renders outside of table to avoid clipping */}
                 {openRow !== null && createPortal(
-                    <div 
+                    <div
                         className="absolute w-40 bg-white border rounded-lg shadow-lg z-50"
-                        style={{ 
-                            top: `${dropdownPosition.top}px`, 
-                            left: `${dropdownPosition.left}px` 
+                        style={{
+                            top: `${dropdownPosition.top}px`,
+                            left: `${dropdownPosition.left}px`
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >

@@ -32,8 +32,18 @@ export default function DashboardSidebar() {
     { href: "/bpifindcollab", icon: "/images/Folder_del.png", label: "Find Collaborators" },
   ];
 
+  const adminMenu = [
+    { href: "/admindashboard", icon: "/images/Sidebar_home.png", label: "Home" },
+    { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
+    { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
+    { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
+    { href: "/companylist", icon: "/images/Folder_del.png", label: "Companies" },
+    { href: "/bpifilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
+    { href: "/bpifindcollab", icon: "/images/Folder_del.png", label: "Find Collaborators" },
+  ];
+
   // Pick which menu to show
-  const menuItems = role === "user" ? collabMenu : role === "employee" ? employeeMenu : [];
+  const menuItems = role === "user" ? collabMenu : role === "employee" ? employeeMenu : role === "admin" ? adminMenu : [];
 
   return (
     <aside

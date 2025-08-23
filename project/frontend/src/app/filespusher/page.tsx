@@ -2,7 +2,7 @@
 import Head from "next/head";
 import React, { useState, useEffect, useRef } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { FaArrowLeft, FaFileAlt, FaDownload, FaTimes  } from "react-icons/fa";
+import { FaArrowLeft, FaFileAlt, FaDownload, FaTimes } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -51,7 +51,7 @@ export default function FilesPusher() {
   const [userDepartmentId, setUserDepartmentId] = useState<number | null>(null);
   const [canInteract, setCanInteract] = useState<boolean>(false);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [allDepartments, setAllDepartments] = useState<{id: number, name: string}[]>([]);
+  const [allDepartments, setAllDepartments] = useState<{ id: number, name: string }[]>([]);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -82,7 +82,7 @@ export default function FilesPusher() {
 
       const response = await res.json();
       console.log("Fetched departments response:", response);
-      
+
       // Extract departments array from the response
       const departmentsData = response.departments || [];
       setAllDepartments(departmentsData);
@@ -98,7 +98,7 @@ export default function FilesPusher() {
     const fetchUserDepartment = () => {
       try {
         console.log("=== DEBUG: Checking for department_id ===");
-        
+
         // Check all sessionStorage items for debugging
         const allSessionItems: Record<string, string | null> = {};
         for (let i = 0; i < sessionStorage.length; i++) {
@@ -112,7 +112,7 @@ export default function FilesPusher() {
         // Method 1: Try to get department_id directly
         const storedDeptId = sessionStorage.getItem("department_id");
         console.log("Direct department_id lookup:", storedDeptId);
-        
+
         if (storedDeptId && storedDeptId !== "null" && storedDeptId !== "undefined") {
           const deptId = parseInt(storedDeptId);
           console.log("✅ Found department_id directly:", deptId);
@@ -128,7 +128,7 @@ export default function FilesPusher() {
             try {
               const userData = JSON.parse(storedUserData);
               console.log(`Found user data in '${userKey}':`, userData);
-              
+
               if (userData && typeof userData === 'object' && userData.department_id !== undefined && userData.department_id !== null) {
                 console.log("✅ Found department_id in user data:", userData.department_id);
                 setUserDepartmentId(userData.department_id);
@@ -145,7 +145,7 @@ export default function FilesPusher() {
         // Method 3: Check if we have user_id and can make assumptions
         const userId = sessionStorage.getItem("user_id");
         const role = sessionStorage.getItem("role");
-        
+
         console.log("Available session data:", {
           user_id: userId,
           role: role,
@@ -157,12 +157,12 @@ export default function FilesPusher() {
         console.warn("Please update your login process to store the user data:");
         console.warn("Example: sessionStorage.setItem('user', JSON.stringify(loginResponse.user))");
         console.warn("Or: sessionStorage.setItem('department_id', loginResponse.user.department_id)");
-        
+
         // For immediate testing, suggest the manual approach
         if (role === 'employee') {
           console.warn("🔧 For testing, run this in console: sessionStorage.setItem('department_id', '1')");
         }
-        
+
       } catch (error) {
         console.error("Error getting user department from sessionStorage:", error);
       }
@@ -281,7 +281,7 @@ export default function FilesPusher() {
 
       const result = await res.json();
       alert("Document pushed to next department successfully!");
-      
+
       // Refresh the page to get updated data
       window.location.reload();
     } catch (err) {
@@ -307,7 +307,7 @@ export default function FilesPusher() {
       const deptInfo = allDepartments.find(d => d.id === deptId);
       const currentIndex = iteration.indexOf(currentLocation);
       const deptIndex = iteration.indexOf(deptId);
-      
+
       return {
         id: deptId,
         name: deptInfo ? deptInfo.name : `Department ${deptId}`,
@@ -342,7 +342,7 @@ export default function FilesPusher() {
         }
 
         const token = sessionStorage.getItem('access_token');
-        
+
         if (!token) {
           throw new Error("No authentication token found. Please log in again.");
         }
@@ -383,7 +383,7 @@ export default function FilesPusher() {
         console.error("Error fetching document setting:", err);
         const errorMessage = err instanceof Error ? err.message : "Failed to fetch document data";
         setError(errorMessage);
-        
+
         setProposalTitle(`Document Setting ${settingId}`);
         setProposalDetails("Push the files to the departments for review and approval");
         setFiles([]);
@@ -399,17 +399,17 @@ export default function FilesPusher() {
   useEffect(() => {
     if (documentSetting && allDepartments.length > 0) {
       updateDepartmentStatus(documentSetting.iteration, documentSetting.current_location);
-      
+
       // Create file items for each department in iteration
       const fileItems: FileItem[] = documentSetting.iteration.map((deptId, index) => {
         const deptName = getDepartmentNameById(deptId);
         const currentIndex = documentSetting.iteration.indexOf(documentSetting.current_location);
-        
+
         return {
           id: `${documentSetting.document_id}-${deptId}`,
           name: documentSetting.document_name,
           details: documentSetting.document_description || "Document file",
-          dateCreated: documentSetting.document_created_at 
+          dateCreated: documentSetting.document_created_at
             ? new Date(documentSetting.document_created_at).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
           isSelected: false,
@@ -445,7 +445,7 @@ export default function FilesPusher() {
       alert("No download URL available for this file");
       return;
     }
-    
+
     console.log("Opening download URL:", file.downloadUrl);
     window.open(file.downloadUrl, "_blank");
   };
@@ -453,29 +453,29 @@ export default function FilesPusher() {
   // Get file card image based on department status
   const getFileCardImage = (file: FileItem) => {
     if (!documentSetting) return "/images/file-card.png";
-    
+
     const currentIndex = documentSetting.iteration.indexOf(documentSetting.current_location);
-    const fileDeptIndex = documentSetting.iteration.findIndex(deptId => 
+    const fileDeptIndex = documentSetting.iteration.findIndex(deptId =>
       getDepartmentNameById(deptId) === file.department
     );
-    
+
     // If this department has been completed (file passed through)
     if (fileDeptIndex < currentIndex) {
       return "/images/file-card-black.png";
     }
-    
+
     // If this is the current department
     if (fileDeptIndex === currentIndex) {
       return "/images/file-card.png";
     }
-    
+
     // If this department hasn't been reached yet
     return "/images/file-card.png";
   };
 
   if (loading) {
     return (
-      <ProtectedRoute allowedRoles={["user", "employee"]}>
+      <ProtectedRoute allowedRoles={["user", "employee", "admin"]}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B11016] mx-auto mb-4"></div>
@@ -487,15 +487,20 @@ export default function FilesPusher() {
   }
 
   return (
-    <ProtectedRoute allowedRoles={["user", "employee"]}>
+    <ProtectedRoute allowedRoles={["user", "employee", "admin"]}>
       <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
         {/* Header */}
         <div className="relative flex items-center w-full mt-2 mb-4">
           <button
             onClick={() => {
               const role = sessionStorage.getItem("role");
-              if (role === "employee") router.push("/bpidashboard");
-              else router.push("/dashboard");
+              if (role === "employee") {
+                router.push("/bpidashboard");
+              } else if (role === "admin") {
+                router.push("/admindashboard");
+              } else {
+                router.push("/dashboard");
+              }
             }}
             className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
           >
@@ -508,7 +513,7 @@ export default function FilesPusher() {
               Files Pusher
             </h1>
             <p className="text-sm sm:text-md text-black mb-4 sm:mb-6 px-4">
-             Push the files to the departments for review and approval.
+              Push the files to the departments for review and approval.
             </p>
             <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
           </div>
@@ -530,11 +535,11 @@ export default function FilesPusher() {
             </p>
           </div>
         )}
-        
+
         {!canInteract && documentSetting && userDepartmentId !== null && (
           <div className="w-full max-w-6xl mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
             <p className="text-sm">
-              This document is currently at {getDepartmentNameById(documentSetting.current_location)}. 
+              This document is currently at {getDepartmentNameById(documentSetting.current_location)}.
               You can only update or push documents that are at your department (Department ID: {userDepartmentId}).
             </p>
           </div>
@@ -557,13 +562,12 @@ export default function FilesPusher() {
             {departments.map((dept) => (
               <div
                 key={dept.id}
-                className={`flex-1 h-10 rounded flex items-center justify-center text-xs font-medium transition-colors duration-300 ${
-                  dept.isCompleted
+                className={`flex-1 h-10 rounded flex items-center justify-center text-xs font-medium transition-colors duration-300 ${dept.isCompleted
                     ? "bg-[#333333] text-white"
                     : dept.isActive
-                    ? "bg-[#B11016] text-white"
-                    : "bg-gray-300 text-gray-700"
-                }`}
+                      ? "bg-[#B11016] text-white"
+                      : "bg-gray-300 text-gray-700"
+                  }`}
               >
                 <span className="text-center px-1 truncate" title={dept.name}>
                   {dept.name}
@@ -576,15 +580,14 @@ export default function FilesPusher() {
           <div className="flex space-x-2 w-full">
             {departments.map((dept) => {
               const deptFile = files.find(file => file.department === dept.name);
-              
+
               return (
                 <div key={dept.id} className="flex-1 flex flex-col items-center">
                   {deptFile ? (
                     <div className="text-center">
                       <div
-                        className={`cursor-pointer transition-all duration-200 ${
-                          deptFile.isSelected ? "transform scale-105" : ""
-                        }`}
+                        className={`cursor-pointer transition-all duration-200 ${deptFile.isSelected ? "transform scale-105" : ""
+                          }`}
                         onClick={() => handleFileSelect(deptFile)}
                       >
                         <div className="relative mb-4">
@@ -601,9 +604,9 @@ export default function FilesPusher() {
                       <div className="text-xs font-medium text-gray-800 mb-2 truncate px-1" title={deptFile.name}>
                         {deptFile.name}
                       </div>
-                      
+
                       {/* Download Button */}
-                      <button 
+                      <button
                         onClick={() => handleDownload(deptFile)}
                         className="px-3 py-1 bg-[#B11016] text-white text-xs rounded hover:bg-[#800b10] transition-colors flex items-center justify-center mx-auto"
                         disabled={!deptFile.downloadUrl}
@@ -645,31 +648,29 @@ export default function FilesPusher() {
             <button
               onClick={() => setIsUploadModalOpen(true)}
               disabled={!canInteract || userDepartmentId === null}
-              className={`${isAtFinalDepartment() ? 'w-full max-w-md' : 'w-full max-w-xs'} px-6 py-3 rounded transition-colors ${
-                canInteract && userDepartmentId !== null
-                  ? "bg-[#333333] text-white hover:bg-[#0f0f0f]" 
+              className={`${isAtFinalDepartment() ? 'w-full max-w-md' : 'w-full max-w-xs'} px-6 py-3 rounded transition-colors ${canInteract && userDepartmentId !== null
+                  ? "bg-[#333333] text-white hover:bg-[#0f0f0f]"
                   : "bg-gray-400 text-gray-600 cursor-not-allowed"
-              }`}
+                }`}
             >
               Update
             </button>
-            
+
             {/* Only show Push button if not at final department */}
             {!isAtFinalDepartment() && (
-              <button 
+              <button
                 onClick={handlePushDocument}
                 disabled={!canInteract || isPushing || userDepartmentId === null}
-                className={`w-full max-w-xs px-6 py-3 rounded transition-colors ${
-                  canInteract && !isPushing && userDepartmentId !== null
-                    ? "bg-[#B11016] text-white hover:bg-[#800b10]" 
+                className={`w-full max-w-xs px-6 py-3 rounded transition-colors ${canInteract && !isPushing && userDepartmentId !== null
+                    ? "bg-[#B11016] text-white hover:bg-[#800b10]"
                     : "bg-gray-400 text-gray-600 cursor-not-allowed"
-                }`}
+                  }`}
               >
                 {isPushing ? "Pushing..." : "Push"}
               </button>
             )}
           </div>
-          
+
           {/* Help text */}
           <div className="text-center text-sm text-gray-500 mt-2 space-y-1">
             {userDepartmentId === null ? (
@@ -679,7 +680,7 @@ export default function FilesPusher() {
             ) : isAtFinalDepartment() ? (
               <p>Document has reached the final department. Only updates are allowed.</p>
             ) : null}
-            
+
             {/* Debug info - remove in production
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs text-gray-400 mt-2">
