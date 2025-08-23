@@ -109,6 +109,21 @@ def get_project_recommendation(project_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@bp.route('company/<int:company_id>', methods=['GET'])
+@jwt_required()
+def get_project_recommendations_by_company(company_id):
+    """Get all project recommendations for a specific company."""
+    try:
+        
+        # Get all project recommendations for the current user
+        project_recs = ProjectRecommendation.query.filter_by(
+            company_id=company_id, 
+        ).all()
+        
+        return jsonify([rec.to_dict() for rec in project_recs])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @bp.route('/<int:project_id>', methods=['PUT'])
 @jwt_required()
 def update_project_recommendation(project_id):
