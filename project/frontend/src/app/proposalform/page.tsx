@@ -7,6 +7,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { GiConsoleController } from "react-icons/gi";
 import Modal from "@/components/Modal";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProposalForm() {
     const API = process.env.NEXT_PUBLIC_API_URL;
@@ -199,12 +200,28 @@ export default function ProposalForm() {
         }
     };
 
+    const pageVariants = {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+        exit: { opacity: 0, y: -30, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+    };
+
 
     return (
         <ProtectedRoute allowedRoles={["user", "employee"]}>
             <CollabCompanyProtectedRoute>
+            <AnimatePresence mode="wait">
+                    
                 <form onSubmit={handleSubmit}>
-                    <div className="min-h-screen bg-white flex flex-col items-center sm:px-[10%] px-[10%] py-6 sm:py-8 relative">
+                    <motion.div
+                        key="dashboard-page"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="min-h-screen bg-white flex flex-col items-center sm:px-[10%] px-[10%] py-6 sm:py-8 relative"
+                    >
+                    
                         <div className="relative block w-full border-b-3 border-red-700 mb-2 pb-8 text-center">
                             {/* BACK BUTTON */}
                             <button
@@ -599,14 +616,16 @@ export default function ProposalForm() {
                         </div>
 
 
-                    </div>
+                    
                     <Modal
                         isOpen={modalOpen}
                         title={modalTitle}
                         message={modalMessage}
                         onClose={() => setModalOpen(false)}
                     />
+                    </motion.div>
                 </form>
+                </AnimatePresence>
             </CollabCompanyProtectedRoute>
         </ProtectedRoute>
     );

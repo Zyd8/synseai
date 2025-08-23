@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaArrowLeft } from "react-icons/fa";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function CompanySetup() {
     const API = process.env.NEXT_PUBLIC_API_URL;
@@ -414,9 +415,24 @@ export default function CompanySetup() {
         }
     };
 
+    const pageVariants = {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+        exit: { opacity: 0, y: -30, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+    };
+
     return (
         <ProtectedRoute allowedRoles={["user"]}>
-        <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
+            <AnimatePresence mode="wait">
+                    <motion.div
+                        key="dashboard-page"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8"
+                    >
+        
             {/* Header */}
             <div className="relative flex items-center w-full mt-2 mb-10">
                 {/* Back Button */}
@@ -852,7 +868,8 @@ export default function CompanySetup() {
                     )}
                 </div>
             </form>
-        </div>
+        </motion.div>
+            </AnimatePresence>
         </ProtectedRoute>
     );
     
