@@ -276,7 +276,7 @@ export default function SuperAdminDashboard() {
                 router.push('/adminassigndocument');
                 break;
             case 'manage-documents':
-                router.push('/super-admin/manage-documents');
+                router.push('/admindocumentmanagement');
                 break;
             default:
                 console.log(`Action ${action} not implemented yet`);
