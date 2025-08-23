@@ -41,7 +41,6 @@ export default function AdminDocumentManagement() {
     const [assignedDocuments, setAssignedDocuments] = useState<Document[]>([]);
     const [documentSettings, setDocumentSettings] = useState<DocumentSetting[]>([]);
     const [loading, setLoading] = useState(true);
-    const [updating, setUpdating] = useState<number | null>(null);
     const [selectedDocuments, setSelectedDocuments] = useState<Set<number>>(new Set());
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showAssignModal, setShowAssignModal] = useState(false);
@@ -49,21 +48,12 @@ export default function AdminDocumentManagement() {
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all'); // all, assigned, unassigned
-    const [bpiFilter, setBpiFilter] = useState<string>('all');
     const [selectedDocumentForDelete, setSelectedDocumentForDelete] = useState<Document | null>(null);
     const [bulkDepartment, setBulkDepartment] = useState<string>('');
     const router = useRouter();
 
     const [departments, setDepartments] = useState<Department[]>([]);
     const [departmentFilter, setDepartmentFilter] = useState("all");
-
-    const getDepartmentNameFromSetting = (docId: number) => {
-        const setting = documentSettings.find(s => s.document_id === docId);
-        if (!setting?.current_location) return "Unassigned";
-
-        const dept = departments.find(d => parseInt(d.id) === setting.current_location);
-        return dept ? dept.name : "Unknown Department";
-    };
 
     // Upload form state
     const [uploadForm, setUploadForm] = useState({
@@ -88,12 +78,6 @@ export default function AdminDocumentManagement() {
         })}`;
     };
 
-    // Get department name by ID
-    const getDepartmentName = (departmentId?: number) => {
-        if (!departmentId) return "N/A";
-        const dept = departments.find(d => parseInt(d.id) === departmentId || d.id === String(departmentId));
-        return dept ? dept.name : "N/A";
-    };
 
     const getAllDocumentsForDisplay = () => {
         const unassignedDocs = documents.map(doc => ({
@@ -104,7 +88,6 @@ export default function AdminDocumentManagement() {
         }));
 
         const assignedDocs = assignedDocuments.map(doc => {
-            const token = sessionStorage.getItem("access_token");
             const setting = documentSettings.find(s => String(s.document_id) === String(doc.id));
             const currentLocationId = setting ? Number(setting.current_location) : null;
 
@@ -114,20 +97,8 @@ export default function AdminDocumentManagement() {
                 const dept = departments.find(d => Number(d.id) === currentLocationId);
                 if (dept) {
                     deptName = dept.name;
-                } else {
-                    // fallback fetch if department is not in the local list
-                    fetch(`${API}/api/department/${currentLocationId}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    })
-                        .then(res => res.ok ? res.json() : null)
-                        .then(data => {
-                            if (data) {
-                                setDepartments(prev => [...prev, data]);
-                            }
-                        });
-                }
+                } 
             }
-
 
             return {
                 ...doc,
@@ -669,7 +640,10 @@ export default function AdminDocumentManagement() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredDocuments.map((document, i) => (
+                                        {filteredDocuments
+                                        .slice()
+                                        .sort((a, b) => Number(a.id) - Number(b.id))
+                                        .map((document, i) => (
                                             <tr key={`${document.id}-${document.is_assigned ? "assigned" : "unassigned"}`} className="border-t hover:bg-gray-50 transition-colors">
                                                 <td className="p-3">
                                                     <input
