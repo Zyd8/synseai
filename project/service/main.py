@@ -4,8 +4,8 @@ from llm import SynsaiLLM
 
 app = Flask(__name__)
 
-@app.route('/scrape', methods=['POST'])
-def scrape():
+@app.route('/company_scoring_scrape', methods=['POST'])
+def company_scoring_scrape():
 
     company = request.json.get('company')
     if not company:
@@ -62,8 +62,8 @@ def scrape():
             'message': str(e)
         }), 500
 
-@app.route('/project_recommendation', methods=['POST'])
-def project_recommendation():
+@app.route('/company_project_recommendation_scrape', methods=['POST'])
+def company_project_recommendation_scrape():
     company = request.json.get('company')
     if not company:
         return jsonify({'error': 'Company is required'}), 400

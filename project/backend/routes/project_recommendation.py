@@ -3,15 +3,18 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, ProjectRecommendation
 from datetime import datetime
 import pytz
-from functools import wraps
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 bp = Blueprint('project_recommendation', __name__)
 
 def _create_company_project_recommendation(company_id, company_name):
     """Core function to create company project recommendation without JWT requirements"""
     try:
-        service_url = "http://localhost:5001/project_recommendation"
+        service_url = os.getenv('COMPANY_PROJECT_RECCOMENDER_SCRAPE_URL')
         response = requests.post(
             service_url,
             json={"company": company_name},

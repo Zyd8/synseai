@@ -2,13 +2,17 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, User, Synergy, Company, UserRole
 import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 synergy_bp = Blueprint('synergy', __name__)
 
 def _create_company_synergy(company_id, company_name):
     """Core function to create company synergy without JWT requirements"""
     try:
-        service_url = "http://localhost:5001/scrape"
+        service_url = os.getenv('COMPANY_SCORING_SCRAPE_URL')
         response = requests.post(
             service_url,
             json={"company": company_name},
@@ -62,7 +66,7 @@ def create_company_synergy():
 def _update_company_synergy(company_id, company_name):
     """Core function to update company synergy without JWT requirements"""
     try:
-        service_url = "http://localhost:5001/scrape"
+        service_url = os.getenv('COMPANY_SCORING_SCRAPE_URL')
         response = requests.post(
             service_url,
             json={"company": company_name},
