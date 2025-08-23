@@ -222,7 +222,7 @@ export default function SuperAdminDashboard() {
             title: "Users & Roles",
             icon: <FaUsers className="text-2xl" />,
             actions: [
-                { name: "Assign Role", action: "assign-role" },
+                
                 { name: "Manage Users", action: "manage-users" }
             ]
         },
