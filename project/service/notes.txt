@@ -1,8 +1,7 @@
 LLM spits high scores with gibberish scraped website. Solution: Do not scrape website if it is gibberish.
 Remove mentioning of scores in LLM response.
 Webscrape based on terms Find BPI parnters
-Compliance scoring
-Project recommendations (three projects, name and description)
+Project recommendations (three projects, name and description) (three projects, name and description)
 
 Proposal approval, rejection workflow
 User and Department authorities

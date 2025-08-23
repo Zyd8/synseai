@@ -20,45 +20,58 @@ class SynsaiLLM:
 
     def project_recommendation(self, page):
         """
-        Generate project recommendations based on the provided context page.
-        Returns a tuple of (title, description)
+        Generate three unique project recommendations based on the provided context page.
+        Returns a list of tuples containing (title, description) for each recommendation.
         """
         if not page or 'context' not in page:
-            return "Error: No content provided", "No content available for project recommendation"
+            return [("Error: No content provided", "No content available for project recommendation")] * 3
 
         # Load BPI context
         bpi_context = self._load_bpi_context()
         
         prompt = f"""
-        Based on the following context about {self.company}, please provide a collaborative project recommendation
-        that highlights how BPI (Bank of the Philippine Islands) can work with {self.company} to create mutual value.
+        You are an expert in creating strategic banking partnerships. 
         
-        About BPI:
+        TASK: Create THREE detailed project recommendations for collaboration between BPI (Bank of the Philippine Islands) and {self.company}.
+        
+        IMPORTANT REQUIREMENTS:
+        - Focus ONLY on collaboration between BPI and {self.company}
+        - Do NOT mention any other banks or financial institutions
+        - Each recommendation MUST include BOTH a title and a detailed description
+        - Descriptions should be comprehensive and specific
+        
+        CONTEXT:
+        About BPI (Bank of the Philippine Islands):
         {bpi_context}
         
         About {self.company}:
         {page.get('context', 'No context')}
 
+        For EACH recommendation, you MUST include:
+        1. A clear, specific title (max 10 words)
+        2. A detailed description (at least 3-5 sentences) covering:
+           - How BPI and {self.company} will collaborate
+           - Specific contributions from each company
+           - Project goals and benefits
+           - Implementation approach
+           - Expected outcomes
         
-        Please provide:
-        1. A single, most promising collaborative project idea
-        2. A detailed description including:
-           - Clear explanation of how both companies will collaborate
-           - Specific contributions and expertise from each company
-           - Project goals and objectives that benefit both parties
-           - Key features and functionality
-           - Mutual benefits for both companies
-           - Estimated implementation complexity (Low/Medium/High)
-           - Potential challenges and mitigation strategies
+        RESPONSE FORMAT - YOU MUST FOLLOW THIS EXACT FORMAT:
         
-        Format your response as follows:
-        TITLE: [Project Title Here]
-        DESCRIPTION: [Detailed description here]
+        TITLE 1: [Concise project title]
+        DESCRIPTION 1: [Detailed description with specific details about the collaboration between BPI and {self.company}]
         
-        Make sure to explicitly mention:
-        - How our expertise complements {self.company}'s capabilities
-        - Specific ways we will work together
-        - How the collaboration creates value that wouldn't be possible independently
+        TITLE 2: [Concise project title]
+        DESCRIPTION 2: [Detailed description with specific details about the collaboration between BPI and {self.company}]
+        
+        TITLE 3: [Concise project title]
+        DESCRIPTION 3: [Detailed description with specific details about the collaboration between BPI and {self.company}]
+        
+        REMEMBER:
+        - Be specific and concrete in your descriptions
+        - Focus on mutual benefits for both BPI and {self.company}
+        - Include implementation details
+        - Each recommendation should be distinct and valuable
         """
 
         try:
@@ -70,34 +83,45 @@ class SynsaiLLM:
                 }]
             )
             
-            # Parse the response to extract title and description
             content = response['message']['content'].strip()
+            recommendations = []
             
-            # Initialize with default values
-            title = "Project Recommendation"
-            description = content  # Use full content as fallback
+            # Parse the response to extract all three recommendations
+            for i in range(1, 4):
+                title = f"Project Recommendation {i}"
+                description = f"Description not available for project {i}"
+                
+                # Try to extract title
+                title_pattern = f"TITLE {i}:(.*?)(?=DESCRIPTION {i}:|\n\n|$)"
+                title_match = re.search(title_pattern, content, re.IGNORECASE | re.DOTALL)
+                if title_match:
+                    title = title_match.group(1).strip()
+                
+                # Try to extract description
+                desc_pattern = f"DESCRIPTION {i}:(.*?)(?=TITLE {i+1}:|\n\n|$)"
+                desc_match = re.search(desc_pattern, content, re.IGNORECASE | re.DOTALL)
+                if desc_match:
+                    description = desc_match.group(1).strip()
+                
+                # Clean up the title
+                title = title.replace('"', '').strip()
+                if not title:
+                    title = f"Project Recommendation {i}"
+                    
+                recommendations.append((title, description))
             
-            # Try different patterns to extract title
-            if 'Title:' in content:
-                # Try to extract title if it's in the format "Title: ..."
-                title = content.split('Title:')[1].split('\n')[0].strip()
-            elif '\n' in content:
-                # Use first line as title if it's not too long
-                first_line = content.split('\n')[0].strip()
-                if len(first_line) < 100:  # Reasonable title length
-                    title = first_line
-            
-            # Clean up the title
-            title = title.replace('TITLE:', '').replace('Title:', '').strip()
-            if title.startswith('"') and title.endswith('"'):
-                title = title[1:-1]  # Remove quotes if present
-            
-            return title, description
-            
+            # Ensure we return exactly 3 recommendations
+            while len(recommendations) < 3:
+                recommendations.append((
+                    f"Project Recommendation {len(recommendations) + 1}",
+                    "Detailed description not available."
+                ))
+                
+            return recommendations[:3]
+
         except Exception as e:
-            error_msg = f"Error generating project recommendations: {str(e)}"
-            print(error_msg)
-            return "Error", error_msg
+            error_msg = f"Error generating recommendations: {str(e)}"
+            return [(error_msg, "")] * 3
 
     def get_company_score(self, page, criteria):
         """Get a score based on the given page and criteria."""

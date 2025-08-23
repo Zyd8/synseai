@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Company, User, UserRole
 from routes.synergy import _create_company_synergy
+from routes.project_recommendation import _create_company_project_recommendation
 import threading
 
 def run_synergy_creation(app, company_id, company_name):
@@ -9,10 +10,20 @@ def run_synergy_creation(app, company_id, company_name):
     with app.app_context():
         success, result = _create_company_synergy(company_id, company_name)
         if not success:
-            print("FAILEDD")
+            print(" Synergy creation FAILED")
             current_app.logger.error(f"Failed to create synergy: {result}")
 
-        print("DONEEEEE")
+        print("Synergy creation DONE")
+
+def run_project_recommendation_creation(app, company_id, company_name):
+    """Helper function to run project recommendation creation in a background thread"""
+    with app.app_context():
+        success, result = _create_company_project_recommendation(company_id, company_name)
+        if not success:
+            print("Project recommendation creation FAILED")
+            current_app.logger.error(f"Failed to create project recommendation: {result}")
+
+        print("Project recommendation creation DONE")
 
 company_bp = Blueprint('company', __name__)
 
@@ -59,12 +70,20 @@ def create_company():
         db.session.commit()
 
         # Start the synergy creation in a background thread
-        thread = threading.Thread(
+        thread_synergy = threading.Thread(
             target=run_synergy_creation,
             args=(current_app._get_current_object(), company.id, company.name)
         )
-        thread.daemon = True
-        thread.start()
+        thread_synergy.daemon = True
+        thread_synergy.start()
+
+        # Start the project recommendation creation in a background thread
+        thread_project_recommendation = threading.Thread(
+            target=run_project_recommendation_creation,
+            args=(current_app._get_current_object(), company.id, company.name)
+        )
+        thread_project_recommendation.daemon = True
+        thread_project_recommendation.start()
         
         return jsonify({
             "message": "Company created successfully",

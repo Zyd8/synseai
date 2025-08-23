@@ -78,11 +78,15 @@ def project_recommendation():
  
         synsai_llm = SynsaiLLM(company)
 
-        title, description = synsai_llm.project_recommendation(scraped_pages)
+        project_reccomendations = synsai_llm.project_recommendation(scraped_pages)
 
         return jsonify({
-            'title': title,
-            'description': description,
+            'title1': project_reccomendations[0][0],
+            'description1': project_reccomendations[0][1],
+            'title2': project_reccomendations[1][0],
+            'description2': project_reccomendations[1][1],
+            'title3': project_reccomendations[2][0],
+            'description3': project_reccomendations[2][1],
         })
     except Exception as e:
         return jsonify({

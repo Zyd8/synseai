@@ -52,7 +52,7 @@ def create_app():
     app.register_blueprint(document_bp, url_prefix='/api/document')
     app.register_blueprint(user_bp, url_prefix='/api/user')
     app.register_blueprint(synergy_bp, url_prefix='/api/synergy')
-    app.register_blueprint(project_recommendation_bp)
+    app.register_blueprint(project_recommendation_bp, url_prefix='/api/project_recommendation')
     app.register_blueprint(document_setting_bp, url_prefix='/api/document_setting')
     app.register_blueprint(department_preset_bp, url_prefix='/api/department_preset')
     app.register_blueprint(reverted_document_bp, url_prefix='/api/reverted_document')
