@@ -1,5 +1,5 @@
 search_settings:
-  num_results: 1
+  num_results: 2
   min_delay: 1
   max_delay: 3
   timeout: 10
@@ -14,9 +14,9 @@ criteria:
   compliance:
     - What are the compliance papers of
 
-project_recommendation:
-  context:
-    - What is the company {company_name}?
+# project_recommendation:
+#   context:
+#     - What is the company {company_name}?
   
-  objective:
-    - what future projects can you reccomend between BPI and the company named {company_name}?
+#   objective:
+#     - what future projects can you reccomend between BPI and the company named {company_name}?

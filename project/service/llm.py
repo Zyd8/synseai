@@ -222,3 +222,38 @@ class SynsaiLLM:
             )
 
         return reason_response['message']['content'].strip()
+
+    @staticmethod
+    def get_company_names(pages):
+        try:
+            # Extract content from all pages
+            context = ' '.join([page.get('content', '') for page in pages])
+            
+            if not context:
+                return []
+                
+            # Create prompt for the model
+            prompt = f"""
+            Extract a list of company names from the following text. 
+            Only return the company names, one per line. 
+            Do not include any other text or explanations.
+            
+            Text: {context}
+            """
+
+            response = ollama.chat(
+                model='llama2',
+                messages=[{
+                    'role': 'user',
+                    'content': prompt,
+                }]
+            )
+
+            # Extract company names from the response
+            result = response['message']['content']
+            company_names = [name.strip() for name in result.split('\n') if name.strip()]
+            return company_names
+
+        except Exception as e:
+            print(f"Error in get_company_names: {str(e)}")
+            return []

@@ -19,7 +19,7 @@ def _create_company_synergy(company_id, company_name):
             timeout=3600
         )
 
-        data = response.json()['data']
+        data = response.json()
         
         synergy = Synergy(
             company_id=company_id,
@@ -73,7 +73,7 @@ def _update_company_synergy(company_id, company_name):
             timeout=3600
         )
 
-        data = response.json()['data']
+        data = response.json()
         
         synergy = Synergy.query.filter_by(company_id=company_id).first()
         if not synergy:
