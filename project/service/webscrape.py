@@ -9,7 +9,7 @@ import os
 
 # Set up headers to mimic a browser
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
     'Accept-Language': 'en-US,en;q=0.9',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate, br',
@@ -53,33 +53,70 @@ def fetch_url(url, timeout):
     response.raise_for_status()
     return response
 
+def is_binary_content(text):
+    """Check if the content appears to be binary or unreadable."""
+    if not text:
+        return True
+        
+    # Check for high ratio of non-printable characters
+    printable_ratio = sum(1 for char in text if 32 <= ord(char) <= 126 or char in '\n\r\t') / len(text)
+    if printable_ratio < 0.7:  # Less than 70% printable ASCII
+        return True
+        
+    # Check for common binary patterns
+    binary_indicators = [
+        '\x00',  # Null bytes
+        '\x1f',  # ASCII control characters
+        '\x7f',  # DEL character
+        '\x80\x81',  # Common in binary data
+    ]
+    
+    return any(indicator in text for indicator in binary_indicators)
+
 def extract_clean_text(soup):
     """Extract and clean text content from BeautifulSoup object."""
-    # Remove script and style elements
-    for script in soup(["script", "style", "noscript", "meta", "link"]):
-        script.decompose()
-    
-    # Get text and clean it up
-    text = soup.get_text(separator=' ', strip=True)
-    
-    # Remove excessive whitespace and newlines
-    text = ' '.join(text.split())
-    
-    # Check if the text contains too many non-ASCII characters (potential garbage)
-    non_ascii_ratio = sum(1 for char in text if ord(char) > 127) / len(text) if text else 0
-    if non_ascii_ratio > 0.5:  # If more than 50% of characters are non-ASCII
-        return "[Content not available: Unreadable or encrypted content]"
+    try:
+        # Check if the response is HTML
+        if not soup.find():
+            return "[Content not available: No HTML content found]"
+            
+        # Remove script and style elements
+        for script in soup(["script", "style", "noscript", "meta", "link", "svg", "img"]):
+            script.decompose()
         
-    # Check for common error messages or placeholders
-    error_phrases = ["enable javascript", "please wait", "cloudflare", "captcha", "access denied"]
-    if any(phrase in text.lower() for phrase in error_phrases):
-        return "[Content not available: JavaScript or CAPTCHA required]"
-    
-    # If the text is too short after cleaning, it might be a SPA
-    if len(text) < 100 and not any(tag.name == 'div' for tag in soup.find_all()):
-        return "[Content not available: Single Page Application detected]"
+        # Get text and clean it up
+        text = soup.get_text(separator=' ', strip=True)
         
-    return text
+        # Early return for empty content
+        if not text or len(text.strip()) == 0:
+            return "[Content not available: Empty content]"
+        
+        # Check for binary/unreadable content
+        if is_binary_content(text):
+            return "[Content not available: Unreadable or binary content]"
+        
+        # Remove excessive whitespace and newlines
+        text = ' '.join(text.split())
+        
+        # Check for common error messages or placeholders
+        error_phrases = [
+            "enable javascript", "please wait", "cloudflare", "captcha", 
+            "access denied", "you need to enable javascript", "browser requirements"
+        ]
+        
+        lower_text = text.lower()
+        if any(phrase in lower_text for phrase in error_phrases):
+            return "[Content not available: JavaScript or CAPTCHA required]"
+        
+        # If the text is too short after cleaning, it might be a SPA
+        if len(text) < 100 and not any(tag.name == 'div' for tag in soup.find_all()):
+            return "[Content not available: Single Page Application detected]"
+            
+        return text
+        
+    except Exception as e:
+        print(f"Error extracting text: {str(e)}")
+        return "[Content not available: Error processing content]"
 
 def company_project_reccomender(company_name):
     """Scrape project recommendation context for a company"""
@@ -224,5 +261,7 @@ def company_traits_webscraper(company_traits):
 
         except Exception as e:
             print(f"Error processing {url}: {str(e)}")
+
+    return results
             
     

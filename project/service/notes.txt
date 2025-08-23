@@ -1,3 +1,4 @@
-LLM spits high scores with gibberish scraped website. Solution: Do not scrape website if it is gibberish.
-Remove mentioning of scores in LLM response.
-Webscrape based on terms Find BPI parnters
+Project reccomender stream not working
+data webscraped must be recent
+refine prompts
+refactor prompts into yaml

@@ -1,9 +1,10 @@
 import requests
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Company, User, UserRole
 import os
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -51,20 +52,47 @@ def find_company_by_name():
     return jsonify({"error": "Unauthorized"}), 403
 
 
+def generate_stream(service_url, company_name):
+    try:
+        # Make a streaming request
+        with requests.post(
+            service_url,
+            json={"company_traits": company_name},
+            stream=True,
+            timeout=3600
+        ) as response:
+            response.raise_for_status()
+            
+            # Forward the streaming response directly
+            for chunk in response.iter_content(chunk_size=None):
+                if chunk:
+                    yield chunk
+                    
+    except requests.exceptions.RequestException as e:
+        yield f"data: {json.dumps({'error': str(e)})}\n\n".encode()
+    except Exception as e:
+        yield f"data: {json.dumps({'error': 'An unexpected error occurred'})}\n\n".encode()
+    finally:
+        yield b"event: end\ndata: {}\n\n"
+
 @find_company_bp.route('/term', methods=['POST'])
 @jwt_required()
 def find_company_by_term():
-    """
-    Find companies based on search query
-    """
-    current_user_id = str(get_jwt_identity())
-    user = User.query.get(current_user_id)
-
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    if user.role == UserRole.ADMIN or user.role == UserRole.EMPLOYEE:
-        companies = Company.query.filter_by(name=request.json.get('name')).all()
-        return jsonify([company.to_dict() for company in companies]), 200
+    company_name = request.json.get('company')
+    if not company_name:
+        return jsonify({"error": "Company name is required"}), 400
+        
+    service_url = os.getenv('COMPANY_SEARCH_URL') 
     
-    return jsonify({"error": "Unauthorized"}), 403
+    if not service_url:
+        return jsonify({"error": "Service URL not configured"}), 500
+
+    return Response(
+        generate_stream(service_url, company_name),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )

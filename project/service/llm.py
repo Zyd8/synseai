@@ -234,9 +234,45 @@ class SynsaiLLM:
                 
             # Create prompt for the model
             prompt = f"""
-            Extract a list of company names from the following text. 
-            Only return the company names, one per line. 
-            Do not include any other text or explanations.
+            Extract ONLY the company names from the following text. Follow these rules:
+
+            FOLLOW THIS RULES STRICTLY:
+            1. List ONLY the company/organization names
+            2. Remove all numbers, rankings, and special characters
+            3. Exclude any descriptive text, statistics, or explanations
+            4. If a company name includes common suffixes (Inc, Corp, LLC, etc.), you can include them
+            5. Return each name on a new line with no additional text
+            6. No introductions and conclusions, no afterwords.
+            7. The company should be a few words long.
+            8. No explanation
+            9. Don't mention any money or currency.
+    
+            Examples (but don't include these in the response if not in the context):
+            "1. BDO Unibank, Inc."
+            "2. Land Bank of the Philippines"
+            "3. Bancotaphil Corporation"
+            "4. China Banking Corporation"
+            "5. UnionBank of the Philippines"
+            "6. Metropolitan Bank & Trust Co."
+            "7. Citibank, N.A."
+            "8. Bancado de Oro Unibank, Inc."
+            "9. DBS Bank Ltd."
+            "10. Bangkok Bank Public Co., Ltd."
+            "11. Philippine Veterans Bank"
+            "12. ING Bank N.V."
+            "13. Mega International Commercial Bank Ltd."
+            "14. Industrial and Commercial Bank of China Limited"
+            "15. United Overseas Bank Limited"
+            "16. Standard Chartered Bank"
+            "17. KEB Hana Commercial Bank Ltd."
+            "18. Industrial Bank of Korea Limited"
+            "19. China Construction Bank Corporation"
+            "20. Cathay United Commercial Bank Ltd."
+            "21. Hana Financial Group Inc."
+            "22. Taiwan Business Bank"
+            "23. Banco Delta Asia Limited"
+            "24. The Hongkong and Shanghai Banking Corporation Limited"
+            "25. Bank of East Asia Limited"
             
             Text: {context}
             """
