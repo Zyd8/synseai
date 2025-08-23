@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from webscrape import company_webscraper, company_project_reccomender
+from webscrape import company_webscraper, company_project_reccomender, company_term_webscraper
 from llm import SynsaiLLM
 
 app = Flask(__name__)
@@ -44,18 +44,15 @@ def company_scoring_scrape():
         referential_reasoning = synsai_llm.company_score_reasoning('referential') if referential_scores else 'No referential data available'
         compliance_reasoning = synsai_llm.company_score_reasoning('compliance') if compliance_scores else 'No compliance data available'
 
-
         return jsonify({
-            'status': 'success',
-            'data': {
-                'credibility_score': credibility_score,
-                'referential_score': referential_score,
-                'compliance_score': compliance_score,
-                'credibility_reasoning': credibility_reasoning,
-                'referential_reasoning': referential_reasoning,
-                'compliance_reasoning': compliance_reasoning
+            'credibility_score': credibility_score,
+            'referential_score': referential_score,
+            'compliance_score': compliance_score,
+            'credibility_reasoning': credibility_reasoning,
+            'referential_reasoning': referential_reasoning,
+            'compliance_reasoning': compliance_reasoning
             }
-        })
+        )
     except Exception as e:
         return jsonify({
             'status': 'error',
@@ -87,6 +84,32 @@ def company_project_recommendation_scrape():
             'description2': project_reccomendations[1][1],
             'title3': project_reccomendations[2][0],
             'description3': project_reccomendations[2][1],
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/company_traits_webscraper', methods=['POST'])
+def company_traits_webscraper():
+    company_traits = request.json.get('company_traits')
+    if not company_traits:
+        return jsonify({'error': 'Company traits are required'}), 400
+
+    try:
+        scraped_pages = company_traits_webscraper(company_traits)
+        if 'error' in scraped_pages:
+            return jsonify({'error': scraped_pages['error']}), 400    
+
+        print(scraped_pages) 
+
+        company_names = SynsaiLLM.get_company_names(scraped_pages)
+
+        # synsai_llm = SynsaiLLM(company_term)
+
+        return jsonify({
+            'company_names': company_names
         })
     except Exception as e:
         return jsonify({

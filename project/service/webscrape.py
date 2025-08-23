@@ -187,3 +187,42 @@ def company_webscraper(company):
     
     return results
 
+def company_traits_webscraper(company_traits):
+    config = get_configuration()
+
+    results = []
+
+    links = search(
+        f"Companies known for {company_traits}",
+        num_results=config.get('search_settings').get('num_results'),
+        advanced=True
+    )
+
+    for result in links:
+        try:
+            url = ensure_url_scheme(result.url)
+
+            search_random_delay(
+                config.get('search_settings').get('min_delay'),
+                config.get('search_settings').get('max_delay')
+            )
+
+            response = fetch_url(
+                url,
+                config.get('search_settings').get('timeout')
+            )
+
+            response.encoding = response.apparent_encoding
+                        
+            soup = BeautifulSoup(response.text, 'html.parser')
+            clean_text = extract_clean_text(soup)
+
+            page_data = {
+                'content': clean_text
+            }
+            results.append(page_data)
+
+        except Exception as e:
+            print(f"Error processing {url}: {str(e)}")
+            
+    
