@@ -65,7 +65,7 @@ def update_department(department_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
     
-    if not user.is_admin:
+    if not user.role == UserRole.ADMIN:
             return jsonify({"error": "User is not an admin"}), 403
 
     department = Department.query.get(department_id)
@@ -99,7 +99,7 @@ def delete_department(department_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
     
-    if not user.is_admin:
+    if not user.role == UserRole.ADMIN:
             return jsonify({"error": "User is not an admin"}), 403
     
     department = Department.query.get(department_id)

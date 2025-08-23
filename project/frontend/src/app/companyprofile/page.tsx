@@ -44,8 +44,74 @@ export default function CompanyProfile() {
 
     const [synergyData, setSynergyData] = useState<any | null>(null);
 
+    const [activeTab, setActiveTab] = useState("all");
+
     // Get company ID from URL parameters - this is required for employee view
     const companyId = searchParams.get('id');
+
+    const [approvedProposals, setApprovedProposals] = useState<{ id: number; title: string; status: string }[]>([]);
+    const [loadingApproved, setLoadingApproved] = useState(false);
+    const [approvedError, setApprovedError] = useState<string | null>(null);
+    const [pendingProposals, setPendingProposals] = useState<{ id: number; title: string; status: string }[]>([]);
+    const [loadingProposals, setLoadingProposals] = useState(false);
+    const [proposalError, setProposalError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const token = sessionStorage.getItem("access_token");
+        if (!token || !companyId) return;
+
+        const fetchProposals = async () => {
+            if (activeTab === "pending") {
+                setLoadingProposals(true);
+                setProposalError(null);
+                try {
+                    const res = await fetch(`${API}/api/proposal/get_company/${companyId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        setPendingProposals(data.proposals || []);
+                    } else {
+                        const errData = await res.json();
+                        setProposalError(errData.error || "Failed to load proposals");
+                    }
+                } catch {
+                    setProposalError("Network error occurred while loading proposals.");
+                } finally {
+                    setLoadingProposals(false);
+                }
+            }
+
+            if (activeTab === "all") {
+                setLoadingApproved(true);
+                setApprovedError(null);
+                try {
+                    const res = await fetch(`${API}/api/proposal/get_company_filtered/${companyId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        setApprovedProposals(data.proposals || []);
+                    } else {
+                        const errData = await res.json();
+                        setApprovedError(errData.error || "No approved projects yet.");
+                    }
+                } catch {
+                    setApprovedError("Network error occurred while loading approved proposals.");
+                } finally {
+                    setLoadingApproved(false);
+                }
+            }
+        };
+
+        fetchProposals();
+    }, [activeTab, API, companyId]);
+
+    const handleFilesClick = (proposalId: number) => {
+        router.push(`/bpiproposaltracking?id=${proposalId}`); 
+    };
 
     // Convert company size string to display format
     const formatCompanySize = (size?: string): string => {
@@ -370,16 +436,17 @@ export default function CompanyProfile() {
                             </div>
                         )}
                     </div>
+
                     {/* Synergy Score */}
                     {synergyData && (
-                        <div className="text-center my-12">
+                        <div className="text-center my-12 border-b-2 border-gray-800 pb-10">
                             <h3 className="text-2xl font-bold text-red-700 mb-6">Synergy Score</h3>
 
                             {/* Circular Progress */}
                             <div className="w-48 h-48 mx-auto mb-12">
                                 <CircularProgressbar
                                     value={overallSynergy}
-                                    text={`${formatScore(overallSynergy / 100)}`} 
+                                    text={`${formatScore(overallSynergy / 100)}`}
                                     styles={buildStyles({
                                         textSize: "20px",
                                         textColor: "#111827",
@@ -426,6 +493,67 @@ export default function CompanyProfile() {
                         </div>
                     )}
 
+                    <div className="w-full px-[10%] justify-center">
+                        <div className="flex w-full border-b mb-4">
+                            <button
+                                onClick={() => setActiveTab("pending")}
+                                className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "pending"
+                                    ? "bg-[#B11016] text-white rounded-t"
+                                    : "text-gray-600 hover:text-black"
+                                    }`}
+                            >
+                                Proposals Submitted
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("all")}
+                                className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "all"
+                                    ? "bg-[#B11016] text-white rounded-t"
+                                    : "text-gray-600 hover:text-black"
+                                    }`}
+                            >
+                                Projects Together
+                            </button>
+                        </div>
+
+                        {/* Table */}
+                        <div className="w-full bg-white shadow rounded-lg p-4 overflow-x-auto border border-gray-400">
+                            {activeTab === "pending" ? (
+                                loadingProposals ? (
+                                    <p className="text-center">Loading proposals...</p>
+                                ) : proposalError ? (
+                                    <p className="text-center">{proposalError}</p>
+                                ) : (
+                                    <FileTable
+                                        files={pendingProposals}
+                                        onRowClick={handleFilesClick}
+                                        emptyMessage="No proposals submitted yet."
+                                    />
+                                )
+                            ) : (
+                                loadingApproved ? (
+                                    <p className="text-center">Loading approved projects...</p>
+                                ) : approvedError ? (
+                                    <p className="text-center">{approvedError}</p>
+                                ) : (
+                                    <FileTable
+                                        files={approvedProposals}
+                                        onRowClick={handleFilesClick}
+                                        emptyMessage="No approved projects yet."
+                                    />
+                                )
+                            )}
+                        </div>
+
+                        {/* Centered Button */}
+                        <div className="flex justify-center mt-4">
+                            <button
+                                className="min-w-2xl cursor-pointer font-bold text-center py-4 px-6 text-white bg-[#B11016] border-2 border-[#B11016] rounded-md hover:text-[#B11016] hover:bg-white hover:border-[#B11016] transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg"
+                                onClick={() => router.push("/login")}
+                            >
+                                Get Project Ideas
+                            </button>
+                        </div>
+                    </div>
 
 
 
@@ -434,3 +562,62 @@ export default function CompanyProfile() {
         </ProtectedRoute>
     );
 }
+
+const FileTable = ({
+    files,
+    emptyMessage,
+    onRowClick,
+}: {
+    files: { id: number; title: string; status: string }[];
+    emptyMessage: string;
+    onRowClick: (id: number) => void;
+}) => (
+    <table className="w-full text-sm rounded-lg overflow-hidden min-w-[600px]">
+        <thead>
+            <tr>
+                <th className="p-3 text-left text-red-700 whitespace-nowrap">Proposal ID</th>
+                <th className="p-3 text-left text-red-700 whitespace-nowrap">Proposal Title</th>
+                <th className="p-3 text-left text-red-700 whitespace-nowrap">Status</th>
+                <th className="p-3 text-center text-red-700 whitespace-nowrap">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {files.length > 0 ? (
+                files.map((file, i) => (
+                    <tr
+                        key={i}
+                        className="border-t hover:bg-gray-100 transition cursor-pointer"
+                        onClick={() => onRowClick(file.id)}
+                    >
+                        <td className="p-3">{file.id}</td>
+                        <td className="p-3">{file.title}</td>
+                        <td className="p-3">{file.status}</td>
+                        <td className="p-3 text-center">
+                            <div className="flex items-center justify-center">
+                                <svg
+                                    className="w-4 h-4 text-gray-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 5l7 7-7 7"
+                                    />
+                                </svg>
+                            </div>
+                        </td>
+                    </tr>
+                ))
+            ) : (
+                <tr>
+                    <td colSpan={4} className="text-center py-4">
+                        {emptyMessage}
+                    </td>
+                </tr>
+            )}
+        </tbody>
+    </table>
+);
