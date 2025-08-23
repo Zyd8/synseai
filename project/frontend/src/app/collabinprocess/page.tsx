@@ -3,12 +3,17 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/DashboardSidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function CollabInProcess() {
     const API = process.env.NEXT_PUBLIC_API_URL;
     const [proposals, setProposals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-
+    const pageVariants = {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+        exit: { opacity: 0, y: -30, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
+    };
     useEffect(() => {
         const fetchProposals = async () => {
             const token = sessionStorage.getItem("access_token");
@@ -43,7 +48,15 @@ export default function CollabInProcess() {
     return (
         <ProtectedRoute allowedRoles={["user"]}>
             <CollabCompanyProtectedRoute>
-                <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key="collabapproved-page"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="flex min-h-screen bg-gray-50 overflow-x-hidden"
+                    >
                     {/* Sidebar */}
                     <Sidebar />
 
@@ -85,7 +98,8 @@ export default function CollabInProcess() {
                             </div>
                         </div>
                     </div>
-                </div>
+                    </motion.div>
+                </AnimatePresence>
             </CollabCompanyProtectedRoute>
         </ProtectedRoute>
     );
