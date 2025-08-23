@@ -369,7 +369,7 @@ const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     }
   };
 
-// Assign document to departments
+// Fixed handleAssignDocument function
 const handleAssignDocument = async () => {
   if (!selectedDoc) {
     alert("Please select a document first.");
@@ -413,36 +413,70 @@ const handleAssignDocument = async () => {
 
     const data = await res.json();
     console.log("Success response:", data);
+    console.log("Full response structure:", JSON.stringify(data, null, 2));
+    console.log("Response data type:", typeof data);
+    console.log("Is data an array?", Array.isArray(data));
+    console.log("Data keys:", Object.keys(data || {}));
     
-    // Try multiple ways to get the document_setting id
+    // Based on your backend code, it returns new_setting.to_dict() directly
+    // So the ID should be directly in data.id
     const documentSettingId = 
-      data.document_setting?.id || 
-      data.id || 
-      data.document_setting_id ||
-      data.setting_id;
+      data.id ||                      // Direct ID from to_dict() - this should work
+      data.document_setting_id ||     // Just in case
+      data.document_setting?.id ||    // Nested object fallback
+      data.setting_id ||              // Alternative naming
+      data.documentSettingId;         // CamelCase variant
     
     console.log("Extracted document_setting_id:", documentSettingId);
-    console.log("Full response object keys:", Object.keys(data));
     
     if (documentSettingId) {
+      console.log("✅ Successfully extracted ID, navigating...");
+      
+      // Clear any previous state
+      setSelectedDoc(null);
+      setQueue([]);
+      setSelectedPresetId("");
+      
+      // Navigate to filespusher with the document_setting ID
       const navigationUrl = `/filespusher?id=${documentSettingId}`;
-      console.log("Attempting to navigate to:", navigationUrl);
+      console.log("Navigating to:", navigationUrl);
       
-      // Try navigation
-      router.push(navigationUrl);
+      // Show success message first
+      alert("✅ Document successfully assigned! Redirecting to Files Pusher...");
       
-      // Also show success message
-      alert(`✅ Document successfully assigned! Redirecting to filespusher...`);
+      // Small delay to ensure alert is seen, then navigate
+      setTimeout(() => {
+        router.push(navigationUrl);
+      }, 100);
       
     } else {
-      console.warn("❌ No document_setting id found in response");
-      console.log("Available data properties:", Object.keys(data));
-      alert("✅ Document successfully assigned to departments! However, unable to navigate to filespusher - missing ID.");
+      console.error("❌ No document_setting ID found in response");
+      console.log("Available response keys:", Object.keys(data || {}));
+      console.log("Response data structure:", data);
+      console.log("Typeof data:", typeof data);
+      console.log("Is array:", Array.isArray(data));
+      
+      // Try to extract ANY id-like field for debugging
+      const possibleIds = Object.keys(data || {}).filter(key => 
+        key.toLowerCase().includes('id')
+      );
+      console.log("Fields containing 'id':", possibleIds);
+      
+      // Still show success but explain the navigation issue
+      alert(`✅ Document successfully assigned! However, unable to navigate to Files Pusher automatically. 
+      
+Debug info: 
+- Response keys: ${Object.keys(data || {}).join(', ')}
+- ID fields found: ${possibleIds.join(', ')}
+- Please check the browser console for full response details.`);
+      
+      // Optionally, you could still try to navigate to a general page
+      // router.push("/bpidashboard");
     }
     
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Error assigning document:", error);
-    alert(`❌ Error: ${error.message}`);
+
   }
 };
 
