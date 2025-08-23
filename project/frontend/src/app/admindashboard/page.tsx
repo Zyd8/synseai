@@ -231,7 +231,7 @@ export default function SuperAdminDashboard() {
             icon: <FaBuilding className="text-2xl" />,
             actions: [
                 { name: "Create Department", action: "create-department" },
-                { name: "Assign Employee to Department", action: "assign-employee" },
+                
                 { name: "Manage Departments", action: "manage-departments" }
             ]
         },
@@ -239,9 +239,9 @@ export default function SuperAdminDashboard() {
             title: "Documents",
             icon: <FaFileAlt className="text-2xl" />,
             actions: [
-                { name: "Upload Document", action: "upload-document" },
+                { name: "Manage Documents", action: "manage-documents" },
                 { name: "Assign Document to Departments", action: "assign-document" },
-                { name: "Manage Documents", action: "manage-documents" }
+                
             ]
         }
     ];
