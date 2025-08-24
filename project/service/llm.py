@@ -163,8 +163,6 @@ class SynsaiLLM:
                 }]
             )
 
-            print(prompt)
-
             score_text = score_response['message']['content'].strip()
             score = float(re.search(r'[0-9]*\.?[0-9]+', score_text).group())
 
@@ -232,62 +230,102 @@ class SynsaiLLM:
             if not context:
                 return []
                 
-            # Create prompt for the model
-            prompt = f"""
-            Extract ONLY the company names from the following text. Follow these rules:
+            # First pass: Extract potential company names
+            extract_prompt = """
+            Extract ONLY the company/organization names from the text below.
 
-            FOLLOW THIS RULES STRICTLY:
-            1. List ONLY the company/organization names
-            2. Remove all numbers, rankings, and special characters
-            3. Exclude any descriptive text, statistics, or explanations
-            4. If a company name includes common suffixes (Inc, Corp, LLC, etc.), you can include them
-            5. Return each name on a new line with no additional text
-            6. No introductions and conclusions, no afterwords.
-            7. The company should be a few words long.
-            8. No explanation
-            9. Don't mention any money or currency.
-    
-            Examples (but don't include these in the response if not in the context):
-            "1. BDO Unibank, Inc."
-            "2. Land Bank of the Philippines"
-            "3. Bancotaphil Corporation"
-            "4. China Banking Corporation"
-            "5. UnionBank of the Philippines"
-            "6. Metropolitan Bank & Trust Co."
-            "7. Citibank, N.A."
-            "8. Bancado de Oro Unibank, Inc."
-            "9. DBS Bank Ltd."
-            "10. Bangkok Bank Public Co., Ltd."
-            "11. Philippine Veterans Bank"
-            "12. ING Bank N.V."
-            "13. Mega International Commercial Bank Ltd."
-            "14. Industrial and Commercial Bank of China Limited"
-            "15. United Overseas Bank Limited"
-            "16. Standard Chartered Bank"
-            "17. KEB Hana Commercial Bank Ltd."
-            "18. Industrial Bank of Korea Limited"
-            "19. China Construction Bank Corporation"
-            "20. Cathay United Commercial Bank Ltd."
-            "21. Hana Financial Group Inc."
-            "22. Taiwan Business Bank"
-            "23. Banco Delta Asia Limited"
-            "24. The Hongkong and Shanghai Banking Corporation Limited"
-            "25. Bank of East Asia Limited"
-            
-            Text: {context}
+            RULES:
+            - Output company names ONLY
+            - One name per line
+            - No numbers, no bullets, no explanations
+            - Do not include "Here are" or any intro/conclusion
+            - Keep official suffixes like Inc., Corp., Ltd., PLC, etc.
+            - Ignore statistics, locations, money, or any descriptive text
+
+            TEXT:
+            {context}
             """
 
+            # Get initial list of company names
             response = ollama.chat(
                 model='llama2',
                 messages=[{
                     'role': 'user',
-                    'content': prompt,
+                    'content': extract_prompt.format(context=context),
                 }]
             )
 
-            # Extract company names from the response
-            result = response['message']['content']
-            company_names = [name.strip() for name in result.split('\n') if name.strip()]
+            # Clean up the initial results
+            raw_names = response['message']['content']
+            
+            # Second pass: Clean and validate the extracted names
+            clean_prompt = """
+            Clean the following list of potential company names.
+            
+            RULES:
+            - Remove any numbers, bullets, or list markers (e.g., "1. ", "- ", "• ")
+            - Remove any introductory text (e.g., "Here are the companies:")
+            - Remove any explanations or additional text after the company name
+            - Keep only one company name per line
+            - Remove any empty lines
+            - Return only the cleaned company names, one per line
+            - Remove INTRODUCTIONS, CONCLUSIONS, and AFTERWORDS
+            
+            INPUT:
+            {raw_names}
+            
+            OUTPUT (cleaned company names, one per line):
+            """
+            
+            # Get cleaned company names
+            clean_response = ollama.chat(
+                model='llama2',
+                messages=[{
+                    'role': 'user',
+                    'content': clean_prompt.format(raw_names=raw_names),
+                }]
+            )
+            
+            # Process the cleaned output
+            cleaned_text = clean_response['message']['content']
+            
+            # Split by newline and clean each line
+            company_names = []
+            for line in cleaned_text.split('\n'):
+                # Remove JSON-like structures if present
+                line = re.sub(r'\{.*?\}', '', line)
+                # Remove any remaining quotes
+                line = line.replace('"', '').replace("'", '')
+                # Remove numbered list patterns like '1. ', '2. ', etc.
+                line = re.sub(r'^\s*\d+\.?\s*', '', line)
+                # Remove common prefixes/suffixes
+                line = re.sub(r'^[^a-zA-Z0-9]+', '', line)  # Remove leading non-alphanumeric
+                line = re.sub(r'[^a-zA-Z0-9]+$', '', line)  # Remove trailing non-alphanumeric
+                line = line.strip()
+                    
+                # Skip common non-company lines
+                skip_phrases = [
+                    'sure!', 'here are', 'company names', 'output:', 'input:', 
+                    'cleaned', 'list of', 'companies', 'names', 'extracted'
+                ]
+                if any(phrase in line.lower() for phrase in skip_phrases):
+                    continue
+                    
+                company_names.append(line)
+            
+            # Remove duplicates while preserving order and filter out empty strings
+            seen = set()
+            company_names = [name for name in company_names 
+                           if name.strip() and not (name.lower() in seen or seen.add(name.lower()))]
+            
+            # Final cleanup - remove any remaining non-company names
+            company_names = [name for name in company_names 
+                           if len(name.split()) <= 5 and  # Reasonable length for company names
+                           not name.endswith(':') and
+                           not name.startswith('(') and
+                           not name.endswith(')')]
+            
+            print(f"Extracted company names: {company_names}")
             return company_names
 
         except Exception as e:

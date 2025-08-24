@@ -1,6 +1,3 @@
-Project reccomender stream not working
-Still hardcoded company name
-
 data webscraped must be recent
 refine prompts
-refactor prompts into yaml
+refactor prompts into yaml 

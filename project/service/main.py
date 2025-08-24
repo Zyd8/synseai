@@ -25,15 +25,12 @@ def company_scoring_scrape():
             if pages['criteria'] == 'credibility':
                 credibility_score = synsai_llm.get_company_score(pages, 'credibility')
                 credibility_scores.append(credibility_score)
-                print(credibility_score)
             elif pages['criteria'] == 'referential':
                 referential_score = synsai_llm.get_company_score(pages, 'referential')
                 referential_scores.append(referential_score)
-                print(referential_score)
             elif pages['criteria'] == 'compliance':
                 compliance_score = synsai_llm.get_company_score(pages, 'compliance')
                 compliance_scores.append(compliance_score)
-                print(compliance_score)
 
         # Calculate average scores only if we have scores
         credibility_score = sum(credibility_scores) / len(credibility_scores) if credibility_scores else 0.0
@@ -71,8 +68,6 @@ def company_project_recommendation_scrape():
         scraped_pages = company_project_reccomender(company)
         if 'error' in scraped_pages:
             return jsonify({'error': scraped_pages['error']}), 400    
-
-        print(scraped_pages) 
  
         synsai_llm = SynsaiLLM(company)
 
@@ -107,11 +102,9 @@ def generate_company_from_traits(company_name):
             if pages['criteria'] == 'credibility':
                 credibility_score = synsai_llm.get_company_score(pages, 'credibility')
                 credibility_scores.append(credibility_score)
-                print(credibility_score)
             elif pages['criteria'] == 'referential':
                 referential_score = synsai_llm.get_company_score(pages, 'referential')
                 referential_scores.append(referential_score)
-                print(referential_score)
             elif pages['criteria'] == 'compliance':
                 compliance_score = synsai_llm.get_company_score(pages, 'compliance')
                 compliance_scores.append(compliance_score)
@@ -133,6 +126,7 @@ def generate_company_from_traits(company_name):
 
         # Create the data structure
         data = {
+            'company_name': company_name,
             'scoring': {
                 'credibility_score': credibility_score, 
                 'referential_score': referential_score, 
@@ -183,12 +177,14 @@ def company_traits_webscraper_stream():
 
     def generate():
         try:
-            # company_names = company_traits_webscraper(company_traits)
-            # if 'error' in company_names:
-            #     yield f"data: {json.dumps({'error': company_names['error']})}\n\n"
-            #     return
+            scraped_pages = company_traits_webscraper(company_traits)
+            if 'error' in scraped_pages:
+                yield f"data: {json.dumps({'error': scraped_pages['error']})}\n\n"
+                return
 
-            company_names = ["ING bank", "BDO", "MetroBank"]
+            company_names = SynsaiLLM.get_company_names(scraped_pages)
+
+            #company_names = ["ING bank", "BDO", "MetroBank"]
             
             for company_name in company_names:
                 for result in generate_company_from_traits(company_name):
