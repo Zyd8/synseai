@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
@@ -24,7 +24,7 @@ from routes.find_company import find_company_bp
 load_dotenv()
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder="frontend/out", static_url_path="")
     
     # Load configuration
     env = os.getenv('FLASK_ENV', 'development')
@@ -87,11 +87,11 @@ def create_app():
     @app.errorhandler(500)
     def server_error(error):
         return jsonify({'message': 'Internal server error'}), 500
-    
-    # Home route
-    @app.route('/')
-    def home():
-        return jsonify({"message": "Welcome to the API"})
+
+    # Serve index.html for the root
+    @app.route("/")
+    def index():
+        return send_from_directory(app.static_folder, "index.html")
     
     return app
 
