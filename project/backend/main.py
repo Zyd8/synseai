@@ -24,8 +24,8 @@ from routes.find_company import find_company_bp
 load_dotenv()
 
 # Global Flask app instance
-app = Flask(__name__, static_folder="frontend/out", static_url_path="")
-
+app = Flask(__name__)
+# app = Flask(__name__, static_folder="frontend/out", static_url_path="")
 # Load configuration
 env = os.getenv('FLASK_ENV', 'development')
 app.config.from_object(config[env])
