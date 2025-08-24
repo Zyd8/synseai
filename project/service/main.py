@@ -87,9 +87,30 @@ def company_project_recommendation_scrape():
             'message': str(e)
         }), 500
 
-def generate_company_from_traits(company_name):
-    try:
 
+@app.route('/company_names_from_traits', methods=['POST'])
+def company_names_from_traits():
+    company_traits = request.json.get('company_traits')
+    if not company_traits:
+        return jsonify({'error': 'Company traits are required'}), 400
+
+    try:
+        scraped_pages = company_traits_webscraper(company_traits)
+        company_names = SynsaiLLM.get_company_names(scraped_pages)
+
+        return jsonify({'company_names': company_names})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/company_name_webscraper', methods=['POST'])
+def company_name_webscraper():
+    company_name = request.json.get('company_name')
+    
+    if not company_name:
+        return jsonify({'error': 'Company name is required'}), 400
+
+    try:
         synsai_llm = SynsaiLLM(company_name)
 
         scraped_pages = company_webscraper(company_name)
@@ -119,92 +140,31 @@ def generate_company_from_traits(company_name):
         referential_reasoning = synsai_llm.company_score_reasoning('referential') if referential_scores else 'No referential data available'
         compliance_reasoning = synsai_llm.company_score_reasoning('compliance') if compliance_scores else 'No compliance data available'
 
-
         scraped_pages = company_project_reccomender(company_name)
         project_reccomendations = synsai_llm.project_recommendation(scraped_pages)
         
-
         # Create the data structure
         data = {
             'company_name': company_name,
-            'scoring': {
-                'credibility_score': credibility_score, 
-                'referential_score': referential_score, 
-                'compliance_score': compliance_score, 
-                'credibility_reasoning': credibility_reasoning, 
-                'referential_reasoning': referential_reasoning, 
-                'compliance_reasoning': compliance_reasoning,
-            },
-            'project_recommendations': {
-                'title1': project_reccomendations[0][0] if len(project_reccomendations) > 0 else 'No recommendation',
-                'description1': project_reccomendations[0][1] if len(project_reccomendations) > 0 else 'No description',
-                'title2': project_reccomendations[1][0] if len(project_reccomendations) > 1 else 'No recommendation',
-                'description2': project_reccomendations[1][1] if len(project_reccomendations) > 1 else 'No description',
-                'title3': project_reccomendations[2][0] if len(project_reccomendations) > 2 else 'No recommendation',
-                'description3': project_reccomendations[2][1] if len(project_reccomendations) > 2 else 'No description',
-            }
+            'credibility_score': credibility_score, 
+            'referential_score': referential_score, 
+            'compliance_score': compliance_score, 
+            'credibility_reasoning': credibility_reasoning, 
+            'referential_reasoning': referential_reasoning, 
+            'compliance_reasoning': compliance_reasoning,
+            'project_title1': project_reccomendations[0][0] if len(project_reccomendations) > 0 else 'No recommendation',
+            'project_description1': project_reccomendations[0][1] if len(project_reccomendations) > 0 else 'No description',
+            'project_title2': project_reccomendations[1][0] if len(project_reccomendations) > 1 else 'No recommendation',
+            'project_description2': project_reccomendations[1][1] if len(project_reccomendations) > 1 else 'No description', 
+            'project_title3': project_reccomendations[2][0] if len(project_reccomendations) > 2 else 'No recommendation',
+            'project_description3': project_reccomendations[2][1] if len(project_reccomendations) > 2 else 'No description',
         }
         
-        # Convert to JSON and yield as SSE
-        yield f"data: {json.dumps(data)}\n\n"
+        return jsonify(data)
+        
     except Exception as e:
-        yield f"data: {json.dumps({'error': str(e)})}\n\n"
-    yield "event: end\ndata: {}\n\n"
+        return jsonify({'error': str(e)}), 500
 
-def stream_companies(company_names):
-    try:
-        for company_name in company_names:
-            # First yield the company name being processed
-            yield f"data: {json.dumps({'status': 'processing', 'company': company_name})}\n\n"
-            
-            # Process the company and stream results
-            for result in generate_company_from_traits(company_name):
-                try:
-                    # Try to parse the result to check for errors
-                    data = json.loads(result[6:])  # Skip 'data: ' prefix
-                    yield f"data: {json.dumps(data)}\n\n"
-                except json.JSONDecodeError:
-                    # If it's not valid JSON, send it as an error
-                    yield f"data: {json.dumps({'error': 'Invalid JSON response'})}\n\n"
-    except Exception as e:
-        return [{'error': str(e)}]
-
-@app.route('/company_traits_webscraper', methods=['POST'])
-def company_traits_webscraper_stream():
-    company_traits = request.json.get('company_traits')
-    if not company_traits:
-        return jsonify({'error': 'Company traits are required'}), 400
-
-    def generate():
-        try:
-            scraped_pages = company_traits_webscraper(company_traits)
-            if 'error' in scraped_pages:
-                yield f"data: {json.dumps({'error': scraped_pages['error']})}\n\n"
-                return
-
-            company_names = SynsaiLLM.get_company_names(scraped_pages)
-
-            #company_names = ["ING bank", "BDO", "MetroBank"]
-            
-            for company_name in company_names:
-                for result in generate_company_from_traits(company_name):
-                    if result.startswith('data: '):
-                        try:
-                            data = json.loads(result[6:].strip())
-                            if 'error' not in data:  # Skip error messages
-                                yield f"data: {json.dumps(data)}\n\n"
-                        except json.JSONDecodeError:
-                            continue
-        except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
-        finally:
-            yield "event: end\ndata: {}\n\n"
-    
-    return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'X-Accel-Buffering': 'no'
-    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
