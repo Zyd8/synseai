@@ -128,20 +128,29 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8 text-md">
-          <Link href="/home" className="text-white hover:underline ">
+          <Link href="/" className="text-white hover:underline ">
             Home
           </Link>
-          <Link href="/about" className="text-white hover:underline ">
-            About
-          </Link>
-          <Link href="/partners" className="text-white hover:underline ">
-            Partners
-          </Link>
+          <button
+            onClick={() => {
+              const role = sessionStorage.getItem("role");
+              if (role === "employee") {
+                router.push("/bpidashboard");
+              } else if (role === "admin") {
+                router.push("/admindashboard");
+              } else {
+                router.push("/dashboard");
+              }
+            }}
+            className="text-white hover:underline"
+          >
+            Dashboard
+          </button>
 
           {/* Conditional Login/Logout with loading state */}
           {isLoading ? (
             <div className="bg-white text-[#B11016] font-bold px-6 py-1.5 rounded-md text-md opacity-50">
-              Loading...
+              Loading
             </div>
           ) : isLoggedIn ? (
             <button
@@ -181,20 +190,30 @@ export default function Navbar() {
           }`}
       >
         <div className="flex flex-col gap-6 mt-16">
-          <Link href="/home" className="text-white font-bold" onClick={closeMenu}>
+          <Link href="/" className="text-white font-bold" onClick={closeMenu}>
             Home
           </Link>
-          <Link href="/about" className="text-white font-bold" onClick={closeMenu}>
-            About
-          </Link>
-          <Link href="/partners" className="text-white font-bold" onClick={closeMenu}>
-            Partners
-          </Link>
+          <button
+            onClick={() => {
+              const role = sessionStorage.getItem("role");
+              if (role === "employee") {
+                router.push("/bpidashboard");
+              } else if (role === "admin") {
+                router.push("/admindashboard");
+              } else {
+                router.push("/dashboard");
+              }
+              closeMenu();
+            }}
+            className="text-white font-bold"
+          >
+            Dashboard
+          </button>
 
           {/* Conditional Login/Logout in mobile menu with loading state */}
           {isLoading ? (
             <div className="bg-white text-[#B11016] font-bold px-4 py-2 rounded-lg text-[1.05rem] opacity-50">
-              Loading...
+              Loading
             </div>
           ) : isLoggedIn ? (
             <button

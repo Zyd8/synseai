@@ -2,7 +2,7 @@
 import React, { useState, useRef } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaCheckCircle, FaTimes } from "react-icons/fa";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -41,6 +41,11 @@ export default function CompanySetup() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [originalCompanyData, setOriginalCompanyData] = useState<any>(null);
     const [companyId, setCompanyId] = useState("");
+
+    // Modal state
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
+    const [isNewCompany, setIsNewCompany] = useState(false);
 
     // Convert company size number to display string
     const sizeToString = (size: number): string => {
@@ -88,7 +93,7 @@ export default function CompanySetup() {
 
                 if (resCompany.ok) {
                     const companyData = await resCompany.json();
-                    
+
                     // Pre-fill all company fields
                     setCompanyName(companyData.name || "");
                     setCompanyWebsite(companyData.website || "");
@@ -98,7 +103,7 @@ export default function CompanySetup() {
                     setBio(companyData.bio || "");
                     setColor(companyData.color || "#000000");
                     setCollabType(companyData.collab_type || "");
-                    
+
                     // Handle company size
                     if (companyData.size) {
                         const sizeString = sizeToString(companyData.size);
@@ -112,8 +117,8 @@ export default function CompanySetup() {
 
                     // Handle industry
                     const predefinedIndustries = [
-                        "Financial Technology", "Healthcare", "Education", "Technology", 
-                        "Manufacturing", "Retail", "Finance", "Consulting", "Real Estate", 
+                        "Financial Technology", "Healthcare", "Education", "Technology",
+                        "Manufacturing", "Retail", "Finance", "Consulting", "Real Estate",
                         "Media & Entertainment"
                     ];
                     if (companyData.industry && !predefinedIndustries.includes(companyData.industry)) {
@@ -125,10 +130,10 @@ export default function CompanySetup() {
                     if (companyData.logo) {
                         setExistingLogoUrl(companyData.logo);
                     }
-                    
+
                     setHasExistingCompany(true);
                     setCompanyId(companyData.id);
-                    
+
                     // Store original data for cancel functionality
                     setOriginalCompanyData({
                         name: companyData.name || "",
@@ -165,29 +170,28 @@ export default function CompanySetup() {
     };
 
     const updateUserInfo = async (token: string) => {
-    try {
-        const res = await fetch(`${API}/api/auth/update_user`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                position,
-                contact_number: contactNumber,
-            }),
-        });
+        try {
+            const res = await fetch(`${API}/api/auth/update_user`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    position,
+                    contact_number: contactNumber,
+                }),
+            });
 
-        if (!res.ok) {
-            console.error("Failed to update user info");
-        } else {
-            console.log("User info updated successfully");
+            if (!res.ok) {
+                console.error("Failed to update user info");
+            } else {
+                console.log("User info updated successfully");
+            }
+        } catch (err) {
+            console.error("Error updating user info:", err);
         }
-    } catch (err) {
-        console.error("Error updating user info:", err);
-    }
-};
-
+    };
 
     // Handle Logo Upload
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,7 +200,7 @@ export default function CompanySetup() {
             setExistingLogoUrl(""); // Clear existing logo when new one is uploaded
         }
     };
-    
+
     const handleLogoDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
@@ -227,8 +231,8 @@ export default function CompanySetup() {
 
             // Handle industry restoration
             const predefinedIndustries = [
-                "Financial Technology", "Healthcare", "Education", "Technology", 
-                "Manufacturing", "Retail", "Finance", "Consulting", "Real Estate", 
+                "Financial Technology", "Healthcare", "Education", "Technology",
+                "Manufacturing", "Retail", "Finance", "Consulting", "Real Estate",
                 "Media & Entertainment"
             ];
             if (originalCompanyData.industry && !predefinedIndustries.includes(originalCompanyData.industry)) {
@@ -257,6 +261,17 @@ export default function CompanySetup() {
         setIsEditMode(false);
         setError("");
         setSuccess("");
+    };
+
+    // Close modal and handle navigation
+    const handleCloseModal = () => {
+        setShowSuccessModal(false);
+        if (isNewCompany) {
+            // Redirect to dashboard for new companies
+            setTimeout(() => {
+                router.push("/dashboard");
+            }, 300);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -299,7 +314,7 @@ export default function CompanySetup() {
             const payload: any = {
                 name: companyName,
                 contact_email: contactEmail,
-                position: position,               // ✅ include position
+                position: position,
                 contact_number: contactNumber
             };
 
@@ -337,9 +352,10 @@ export default function CompanySetup() {
 
             if (response.ok) {
                 if (hasExistingCompany) {
-                    setSuccess(`Company "${data.company.name}" updated successfully!`);
+                    setModalMessage(`Company "${data.company.name}" updated successfully!`);
+                    setIsNewCompany(false);
                     setIsEditMode(false);
-                    
+
                     // Update original data with new values for future cancellations
                     setOriginalCompanyData({
                         name: data.company.name,
@@ -353,10 +369,11 @@ export default function CompanySetup() {
                         logo: data.company.logo || ""
                     });
                 } else {
-                    setSuccess(`Company "${data.company.name}" created successfully!`);
+                    setModalMessage(`Company "${data.company.name}" created successfully!`);
+                    setIsNewCompany(true);
                     setHasExistingCompany(true);
                     setCompanyId(data.company.id);
-                    
+
                     // Store the newly created company data
                     setOriginalCompanyData({
                         name: data.company.name,
@@ -369,12 +386,10 @@ export default function CompanySetup() {
                         collab_type: data.company.collab_type || "",
                         logo: data.company.logo || ""
                     });
-
-                    // Redirect to Proposal Form page after successful creation
-                    setTimeout(() => {
-                        window.location.href = "/dashboard"; // Adjust this path as needed
-                    }, 2000);
                 }
+
+                // Show success modal
+                setShowSuccessModal(true);
             } else {
                 setError(data.error || `Failed to ${hasExistingCompany ? 'update' : 'create'} company (${response.status})`);
             }
@@ -397,11 +412,11 @@ export default function CompanySetup() {
             }
             return "SETTING UP COMPANY...";
         }
-        
+
         if (hasExistingCompany) {
             return isEditMode ? "SAVE CHANGES" : "EDIT COMPANY";
         }
-        
+
         return "SETUP COMPANY";
     };
 
@@ -421,456 +436,661 @@ export default function CompanySetup() {
         exit: { opacity: 0, y: -30, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] } },
     };
 
+    // Modal animation variants
+    const modalOverlayVariants = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 }
+    };
+
+    const modalVariants = {
+        hidden: {
+            opacity: 0,
+            scale: 0.8,
+            y: 50
+        },
+        visible: {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            transition: {
+                type: "spring" as const,
+                stiffness: 300,
+                damping: 25
+            }
+        },
+        exit: {
+            opacity: 0,
+            scale: 0.8,
+            y: 50,
+            transition: {
+                duration: 0.2
+            }
+        }
+    };
+
+    const iconVariants = {
+        hidden: { scale: 0, rotate: -180 },
+        visible: {
+            scale: 1,
+            rotate: 0,
+            transition: {
+                delay: 0.2,
+                type: "spring" as const,
+                stiffness: 300,
+                damping: 20
+            }
+        }
+    };
+
     return (
         <ProtectedRoute allowedRoles={["user"]}>
             <AnimatePresence mode="wait">
-                    <motion.div
-                        key="dashboard-page"
-                        variants={pageVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8"
-                    >
-        
-            {/* Header */}
-            <div className="relative flex items-center w-full mt-2 mb-10">
-                {/* Back Button */}
-                <button
-                    onClick={() => {
-                        if (hasExistingCompany) {
-                        // ✅ User already has a company or updated it → Go to dashboard
-                        router.push("/dashboard");
-                        } else {
-                        // 🚫 No company yet → Must finish setup → Stay in collab flow
-                        router.push("/collabhome");
-                        }
-                    }}
-                    className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10]"
-                    >
-                    <FaArrowLeft className="mr-2" />
-                    <span className="hidden sm:inline">Back</span>
-                </button>
+                <motion.div
+                    key="dashboard-page"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8"
+                >
 
-
-                {/* Title */}
-                <div className="text-center w-full">
-                    <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
-                        Company Setup Form
-                    </h1>
-                    <p className="text-md text-black mb-6">
-                        {hasExistingCompany
-                        ? "Manage your company information"
-                        : "Set up your company that's aiming to partner with BPI"}
-                    </p>
-                    <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
-                </div>
-            </div>
-
-            {/* Error/Success Messages */}
-            {error && (
-                <div className="w-full mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                    {error}
-                </div>
-            )}
-            {success && (
-                <div className="w-full mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                    {success}
-                </div>
-            )}
-
-            <form onSubmit={handleButtonClick} className="w-full">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
-                    {/* LEFT COLUMN - COMPANY INFO */}
-                    <div className="space-y-6">
-                        <h2 className="flex items-center space-x-3 text-[#B11016] text-2xl font-bold">
-                            <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-[#B11016] text-base font-bold leading-none">
-                                1
-                            </span>
-                            <span>Company Information</span>
-                        </h2>
-
-                        {/* Company Name */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                COMPANY NAME *
-                            </label>
-                            <div className="relative w-full group">
-                                <input
-                                    type="text"
-                                    value={companyName}
-                                    onChange={(e) => setCompanyName(e.target.value)}
-                                    placeholder="Enter Company Name"
-                                    readOnly={isReadOnly}
-                                    className={`appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 
-                                    focus:outline-none text-sm sm:text-base
-                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
-                                    required
-                                />
-                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
-                                    transition-transform duration-300 ease-in-out 
-                                    origin-center scale-x-0 w-full 
-                                    group-focus-within:scale-x-100" />
-                            </div>
-                        </div>
-
-                        {/* Website */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                COMPANY WEBSITE LINK
-                            </label>
-                            <div className="relative w-full group">
-                                <input
-                                    type="url"
-                                    value={companyWebsite}
-                                    onChange={(e) => setCompanyWebsite(e.target.value)}
-                                    placeholder="Enter Website Link (https://...)"
-                                    readOnly={isReadOnly}
-                                    className={`appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 
-                                    focus:outline-none text-sm sm:text-base
-                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
-                                />
-                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
-                                    transition-transform duration-300 ease-in-out 
-                                    origin-center scale-x-0 w-full 
-                                    group-focus-within:scale-x-100" />
-                            </div>
-                        </div>
-
-                        {/* Address */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                COMPANY ADDRESS
-                            </label>
-                            <div className="relative w-full group">
-                                <input
-                                    type="text"
-                                    value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    placeholder="Enter Company Address"
-                                    readOnly={isReadOnly}
-                                    className={`appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 
-                                    focus:outline-none text-sm sm:text-base
-                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
-                                />
-                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
-                                    transition-transform duration-300 ease-in-out 
-                                    origin-center scale-x-0 w-full 
-                                    group-focus-within:scale-x-100" />
-                            </div>
-                        </div>
-
-                        {/* Company Bio */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                COMPANY BIO
-                            </label>
-                            <textarea
-                                value={bio}
-                                onChange={(e) => setBio(e.target.value)}
-                                placeholder="Brief description of your company..."
-                                readOnly={isReadOnly}
-                                className={`w-full border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none resize-vertical
-                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                                rows={3}
-                            />
-                        </div>
-
-                        {/* Company Size */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
-                                COMPANY SIZE (Number of Employees)
-                            </label>
-                            <select
-                                value={companySize}
-                                onChange={(e) => setCompanySize(e.target.value)}
-                                disabled={isReadOnly}
-                                className={`border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full
-                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                            >
-                                <option value="">Select Company Size</option>
-                                <option value="1-10">1-10 employees</option>
-                                <option value="11-50">11-50 employees</option>
-                                <option value="51-200">51-200 employees</option>
-                                <option value="201-500">201-500 employees</option>
-                                <option value="501-1000">501-1000 employees</option>
-                                <option value="1000+">1000+ employees</option>
-                                <option value="Other">Other (specify number)</option>
-                            </select>
-                            
-                            {companySize === "Other" && (
-                                <input
-                                    type="number"
-                                    value={customCompanySize}
-                                    onChange={(e) => setCustomCompanySize(e.target.value)}
-                                    placeholder="Enter exact number of employees"
-                                    readOnly={isReadOnly}
-                                    className={`w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2
-                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                                    min="1"
-                                />
-                            )}
-                        </div>
-
-                        {/* Industry */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
-                                COMPANY INDUSTRY
-                            </label>
-                            <select
-                                value={industry}
-                                onChange={(e) => setIndustry(e.target.value)}
-                                disabled={isReadOnly}
-                                className={`border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full
-                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                            >
-                                <option value="">Select Industry</option>
-                                <option>Financial Technology</option>
-                                <option>Healthcare</option>
-                                <option>Education</option>
-                                <option>Technology</option>
-                                <option>Manufacturing</option>
-                                <option>Retail</option>
-                                <option>Finance</option>
-                                <option>Consulting</option>
-                                <option>Real Estate</option>
-                                <option>Media & Entertainment</option>
-                                <option value="Other">Other</option>
-                            </select>
-                            {industry === "Other" && (
-                                <input
-                                    type="text"
-                                    value={customIndustry}
-                                    onChange={(e) => setCustomIndustry(e.target.value)}
-                                    placeholder="Enter industry"
-                                    readOnly={isReadOnly}
-                                    className={`w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2
-                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                                />
-                            )}
-                        </div>
-
-                        {/* Logo & Color Picker in 1 Row */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            {/* Company Logo */}
-                            <div>
-                                <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                    COMPANY LOGO
-                                </label>
-                                <div
-                                    onDrop={!isReadOnly ? handleLogoDrop : undefined}
-                                    onDragOver={!isReadOnly ? (e) => e.preventDefault() : undefined}
-                                    className={`border-2 border-dashed border-[#B11016] rounded-lg p-6 text-center
-                                    ${!isReadOnly ? 'cursor-pointer hover:border-[#B11016]' : 'cursor-not-allowed bg-gray-100'}`}
-                                    onClick={!isReadOnly ? () => logoInputRef.current?.click() : undefined}
-                                >
-                                    {existingLogoUrl && !companyLogo ? (
-                                        <div>
-                                            <img 
-                                                src={existingLogoUrl} 
-                                                alt="Company Logo" 
-                                                className="max-w-full max-h-24 mx-auto mb-2"
-                                            />
-                                            <p className="text-gray-500 text-sm">Current logo</p>
-                                        </div>
-                                    ) : (
-                                        <p className="text-gray-500">
-                                            {isReadOnly ? "Logo upload disabled" : 
-                                            "Drag & drop logo or "} 
-                                            {!isReadOnly && <span className="underline text-[#B11016]">Browse</span>}
-                                        </p>
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept=".jpeg,.jpg,.png"
-                                        ref={logoInputRef}
-                                        className="hidden"
-                                        onChange={handleLogoChange}
-                                        disabled={isReadOnly}
-                                    />
-                                </div>
-                                {companyLogo && (
-                                    <p className="text-green-700 mt-2 text-sm">
-                                        New upload: {companyLogo.name}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Brand Color */}
-                            <div>
-                                <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                    BRAND COLOR
-                                </label>
-                                <div className="flex items-center space-x-3">
-                                    <input
-                                        type="color"
-                                        value={color}
-                                        onChange={(e) => setColor(e.target.value)}
-                                        disabled={isReadOnly}
-                                        className={`w-12 h-12 border rounded
-                                        ${isReadOnly ? 'cursor-not-allowed' : ''}`}
-                                    />
-                                    <input
-                                        type="text"
-                                        value={color}
-                                        onChange={(e) => setColor(e.target.value)}
-                                        readOnly={isReadOnly}
-                                        className={`border border-gray-300 rounded px-3 py-2 font-mono
-                                        ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* RIGHT COLUMN - POINT OF CONTACT */}
-                    <div className="space-y-6">
-                        <h2 className="flex items-center space-x-3 text-[#B11016] text-2xl font-bold">
-                            <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-[#B11016] text-base font-bold leading-none">
-                                2
-                            </span>
-                            <span>Point of Contact</span>
-                        </h2>
-
-                        {/* Full Name */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                FULL NAME
-                            </label>
-                            <div className="relative w-full group">
-                                <input
-                                    type="text"
-                                    value={fullname}
-                                    readOnly
-                                    placeholder="Loading..."
-                                    className="appearance-none w-full px-2 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-gray-100 
-                                    focus:outline-none text-sm sm:text-base cursor-not-allowed"
-                                />
-                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
-                                    transition-transform duration-300 ease-in-out 
-                                    origin-center scale-x-0 w-full 
-                                    group-focus-within:scale-x-100" />
-                            </div>
-                        </div>
-                        
-                        {/* Contact Email */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                CONTACT EMAIL *
-                            </label>
-                            <div className="relative w-full group">
-                                <input
-                                    type="email"
-                                    value={contactEmail}
-                                    readOnly
-                                    placeholder="Loading..."
-                                    className="appearance-none w-full px-2 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 bg-gray-100 
-                                    focus:outline-none text-sm sm:text-base cursor-not-allowed"
-                                    required
-                                />
-                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
-                                    transition-transform duration-300 ease-in-out 
-                                    origin-center scale-x-0 w-full 
-                                    group-focus-within:scale-x-100" />
-                            </div>
-                        </div>
-                       
-                        {/* Position/Title */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                POSITION/TITLE
-                            </label>
-                            <div className="relative w-full group">
-                                <input
-                                    type="text"
-                                    value={position}
-                                    onChange={(e) => setPosition(e.target.value)}
-                                    placeholder="Enter Position/Title"
-                                    readOnly={isReadOnly}
-                                    className={`appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 
-                                    focus:outline-none text-sm sm:text-base
-                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
-                                />
-                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
-                                    transition-transform duration-300 ease-in-out 
-                                    origin-center scale-x-0 w-full 
-                                    group-focus-within:scale-x-100" />
-                            </div>
-                        </div>
-                       
-                        {/* Contact Number */}
-                        <div>
-                            <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
-                                CONTACT NUMBER
-                            </label>
-                            <div className="relative w-full group">
-                                <input
-                                    type="tel"
-                                    value={contactNumber}
-                                    onChange={(e) => setContactNumber(e.target.value)}
-                                    placeholder="Enter your Contact Number"
-                                    readOnly={isReadOnly}
-                                    className={`appearance-none w-full px-0 py-3 border-0 
-                                    placeholder-gray-400 text-gray-900 
-                                    focus:outline-none text-sm sm:text-base
-                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
-                                />
-                                <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
-                                <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
-                                    transition-transform duration-300 ease-in-out 
-                                    origin-center scale-x-0 w-full 
-                                    group-focus-within:scale-x-100" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Submit and Cancel Buttons */}
-                <div className="w-full mt-10">
-                    {hasExistingCompany && isEditMode ? (
-                        <div className="flex space-x-4">
-                            <button 
-                                type="submit"
-                                disabled={isLoading}
-                                className="flex-1 bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {getButtonText()}
-                            </button>
-                            <button 
-                                type="button"
-                                onClick={handleCancelEdit}
-                                disabled={isLoading}
-                                className="flex-1 bg-white border-2 border-[#B11016] text-[#B11016] py-3 px-6 font-bold text-lg hover:bg-[#B11016] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                CANCEL
-                            </button>
-                        </div>
-                    ) : (
-                        <button 
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    {/* Header */}
+                    <div className="relative flex items-center w-full mt-2 mb-10">
+                        {/* Back Button */}
+                        <button
+                            onClick={() => {
+                                if (hasExistingCompany) {
+                                    // ✅ User already has a company or updated it → Go to dashboard
+                                    router.push("/dashboard");
+                                } else {
+                                    // 🚫 No company yet → Must finish setup → Stay in collab flow
+                                    router.push("/collabhome");
+                                }
+                            }}
+                            className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10]"
                         >
-                            {getButtonText()}
+                            <FaArrowLeft className="mr-2" />
+                            <span className="hidden sm:inline">Back</span>
                         </button>
+
+                        {/* Title */}
+                        <div className="text-center w-full">
+                            <h1 className="text-2xl sm:text-4xl font-bold text-[#B11016] pb-4">
+                                Company Setup Form
+                            </h1>
+                            <p className="text-md text-black mb-6">
+                                {hasExistingCompany
+                                    ? "Manage your company information"
+                                    : "Set up your company that's aiming to partner with BPI"}
+                            </p>
+                            <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+                        </div>
+                    </div>
+
+                    {/* Error/Success Messages */}
+                    {error && (
+                        <div className="w-full mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                            {error}
+                        </div>
                     )}
-                </div>
-            </form>
-        </motion.div>
+                    {success && (
+                        <div className="w-full mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                            {success}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleButtonClick} className="w-full">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full">
+                            {/* LEFT COLUMN - COMPANY INFO */}
+                            <div className="space-y-6">
+                                <h2 className="flex items-center space-x-3 text-[#B11016] text-2xl font-bold">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-[#B11016] text-base font-bold leading-none">
+                                        1
+                                    </span>
+                                    <span>Company Information</span>
+                                </h2>
+
+                                {/* Company Name */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                        COMPANY NAME *
+                                    </label>
+                                    <div className="relative w-full group">
+                                        <input
+                                            type="text"
+                                            value={companyName}
+                                            onChange={(e) => setCompanyName(e.target.value)}
+                                            placeholder="Enter Company Name"
+                                            readOnly={isReadOnly}
+                                            className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
+                                            required
+                                        />
+                                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                        <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
+                                    </div>
+                                </div>
+
+                                {/* Website */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                        COMPANY WEBSITE LINK
+                                    </label>
+                                    <div className="relative w-full group">
+                                        <input
+                                            type="url"
+                                            value={companyWebsite}
+                                            onChange={(e) => setCompanyWebsite(e.target.value)}
+                                            placeholder="Enter Website Link (https://...)"
+                                            readOnly={isReadOnly}
+                                            className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
+                                        />
+                                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                        <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
+                                    </div>
+                                </div>
+
+                                {/* Address */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                        COMPANY ADDRESS
+                                    </label>
+                                    <div className="relative w-full group">
+                                        <input
+                                            type="text"
+                                            value={address}
+                                            onChange={(e) => setAddress(e.target.value)}
+                                            placeholder="Enter Company Address"
+                                            readOnly={isReadOnly}
+                                            className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
+                                        />
+                                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                        <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
+                                    </div>
+                                </div>
+
+                                {/* Company Bio */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                        COMPANY BIO
+                                    </label>
+                                    <textarea
+                                        value={bio}
+                                        onChange={(e) => setBio(e.target.value)}
+                                        placeholder="Brief description of your company..."
+                                        readOnly={isReadOnly}
+                                        className={`w-full border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none resize-vertical
+                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                        rows={3}
+                                    />
+                                </div>
+
+                                {/* Company Size */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
+                                        COMPANY SIZE (Number of Employees)
+                                    </label>
+                                    <select
+                                        value={companySize}
+                                        onChange={(e) => setCompanySize(e.target.value)}
+                                        disabled={isReadOnly}
+                                        className={`border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full
+                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                    >
+                                        <option value="">Select Company Size</option>
+                                        <option value="1-10">1-10 employees</option>
+                                        <option value="11-50">11-50 employees</option>
+                                        <option value="51-200">51-200 employees</option>
+                                        <option value="201-500">201-500 employees</option>
+                                        <option value="501-1000">501-1000 employees</option>
+                                        <option value="1000+">1000+ employees</option>
+                                        <option value="Other">Other (specify number)</option>
+                                    </select>
+
+                                    {companySize === "Other" && (
+                                        <input
+                                            type="number"
+                                            value={customCompanySize}
+                                            onChange={(e) => setCustomCompanySize(e.target.value)}
+                                            placeholder="Enter exact number of employees"
+                                            readOnly={isReadOnly}
+                                            className={`w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                            min="1"
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Industry */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-4">
+                                        COMPANY INDUSTRY
+                                    </label>
+                                    <select
+                                        value={industry}
+                                        onChange={(e) => setIndustry(e.target.value)}
+                                        disabled={isReadOnly}
+                                        className={`border border-gray-300 rounded-md py-2 px-3 focus:border-[#B11016] outline-none w-full
+                                ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                    >
+                                        <option value="">Select Industry</option>
+                                        <option>Financial Technology</option>
+                                        <option>Healthcare</option>
+                                        <option>Education</option>
+                                        <option>Technology</option>
+                                        <option>Manufacturing</option>
+                                        <option>Retail</option>
+                                        <option>Finance</option>
+                                        <option>Consulting</option>
+                                        <option>Real Estate</option>
+                                        <option>Media & Entertainment</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    {industry === "Other" && (
+                                        <input
+                                            type="text"
+                                            value={customIndustry}
+                                            onChange={(e) => setCustomIndustry(e.target.value)}
+                                            placeholder="Enter industry"
+                                            readOnly={isReadOnly}
+                                            className={`w-full border-b-2 border-gray-300 focus:border-[#B11016] outline-none py-2 mt-2
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Logo & Color Picker in 1 Row */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    {/* Company Logo */}
+                                    <div>
+                                        <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                            COMPANY LOGO
+                                        </label>
+                                        <div
+                                            onDrop={!isReadOnly ? handleLogoDrop : undefined}
+                                            onDragOver={!isReadOnly ? (e) => e.preventDefault() : undefined}
+                                            className={`border-2 border-dashed border-[#B11016] rounded-lg p-6 text-center
+                                    ${!isReadOnly ? 'cursor-pointer hover:border-[#B11016]' : 'cursor-not-allowed bg-gray-100'}`}
+                                            onClick={!isReadOnly ? () => logoInputRef.current?.click() : undefined}
+                                        >
+                                            {existingLogoUrl && !companyLogo ? (
+                                                <div>
+                                                    <img
+                                                        src={existingLogoUrl}
+                                                        alt="Company Logo"
+                                                        className="max-w-full max-h-24 mx-auto mb-2"
+                                                    />
+                                                    <p className="text-gray-500 text-sm">Current logo</p>
+                                                </div>
+                                            ) : (
+                                                <p className="text-gray-500">
+                                                    {isReadOnly ? "Logo upload disabled" :
+                                                        "Drag & drop logo or "}
+                                                    {!isReadOnly && <span className="underline text-[#B11016]">Browse</span>}
+                                                </p>
+                                            )}
+                                            <input
+                                                type="file"
+                                                accept=".jpeg,.jpg,.png"
+                                                ref={logoInputRef}
+                                                className="hidden"
+                                                onChange={handleLogoChange}
+                                                disabled={isReadOnly}
+                                            />
+                                        </div>
+                                        {companyLogo && (
+                                            <p className="text-green-700 mt-2 text-sm">
+                                                New upload: {companyLogo.name}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Brand Color */}
+                                    <div>
+                                        <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                            BRAND COLOR
+                                        </label>
+                                        <div className="flex items-center space-x-3">
+                                            <input
+                                                type="color"
+                                                value={color}
+                                                onChange={(e) => setColor(e.target.value)}
+                                                disabled={isReadOnly}
+                                                className={`w-12 h-12 border rounded
+                                        ${isReadOnly ? 'cursor-not-allowed' : ''}`}
+                                            />
+                                            <input
+                                                type="text"
+                                                value={color}
+                                                onChange={(e) => setColor(e.target.value)}
+                                                readOnly={isReadOnly}
+                                                className={`border border-gray-300 rounded px-3 py-2 font-mono
+                                        ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* RIGHT COLUMN - POINT OF CONTACT */}
+                            <div className="space-y-6">
+                                <h2 className="flex items-center space-x-3 text-[#B11016] text-2xl font-bold">
+                                    <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-[#B11016] text-base font-bold leading-none">
+                                        2
+                                    </span>
+                                    <span>Point of Contact</span>
+                                </h2>
+
+                                {/* Full Name */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                        FULL NAME
+                                    </label>
+                                    <div className="relative w-full group">
+                                        <input
+                                            type="text"
+                                            value={fullname}
+                                            readOnly
+                                            placeholder="Loading..."
+                                            className="appearance-none w-full px-2 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-gray-100 
+                                    focus:outline-none text-sm sm:text-base cursor-not-allowed"
+                                        />
+                                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                        <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
+                                    </div>
+                                </div>
+
+                                {/* Contact Email */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                        CONTACT EMAIL *
+                                    </label>
+                                    <div className="relative w-full group">
+                                        <input
+                                            type="email"
+                                            value={contactEmail}
+                                            readOnly
+                                            placeholder="Loading..."
+                                            className="appearance-none w-full px-2 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 bg-gray-100 
+                                    focus:outline-none text-sm sm:text-base cursor-not-allowed"
+                                            required
+                                        />
+                                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                        <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
+                                    </div>
+                                </div>
+
+                                {/* Position/Title */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                        POSITION/TITLE
+                                    </label>
+                                    <div className="relative w-full group">
+                                        <input
+                                            type="text"
+                                            value={position}
+                                            onChange={(e) => setPosition(e.target.value)}
+                                            placeholder="Enter Position/Title"
+                                            readOnly={isReadOnly}
+                                            className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
+                                        />
+                                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                        <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016]
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
+                                    </div>
+                                </div>
+
+                                {/* Contact Number */}
+                                <div>
+                                    <label className="block text-sm sm:text-base font-medium text-[#B11016] mb-2">
+                                        CONTACT NUMBER
+                                    </label>
+                                    <div className="relative w-full group">
+                                        <input
+                                            type="tel"
+                                            value={contactNumber}
+                                            onChange={(e) => setContactNumber(e.target.value)}
+                                            placeholder="Enter your Contact Number"
+                                            readOnly={isReadOnly}
+                                            className={`appearance-none w-full px-0 py-3 border-0 
+                                    placeholder-gray-400 text-gray-900 
+                                    focus:outline-none text-sm sm:text-base
+                                    ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : 'bg-transparent'}`}
+                                        />
+                                        <div className="absolute left-0 bottom-0 w-full h-[2px] bg-gray-300" />
+                                        <div className="absolute left-0 bottom-0 h-[2px] bg-[#B11016] 
+                                    transition-transform duration-300 ease-in-out 
+                                    origin-center scale-x-0 w-full 
+                                    group-focus-within:scale-x-100" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Submit and Cancel Buttons */}
+                        <div className="w-full mt-10">
+                            {hasExistingCompany && isEditMode ? (
+                                <div className="flex space-x-4">
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="flex-1 bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {getButtonText()}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleCancelEdit}
+                                        disabled={isLoading}
+                                        className="flex-1 bg-white border-2 border-[#B11016] text-[#B11016] py-3 px-6 font-bold text-lg hover:bg-[#B11016] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        CANCEL
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full bg-[#B11016] border-2 border-transparent text-white py-3 px-6 font-bold text-lg hover:bg-white hover:border-[#B11016] hover:text-[#B11016] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {getButtonText()}
+                                </button>
+                            )}
+                        </div>
+                    </form>
+
+                    {/* Success Modal */}
+                    <AnimatePresence>
+                        {showSuccessModal && (
+                            <motion.div
+                                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {/* Confetti */}
+                                <Confetti show={showSuccessModal} />
+
+                                {/* Backdrop */}
+                                <motion.div
+                                    className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+                                    onClick={handleCloseModal}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                />
+
+                                {/* Modal */}
+                                <motion.div
+                                    className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.8, opacity: 0 }}
+                                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                                >
+                                    {/* Close Button */}
+                                    <button
+                                        onClick={handleCloseModal}
+                                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+                                    >
+                                        <FaTimes size={20} />
+                                    </button>
+
+                                    {/* Modal Content */}
+                                    <div className="p-8 text-center">
+                                        {/* Success Icon with Pulse */}
+                                        <div className="relative mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                                            {/* Pulse Rings */}
+                                            <motion.div
+                                                className="absolute inset-0 bg-green-200 rounded-full"
+                                                animate={{ scale: [1, 1.5, 2], opacity: [0.3, 0.1, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                                            />
+                                            <motion.div
+                                                className="absolute inset-0 bg-green-200 rounded-full"
+                                                animate={{ scale: [1, 1.5, 2], opacity: [0.3, 0.1, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+                                            />
+                                            <FaCheckCircle className="text-green-600 text-2xl relative z-10" />
+                                        </div>
+
+                                        {/* Success Title */}
+                                        <motion.h3
+                                            className="text-2xl font-bold text-gray-900 mb-4"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.3, duration: 0.4 }}
+                                        >
+                                            {isNewCompany ? "Company Created!" : "Company Updated!"}
+                                        </motion.h3>
+
+                                        {/* Success Message */}
+                                        <motion.p
+                                            className="text-gray-600 mb-8 leading-relaxed"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.4, duration: 0.4 }}
+                                        >
+                                            {modalMessage}
+                                        </motion.p>
+
+                                        {/* Action Button */}
+                                        <motion.div
+                                            className="space-y-3"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.5, duration: 0.4 }}
+                                        >
+                                            <button
+                                                onClick={handleCloseModal}
+                                                className="w-full bg-[#B11016] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#800b10] transition-colors transform hover:scale-105 active:scale-95"
+                                            >
+                                                {isNewCompany ? "Go to Dashboard" : "Continue"}
+                                            </button>
+                                        </motion.div>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
             </AnimatePresence>
         </ProtectedRoute>
     );
-    
 }
+
+type Particle = {
+    id: number;
+    x: number;
+    rotation: number;
+    color: string;
+    size: number;
+    drift: number;
+};
+
+const Confetti = ({ show }: { show: boolean }) => {
+    const [particles, setParticles] = useState<Particle[]>([]);
+
+    useEffect(() => {
+        if (show) {
+            const newParticles = Array.from({ length: 50 }, (_, i) => ({
+                id: i,
+                x: Math.random() * 100,
+                rotation: Math.random() * 360,
+                color: [
+                    '#ff6b6b', '#4ecdc4', '#45b7d1', 
+                    '#f9ca24', '#6c5ce7', '#a29bfe',
+                    '#fd79a8', '#00b894', '#e84393'
+                ][Math.floor(Math.random() * 9)],
+                size: Math.random() * 8 + 4,
+                drift: (Math.random() - 0.5) * 2,
+            }));
+            setParticles(newParticles);
+
+            const timer = setTimeout(() => setParticles([]), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [show]);
+
+    if (!show || particles.length === 0) return null;
+
+    return (
+        <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
+            {particles.map((particle) => (
+                <motion.div
+                    key={particle.id}
+                    className="absolute rounded-sm"
+                    style={{
+                        backgroundColor: particle.color,
+                        width: `${particle.size}px`,
+                        height: `${particle.size}px`,
+                        left: `${particle.x}%`,
+                    }}
+                    initial={{ y: -20, opacity: 1 }}
+                    animate={{
+                        y: window.innerHeight + 100,
+                        x: particle.drift * 100,
+                        rotate: 720,
+                        opacity: 0,
+                    }}
+                    transition={{
+                        duration: 3,
+                        ease: "easeOut",
+                        delay: Math.random() * 0.5,
+                    }}
+                />
+            ))}
+        </div>
+    );
+};

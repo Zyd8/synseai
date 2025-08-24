@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { FaArrowLeft } from "react-icons/fa";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import Sidebar from "@/components/DashboardSidebar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function FindCollabPage() {
     const router = useRouter();
@@ -47,136 +49,160 @@ export default function FindCollabPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
-            {/* Back Button and Title */}
-            <div className="relative flex items-center w-full mt-2 mb-4">
-                <button
-                    onClick={() => {
-                        const role = sessionStorage.getItem("role");
-                        if (role === "employee") router.push("/bpidashboard");
-                        else router.push("/dashboard");
-                    }}
-                    className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
-                >
-                    <FaArrowLeft className="mr-2" />
-                    <span className="hidden sm:inline">Back</span>
-                </button>
+        <ProtectedRoute allowedRoles={["employee", "admin"]}>
+            <div className="flex">
+                <Sidebar />
 
-                <div className="text-center w-full">
-                    <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-[#B11016] pb-2 sm:pb-4">
-                        Find Collaborators
-                    </h1>
-                    <p className="text-sm sm:text-md text-black mb-4 sm:mb-6 px-4">
-                        Search by company name or explore by partner traits to find the right match.
-                    </p>
-                    <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
-                </div>
-            </div>
 
-            {/* Search Controls */}
-            <div className="flex gap-4 justify-center w-full mb-6 px-[20%]">
-                <button
-                    onClick={() => {
-                        setSearchMode("company");
-                        setSearchTerm("");
-                        setSelectedTraits([]);
-                    }}
-                    className={`px-4 py-2 rounded-sm font-bold min-w-[50%] sm:w-auto ${searchMode === "company"
-                        ? "bg-[#B11016] text-white hover:bg-[#8f0d12]"
-                        : "border border-gray-400 hover:bg-gray-100"
-                        }`}
-                >
-                    SEARCH BY COMPANY
-                </button>
-                <button
-                    onClick={() => {
-                        setSearchMode("traits");
-                        setSearchTerm("");
-                        setSelectedTraits([]);
-                    }}
-                    className={`px-4 py-2 rounded-sm font-bold min-w-[50%] sm:w-auto ${searchMode === "traits"
-                        ? "bg-[#B11016] text-white hover:bg-[#8f0d12]"
-                        : "border border-gray-400 hover:bg-gray-100"
-                        }`}
-                >
-                    SEARCH BY TRAITS
-                </button>
-            </div>
+                <div className="min-h-screen bg-gray-50 flex-1 flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
+                    {/* Back Button and Title */}
 
-            {/* Search Bar */}
-            <div className="w-full mb-6 px-[19.5%]">
-                <div className="flex items-center border border-gray-300 rounded-lg px-4 py-2 flex-wrap gap-2">
-                    <div className="relative mr-3">
-                        {/* Magnifying Glass */}
-                        <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
-                            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
-                            <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" />
-                        </svg>
+                    <div className="relative flex items-center w-full mt-2 mb-4">
+                        <button
+                            onClick={() => {
+                                const role = sessionStorage.getItem("role");
+                                if (role === "employee") {
+                                    router.push("/bpidashboard");
+                                } else if (role === "admin") {
+                                    router.push("/admindashboard");
+                                } else {
+                                    router.push("/dashboard");
+                                }
+                            }}
+                            className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
+                        >
+                            <FaArrowLeft className="mr-2" />
+                            <span className="hidden sm:inline">Back</span>
+                        </button>
+
+                        <div className="text-center w-full">
+                            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-[#B11016] pb-2 sm:pb-4">
+                                Find Collaborators
+                            </h1>
+                            <p className="text-sm sm:text-md text-black mb-4 sm:mb-6 px-4">
+                                Search by company name or explore by partner traits to find the right match.
+                            </p>
+                            <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+                        </div>
                     </div>
 
-                    {searchMode === "company" ? (
-                        <input
-                            type="text"
-                            placeholder="Enter company name..."
-                            className="flex-1 outline-none"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    ) : (
-                        <div className="flex flex-wrap gap-2 flex-1">
-                            {selectedTraits.length === 0 && (
-                                <span className="text-gray-400">Select traits below...</span>
-                            )}
-                            {selectedTraits.map((trait, index) => (
-                                <span
-                                    key={index}
-                                    className="bg-[#B11016] text-white px-3 py-1 rounded-full text-sm flex items-center"
-                                >
-                                    {trait}
-                                    <button
-                                        onClick={() => removeTraitFromSearch(trait)}
-                                        className="ml-2 text-white hover:text-gray-300"
+                    {/* Search Controls */}
+                    <div className="flex gap-4 justify-center w-full mb-6 px-[20%]">
+                        <button
+                            onClick={() => {
+                                setSearchMode("company");
+                                setSearchTerm("");
+                                setSelectedTraits([]);
+                            }}
+                            className={`px-4 py-2 rounded-sm font-bold min-w-[50%] sm:w-auto ${searchMode === "company"
+                                ? "bg-[#B11016] text-white hover:bg-[#8f0d12]"
+                                : "border border-gray-400 hover:bg-gray-100"
+                                }`}
+                        >
+                            SEARCH BY COMPANY
+                        </button>
+                        <button
+                            onClick={() => {
+                                setSearchMode("traits");
+                                setSearchTerm("");
+                                setSelectedTraits([]);
+                            }}
+                            className={`px-4 py-2 rounded-sm font-bold min-w-[50%] sm:w-auto ${searchMode === "traits"
+                                ? "bg-[#B11016] text-white hover:bg-[#8f0d12]"
+                                : "border border-gray-400 hover:bg-gray-100"
+                                }`}
+                        >
+                            SEARCH BY TRAITS
+                        </button>
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="w-full mb-6 px-[19.5%]">
+                        <div className="flex items-center border border-gray-300 rounded-lg px-4 py-2 flex-wrap gap-2">
+                            {/* Magnifying Glass */}
+                            <div className="relative mr-3">
+                                <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+                                    <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" />
+                                </svg>
+                            </div>
+
+                            {/* Always show input */}
+                            <input
+                                type="text"
+                                placeholder={
+                                    searchMode === "company"
+                                        ? "Enter company name..."
+                                        : "Type a trait and press Enter..."
+                                }
+                                className="flex-1 outline-none"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (searchMode === "traits" && e.key === "Enter" && searchTerm.trim()) {
+                                        e.preventDefault();
+                                        if (!selectedTraits.includes(searchTerm.trim())) {
+                                            setSelectedTraits([...selectedTraits, searchTerm.trim()]);
+                                        }
+                                        setSearchTerm(""); // Clear input after adding trait
+                                    }
+                                }}
+                            />
+
+                            <button
+                                className="text-[#B11016] font-bold"
+                                onClick={handleSearch}
+                            >
+                                ➤
+                            </button>
+                        </div>
+
+                        {/* Show trait chips when in traits mode */}
+                        {searchMode === "traits" && selectedTraits.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {selectedTraits.map((trait, index) => (
+                                    <span
+                                        key={index}
+                                        className="bg-[#B11016] text-white px-3 py-1 rounded-full text-sm flex items-center"
                                     >
-                                        ×
+                                        {trait}
+                                        <button
+                                            onClick={() => removeTraitFromSearch(trait)}
+                                            className="ml-2 text-white hover:text-gray-300"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                    </div>
+
+
+                    {/* Traits Selection (only show when in traits mode) */}
+                    {searchMode === "traits" && (
+                        <div className="w-full mb-6 px-[19.5%]">
+                            <div className="flex flex-wrap gap-2">
+                                {availableTraits.map((trait, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => handleTraitClick(trait)}
+                                        disabled={selectedTraits.includes(trait)}
+                                        className={`px-3 py-1 rounded-sm text-sm border transition-colors ${selectedTraits.includes(trait)
+                                            ? "bg-[#333333] text-whited"
+                                            : "bg-white border-gray-300 hover:bg-[#B11016] hover:text-white cursor-pointer"
+                                            }`}
+                                    >
+                                        {trait}
                                     </button>
-                                </span>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     )}
 
-                    <button
-                        className="text-[#B11016] font-bold"
-                        onClick={handleSearch}
-                    >
-                        ➤
-                    </button>
-                </div>
-            </div>
-
-
-            {/* Traits Selection (only show when in traits mode) */}
-            {searchMode === "traits" && (
-                <div className="w-full mb-6 px-[19.5%]">
-                    <div className="flex flex-wrap gap-2">
-                        {availableTraits.map((trait, index) => (
-                            <button
-                                key={index}
-                                onClick={() => handleTraitClick(trait)}
-                                disabled={selectedTraits.includes(trait)}
-                                className={`px-3 py-1 rounded-sm text-sm border transition-colors ${selectedTraits.includes(trait)
-                                    ? "bg-[#333333] text-white cursor-not-allowed"
-                                    : "bg-white border-gray-300 hover:bg-[#B11016] hover:text-white cursor-pointer"
-                                    }`}
-                            >
-                                {trait}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Company Cards */}
-            {/* <div className="w-full flex flex-col gap-4">
+                    {/* Company Cards */}
+                    {/* <div className="w-full flex flex-col gap-4">
                 {filteredCompanies.map((company, index) => (
                     <div
                         key={index}
@@ -210,6 +236,8 @@ export default function FindCollabPage() {
                 ))}
 
             </div> */}
-        </div>
+                </div>
+            </div>
+        </ProtectedRoute>
     );
 }

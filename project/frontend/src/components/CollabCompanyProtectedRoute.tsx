@@ -54,6 +54,5 @@ export default function CompanyProtectedRoute({ children }: { children: React.Re
     }
   }, [API, router]);
 
-  if (checking) return <div>Loading...</div>;
   return <>{children}</>;
 }

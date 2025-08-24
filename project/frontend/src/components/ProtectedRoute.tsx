@@ -28,10 +28,6 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     setLoading(false);
   }, [router, allowedRoles]);
 
-  if (loading) {
-    return <div className="p-4 text-center">Checking authentication...</div>;
-  }
-
   return <>{children}</>;
 }
 

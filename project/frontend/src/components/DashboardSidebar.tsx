@@ -25,10 +25,9 @@ export default function DashboardSidebar() {
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
     { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
-    { href: "/companylist", icon: "/images/Folder_del.png", label: "Companies" },
-    { href: "/bpifiles", icon: "/images/Folder_del.png", label: "Files" },
     { href: "/bpifilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
-    { href: "/bpifindcollab", icon: "/images/Folder_del.png", label: "Find Collaborators" },
+    { href: "/companylist", icon: "/images/building-03.png", label: "Collaborators" },
+    { href: "/bpifindcollab", icon: "/images/peer-to-peer-02.png", label: "Find Collaborators" },
   ];
 
   const adminMenu = [
@@ -36,9 +35,9 @@ export default function DashboardSidebar() {
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
     { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
-    { href: "/companylist", icon: "/images/Folder_del.png", label: "Companies" },
-    { href: "/bpifilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
-    { href: "/bpifindcollab", icon: "/images/Folder_del.png", label: "Find Collaborators" },
+    { href: "/adminfilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
+    { href: "/companylist", icon: "/images/building-03.png", label: "Collaborators" },
+    { href: "/bpifindcollab", icon: "/images/peer-to-peer-02.png", label: "Find Collaborators" },
   ];
 
   const menuItems =

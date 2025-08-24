@@ -72,6 +72,10 @@ export default function BpiFindCollabCompany() {
     );
   }
 
+  // Calculate overall synergy score (average of the three scores)
+  const overallSynergy = scoring ? 
+    ((scoring.credibility_score + scoring.referential_score + scoring.compliance_score) / 3 * 100) : 0;
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <button
@@ -83,20 +87,35 @@ export default function BpiFindCollabCompany() {
 
       <h1 className="text-2xl font-bold mb-6">Collaboration Details for {company}</h1>
 
-      {/* Scoring Section */}
+      {/* Synergy Scoring Section */}
       <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Synergy Scoring</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ScoreCard title="Credibility" score={scoring?.credibility_score} />
-          <ScoreCard title="Referential" score={scoring?.referential_score} />
-          <ScoreCard title="Compliance" score={scoring?.compliance_score} />
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-red-600 mb-6">Synergy Score</h2>
+          <div className="flex justify-center mb-8">
+            <CircularProgress score={Math.round(overallSynergy)} />
+          </div>
         </div>
 
-        {/* Reasonings */}
-        <div className="mt-6">
-          <ReasoningBlock title="Credibility Reasoning" text={scoring?.credibility_reasoning} />
-          <ReasoningBlock title="Referential Reasoning" text={scoring?.referential_reasoning} />
-          <ReasoningBlock title="Compliance Reasoning" text={scoring?.compliance_reasoning} />
+        {/* Score Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ScoreCard 
+            title="Credibility" 
+            score={scoring?.credibility_score}
+            reasoning={scoring?.credibility_reasoning}
+            color="bg-red-600"
+          />
+          <ScoreCard 
+            title="Referential" 
+            score={scoring?.referential_score}
+            reasoning={scoring?.referential_reasoning}
+            color="bg-red-500"
+          />
+          <ScoreCard 
+            title="Compliance" 
+            score={scoring?.compliance_score}
+            reasoning={scoring?.compliance_reasoning}
+            color="bg-red-700"
+          />
         </div>
       </section>
 
@@ -117,22 +136,95 @@ export default function BpiFindCollabCompany() {
   );
 }
 
-function ScoreCard({ title, score }: { title: string; score: number }) {
-  const percentage = (score * 100).toFixed(0);
+function CircularProgress({ score }: { score: number }) {
+  const radius = 80;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDasharray = `${(score / 100) * circumference} ${circumference}`;
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow text-center">
-      <h3 className="font-semibold text-lg">{title}</h3>
-      <p className="text-3xl font-bold text-blue-600">{percentage}%</p>
+    <div className="relative">
+      <svg width="200" height="200" className="transform -rotate-90">
+        {/* Background circle */}
+        <circle
+          cx="100"
+          cy="100"
+          r={radius}
+          stroke="#e5e7eb"
+          strokeWidth="20"
+          fill="none"
+        />
+        {/* Progress circle */}
+        <circle
+          cx="100"
+          cy="100"
+          r={radius}
+          stroke="#dc2626"
+          strokeWidth="20"
+          fill="none"
+          strokeDasharray={strokeDasharray}
+          strokeLinecap="round"
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-4xl font-bold text-gray-800">{score}%</span>
+      </div>
     </div>
   );
 }
 
-function ReasoningBlock({ title, text }: { title: string; text: string }) {
+function ScoreCard({ title, score, reasoning, color }: { 
+  title: string; 
+  score: number; 
+  reasoning: string;
+  color: string;
+}) {
+  const percentage = (score * 100).toFixed(0);
+  
   return (
-    <details className="mb-4 bg-gray-50 p-4 rounded-lg">
-      <summary className="font-semibold cursor-pointer">{title}</summary>
-      <p className="mt-2 whitespace-pre-line text-gray-700">{text}</p>
-    </details>
+    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* Header */}
+      <div className="text-center py-4 border-b-2 border-gray-200">
+        <h3 className="font-bold text-lg text-gray-800">{title}</h3>
+        <p className="text-4xl font-bold text-gray-800 mt-2">{percentage}%</p>
+      </div>
+      
+      {/* Content */}
+      <div className={`${color} text-white p-4 space-y-4`}>
+        <div>
+          <h4 className="font-semibold text-sm mb-2">Market Leadership:</h4>
+          <p className="text-xs leading-relaxed">
+            GCash is the leading e-wallet in the Philippines with over 90M users, establishing it as a trusted financial platform.
+          </p>
+        </div>
+        
+        <div>
+          <h4 className="font-semibold text-sm mb-2">Strong Backing:</h4>
+          <p className="text-xs leading-relaxed">
+            Operated by Mynt, a partnership between Globe Telecom, Ayala Corporation, and Ant Group (Alibaba).
+          </p>
+        </div>
+        
+        <div>
+          <h4 className="font-semibold text-sm mb-2">Track Record:</h4>
+          <p className="text-xs leading-relaxed">
+            Recognized by the Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in financial inclusion.
+          </p>
+        </div>
+        
+        {/* Reasoning Details */}
+        {reasoning && (
+          <details className="mt-4">
+            <summary className="font-semibold text-sm cursor-pointer hover:text-gray-200">
+              View Detailed Analysis
+            </summary>
+            <p className="mt-2 text-xs leading-relaxed whitespace-pre-line border-t border-red-400 pt-2">
+              {reasoning}
+            </p>
+          </details>
+        )}
+      </div>
+    </div>
   );
 }
 
