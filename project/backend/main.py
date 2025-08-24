@@ -91,7 +91,7 @@ def server_error(error):
 # Serve index.html for the root
 @app.route("/")
 def index():
-    return send_from_directory(app.static_folder, "index.html")
+    return "Hello World"
 
 if __name__ == '__main__':
     # Run the app
