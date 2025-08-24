@@ -23,28 +23,29 @@ from routes.find_company import find_company_bp
 # Load environment variables
 load_dotenv()
 
-def create_app():
-    app = Flask(__name__, static_folder="frontend/out", static_url_path="")
-    
+# Global Flask app instance
+app = Flask(__name__, static_folder="frontend/out", static_url_path="")
+
+if __name__ == '__main__':
     # Load configuration
     env = os.getenv('FLASK_ENV', 'development')
     app.config.from_object(config[env])
     config[env].init_app(app)
-    
+
     # JWT Configuration
     app.config['JSON_SORT_KEYS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES')))
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 24)))
     app.config['JWT_TOKEN_LOCATION'] = ['headers']
     app.config['JWT_HEADER_NAME'] = 'Authorization'
     app.config['JWT_HEADER_TYPE'] = 'Bearer'
-    
+
     # Initialize extensions
     db.init_app(app)
     jwt = JWTManager(app)
     migrate = Migrate(app, db)
-    CORS(app, resources={r"/*": {"origins": os.getenv('ALLOWED_ORIGINS').split(',')}})
-    
+    CORS(app, resources={r"/*": {"origins": os.getenv('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')}})
+
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(company_bp, url_prefix='/api/company')
@@ -58,11 +59,11 @@ def create_app():
     app.register_blueprint(department_preset_bp, url_prefix='/api/department_preset')
     app.register_blueprint(reverted_document_bp, url_prefix='/api/reverted_document')
     app.register_blueprint(find_company_bp, url_prefix='/api/find_company')
-    
+
     # Create database tables
     with app.app_context():
         db.create_all()
-        
+
         # Create admin user if it doesn't exist (for development)
         if env == 'development':
             admin = User.query.filter_by(email='admin@example.com').first()
@@ -75,15 +76,15 @@ def create_app():
                     position='System Administrator',
                     password="1234"
                 )
-                
+
                 db.session.add(admin)
                 db.session.commit()
-    
+
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({'message': 'Resource not found'}), 404
-    
+
     @app.errorhandler(500)
     def server_error(error):
         return jsonify({'message': 'Internal server error'}), 500
@@ -92,13 +93,10 @@ def create_app():
     @app.route("/")
     def index():
         return send_from_directory(app.static_folder, "index.html")
-    
-    return app
 
-if __name__ == '__main__':
-    app = create_app()
+    # Run the app
     app.run(
-        host=os.getenv('HOST'),
-        port=int(os.getenv('PORT')),
+        host=os.getenv('HOST', '0.0.0.0'),
+        port=int(os.getenv('PORT', 5000)),
         debug=os.getenv('FLASK_ENV') == 'development'
     )

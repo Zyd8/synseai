@@ -1,10 +1,15 @@
 from . import db
 from datetime import datetime
 import pytz
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
 load_dotenv()
+
+def get_timezone():
+    """Get timezone with fallback to UTC"""
+    timezone_name = os.getenv('APP_TIMEZONE', 'UTC')
+    return pytz.timezone(timezone_name)
 
 class CompanyNameScrape(db.Model):
     __tablename__ = 'company_name_scrapes'
@@ -23,7 +28,7 @@ class CompanyNameScrape(db.Model):
     project_description2 = db.Column(db.Text, nullable=False)
     project_title3 = db.Column(db.String(200), nullable=False)
     project_description3 = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
+    created_at = db.Column(db.DateTime, default=datetime.now(get_timezone()))
 
     def to_dict(self):
         return {
