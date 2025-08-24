@@ -148,6 +148,10 @@ def company_project_reccomender(company_name):
                 search_settings.get('max_delay')
             )
         ))
+        search_random_delay(
+        search_settings.get('min_delay'),
+        search_settings.get('max_delay')
+    )
         
         for url in search_results:
             try:
