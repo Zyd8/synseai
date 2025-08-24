@@ -23,9 +23,11 @@ from routes.find_company import find_company_bp
 # Load environment variables
 load_dotenv()
 
-# Global Flask app instance
-app = Flask(__name__)
-# app = Flask(__name__, static_folder="frontend/out", static_url_path="")
+# Global Flask app instance - configure static files
+app = Flask(__name__,
+            static_folder="frontend/out",
+            static_url_path="")
+
 # Load configuration
 env = os.getenv('FLASK_ENV', 'development')
 app.config.from_object(config[env])
@@ -91,7 +93,17 @@ def server_error(error):
 # Serve index.html for the root
 @app.route("/")
 def index():
-    return "Hello World"
+    return send_from_directory(app.static_folder, "index.html")
+
+# Catch-all route for client-side routing
+@app.route("/<path:path>")
+def catch_all(path):
+    # First try to serve the exact file
+    try:
+        return send_from_directory(app.static_folder, path)
+    except:
+        # If file doesn't exist, serve index.html for SPA routing
+        return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == '__main__':
     # Run the app
