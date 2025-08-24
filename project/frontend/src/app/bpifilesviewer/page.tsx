@@ -3,6 +3,8 @@
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Sidebar from "@/components/DashboardSidebar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const BpiFilesViewerPage = () => {
     const router = useRouter();
@@ -85,62 +87,67 @@ const BpiFilesViewerPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
-            {/* Header */}
-            <div className="relative flex items-center w-full mt-2 mb-4">
-                <button
-                    onClick={() => router.push("/bpidashboard")}
-                    className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
-                >
-                    <FaArrowLeft className="mr-2" />
-                    <span className="hidden sm:inline">Back</span>
-                </button>
-                <div className="text-center w-full">
-                    <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-[#B11016] pb-2 sm:pb-4">
-                        {departmentName || "Loading Department..."}
-                    </h1>
-                    <p className="text-sm sm:text-md text-black mb-4 sm:mb-6 px-4">
-                        Files
-                    </p>
-                    <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+        <ProtectedRoute allowedRoles={["employee", "admin"]}>
+            <div className="flex items-center">
+                <Sidebar />
+                <div className="min-h-screen bg-gray-50 flex-1 flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
+                    {/* Header */}
+                    <div className="relative flex items-center w-full mt-2 mb-4">
+                        <button
+                            onClick={() => router.push("/bpidashboard")}
+                            className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
+                        >
+                            <FaArrowLeft className="mr-2" />
+                            <span className="hidden sm:inline">Back</span>
+                        </button>
+                        <div className="text-center w-full">
+                            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-[#B11016] pb-2 sm:pb-4">
+                                {departmentName || "Loading Department..."}
+                            </h1>
+                            <p className="text-sm sm:text-md text-black mb-4 sm:mb-6 px-4">
+                                Files
+                            </p>
+                            <div className="mx-2 border-b-[3px] border-[#B11016]"></div>
+                        </div>
+                    </div>
+
+                    {/* Tabs */}
+                    <div className="flex w-full max-w-4xl border-b items-center justify-center mx-auto">
+                        <button
+                            onClick={() => setActiveTab("pending")}
+                            className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "pending"
+                                ? "bg-[#B11016] text-white rounded-t"
+                                : "text-gray-600 hover:text-black"
+                                }`}
+                        >
+                            Files Pending
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("all")}
+                            className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "all"
+                                ? "bg-[#B11016] text-white rounded-t"
+                                : "text-gray-600 hover:text-black"
+                                }`}
+                        >
+                            All Files
+                        </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="mx-auto w-full max-w-4xl mt-6 bg-white shadow rounded-lg p-4 overflow-x-auto border border-gray-400">
+                        {loading ? (
+                            <p className="text-center">Loading files...</p>
+                        ) : error ? (
+                            <p className="text-center text-red-500">{error}</p>
+                        ) : activeTab === "all" ? (
+                            <FileTable files={files} onRowClick={handleFilesClick} emptyMessage="No files found." />
+                        ) : (
+                            <FileTable files={pendingFiles} onRowClick={handleFilesClick} emptyMessage="No pending files found." />
+                        )}
+                    </div>
                 </div>
             </div>
-
-            {/* Tabs */}
-            <div className="flex w-full max-w-4xl border-b">
-                <button
-                    onClick={() => setActiveTab("pending")}
-                    className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "pending"
-                        ? "bg-[#B11016] text-white rounded-t"
-                        : "text-gray-600 hover:text-black"
-                        }`}
-                >
-                    Files Pending
-                </button>
-                <button
-                    onClick={() => setActiveTab("all")}
-                    className={`flex-1 text-center py-2 font-semibold transition ${activeTab === "all"
-                        ? "bg-[#B11016] text-white rounded-t"
-                        : "text-gray-600 hover:text-black"
-                        }`}
-                >
-                    All Files
-                </button>
-            </div>
-
-            {/* Content */}
-            <div className="w-full max-w-4xl mt-6 bg-white shadow rounded-lg p-4 overflow-x-auto border border-gray-400">
-                {loading ? (
-                    <p className="text-center">Loading files...</p>
-                ) : error ? (
-                    <p className="text-center text-red-500">{error}</p>
-                ) : activeTab === "all" ? (
-                    <FileTable files={files} onRowClick={handleFilesClick} emptyMessage="No files found." />
-                ) : (
-                    <FileTable files={pendingFiles} onRowClick={handleFilesClick} emptyMessage="No pending files found." />
-                )}
-            </div>
-        </div>
+        </ProtectedRoute>
     );
 };
 
@@ -200,6 +207,7 @@ const FileTable = ({
             )}
         </tbody>
     </table>
+
 );
 
 export default BpiFilesViewerPage;
