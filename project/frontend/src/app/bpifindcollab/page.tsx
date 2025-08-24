@@ -7,40 +7,19 @@ import "react-circular-progressbar/dist/styles.css";
 
 export default function FindCollabPage() {
     const router = useRouter();
-    const [searchMode, setSearchMode] = useState("company"); // "company" or "traits"
+    const [searchMode, setSearchMode] = useState("company");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
 
     const overallSynergy = 75;
-
+    // const token = sessionStorage.getItem("access_token");
+    // console.log(token)
     // Available traits for search
     const availableTraits = [
         "Innovative", "Sustainable", "Tech-driven", "Global Presence",
         "Startup-friendly", "Environment", "Data Analytics", "AI/ML",
         "Fintech", "E-commerce", "Healthcare", "Education", "Manufacturing",
         "Retail", "Telecommunications", "Banking", "Insurance", "Real Estate"
-    ];
-
-    // Dummy data for companies
-    const companies = [
-        {
-            name: "GCash",
-            description: "GCash is a Philippine mobile payments service owned by Globe Fintech Innovations, Inc., and operated by its wholly owned subsidiary.",
-            synergy: 75,
-            traits: ["Innovative", "Fintech", "Tech-driven"]
-        },
-        {
-            name: "Apple",
-            description: "Apple Inc. is an American multinational corporation and technology company headquartered in Cupertino, California, in Silicon Valley.",
-            synergy: 75,
-            traits: ["Innovative", "Global Presence", "Tech-driven"]
-        },
-        {
-            name: "Meta",
-            description: "Meta Platforms, Inc. is an American multinational technology company headquartered in Menlo Park, California.",
-            synergy: 75,
-            traits: ["AI/ML", "Tech-driven", "Global Presence"]
-        }
     ];
 
     const handleTraitClick = (trait: string) => {
@@ -60,20 +39,12 @@ export default function FindCollabPage() {
     const handleCheckProjects = () => {
         router.push('/bpifindcollabcompany');
     };
-    // Filter companies based on search mode and search term
-    const filteredCompanies = companies.filter(company => {
-        if (searchMode === "company") {
-            return company.name.toLowerCase().includes(searchTerm.toLowerCase());
-        } else {
-            // For traits mode, show companies that have any of the selected traits
-            if (selectedTraits.length === 0) return true;
-            return selectedTraits.some(trait =>
-                company.traits.some(companyTrait =>
-                    companyTrait.toLowerCase().includes(trait.toLowerCase())
-                )
-            );
-        }
-    });
+
+    const handleSearch = (e: React.FormEvent | React.MouseEvent) => {
+        e.preventDefault();
+        if (!searchTerm.trim()) return;
+        router.push(`/bpifindcollabcompany?company=${encodeURIComponent(searchTerm.trim())}`);
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
@@ -133,7 +104,6 @@ export default function FindCollabPage() {
             </div>
 
             {/* Search Bar */}
-            {/* Search Bar */}
             <div className="w-full mb-6 px-[19.5%]">
                 <div className="flex items-center border border-gray-300 rounded-lg px-4 py-2 flex-wrap gap-2">
                     <div className="relative mr-3">
@@ -174,9 +144,15 @@ export default function FindCollabPage() {
                         </div>
                     )}
 
-                    <button className="text-[#B11016] font-bold">➤</button>
+                    <button
+                        className="text-[#B11016] font-bold"
+                        onClick={handleSearch}
+                    >
+                        ➤
+                    </button>
                 </div>
             </div>
+
 
             {/* Traits Selection (only show when in traits mode) */}
             {searchMode === "traits" && (
@@ -200,7 +176,7 @@ export default function FindCollabPage() {
             )}
 
             {/* Company Cards */}
-            <div className="w-full flex flex-col gap-4">
+            {/* <div className="w-full flex flex-col gap-4">
                 {filteredCompanies.map((company, index) => (
                     <div
                         key={index}
@@ -211,7 +187,7 @@ export default function FindCollabPage() {
                             <p className="text-sm text-gray-700 mt-1">{company.description}</p>
 
                             <button className="mt-3 bg-[#B11016] text-white px-4 py-2 rounded font-semibold hover:bg-[#8f0d12]" onClick={handleCheckProjects}>
-                                CHECK RECOMMENDED PROJECTS
+                                VIEW DETAILS
                             </button>
                         </div>
                         <div className="flex flex-col items-center ml-4">
@@ -233,12 +209,7 @@ export default function FindCollabPage() {
                     </div>
                 ))}
 
-                {filteredCompanies.length === 0 && (
-                    <div className="text-center text-gray-500 py-8">
-                        No companies found matching your {searchMode === "company" ? "search" : "selected traits"}.
-                    </div>
-                )}
-            </div>
+            </div> */}
         </div>
     );
 }
