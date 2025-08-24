@@ -1,7 +1,8 @@
 import requests
 from flask import Blueprint, request, jsonify, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Company, User, UserRole
+from models import db, User, UserRole, CompanyNameScrape
+from sqlalchemy import func
 import os
 from dotenv import load_dotenv
 import json
@@ -27,6 +28,23 @@ def find_company_by_name():
 
     if user.role == UserRole.ADMIN or user.role == UserRole.EMPLOYEE:
 
+        # First try exact match (case insensitive)
+        company_name_scrape = CompanyNameScrape.query.filter(
+            func.lower(CompanyNameScrape.company_name) == func.lower(company_name)
+        ).first()
+        
+        # If no exact match, try fuzzy matching
+        if not company_name_scrape:
+            search_term = f"%{company_name}%"
+            company_name_scrape = CompanyNameScrape.query.filter(
+                func.lower(CompanyNameScrape.company_name).like(func.lower(search_term))
+            ).first()
+
+        if company_name_scrape:
+            return jsonify({
+                'company_name_scrape': company_name_scrape.to_dict()
+            }), 200
+
         service_url = os.getenv('COMPANY_SCORING_SCRAPE_URL')
         scoring_response = requests.post(
             service_url,
@@ -43,10 +61,28 @@ def find_company_by_name():
         
         scoring_data = scoring_response.json()
         project_data = project_recommendation_response.json()
-        
+
+        company_name_scrape = CompanyNameScrape(
+            company_name=company_name,
+            credibility_score=scoring_data['credibility_score'],
+            referential_score=scoring_data['referential_score'],
+            compliance_score=scoring_data['compliance_score'],
+            credibility_reasoning=scoring_data['credibility_reasoning'],
+            referential_reasoning=scoring_data['referential_reasoning'],
+            compliance_reasoning=scoring_data['compliance_reasoning'],
+            project_title1=project_data['title1'],
+            project_description1=project_data['description1'],
+            project_title2=project_data['title2'],
+            project_description2=project_data['description2'],
+            project_title3=project_data['title3'],
+            project_description3=project_data['description3']
+        )
+
+        db.session.add(company_name_scrape)
+        db.session.commit()
+
         return jsonify({
-            'scoring': scoring_data,
-            'recommendations': project_data
+            'company_name_scrape': company_name_scrape.to_dict()
         }), 200
     
     return jsonify({"error": "Unauthorized"}), 403
