@@ -1,6 +1,6 @@
 "use client";
 import Head from "next/head";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FaArrowLeft } from 'react-icons/fa';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -166,6 +166,14 @@ const createTimelineFromProposal = (proposal: any): TimelineItem[] => {
 };
 
 export default function BpiProposalTracking() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BpiProposalTrackingContent />
+    </Suspense>
+  );
+}
+
+function BpiProposalTrackingContent() {
   const [proposalData, setProposalData] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

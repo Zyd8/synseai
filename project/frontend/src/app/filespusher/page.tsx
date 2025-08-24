@@ -5,6 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { FaArrowLeft, FaFileAlt, FaDownload, FaTimes, FaCheck, FaTimes as FaReject } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { Suspense } from "react";
 
 interface Department {
   id: number;
@@ -38,6 +39,14 @@ interface DocumentSetting {
 }
 
 export default function FilesPusher() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FilesPusherContent />
+    </Suspense>
+  );
+}
+
+function FilesPusherContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const settingId = searchParams?.get("id");
