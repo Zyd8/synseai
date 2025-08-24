@@ -288,7 +288,7 @@ export default function CompanyProfile() {
 
     if (isLoading) {
         return (
-            <ProtectedRoute allowedRoles={["employee"]}>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
                 <div className="min-h-screen bg-white flex items-center justify-center">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B11016] mx-auto"></div>
@@ -301,7 +301,7 @@ export default function CompanyProfile() {
 
     if (error) {
         return (
-            <ProtectedRoute allowedRoles={["employee"]}>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
                 <div className="min-h-screen bg-white flex flex-col items-center justify-center px-[10%]">
                     <div className="text-center">
                         <div className="text-red-500 text-6xl mb-4">⚠</div>
@@ -321,7 +321,7 @@ export default function CompanyProfile() {
 
     if (!companyData) {
         return (
-            <ProtectedRoute allowedRoles={["employee"]}>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
                 <div className="min-h-screen bg-white flex flex-col items-center justify-center px-[10%]">
                     <div className="text-center">
                         <FaBriefcase className="text-6xl text-gray-300 mx-auto mb-4" />
@@ -340,7 +340,7 @@ export default function CompanyProfile() {
     }
 
     return (
-        <ProtectedRoute allowedRoles={["employee"]}>
+        <ProtectedRoute allowedRoles={["employee", "admin"]}>
             <div className="min-h-screen bg-white flex flex-col items-center px-[10%] py-8">
                 {/* Header */}
                 <div className="relative flex items-center w-full mt-2 mb-10">

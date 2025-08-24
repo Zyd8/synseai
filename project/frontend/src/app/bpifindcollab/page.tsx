@@ -53,8 +53,13 @@ export default function FindCollabPage() {
                 <button
                     onClick={() => {
                         const role = sessionStorage.getItem("role");
-                        if (role === "employee") router.push("/bpidashboard");
-                        else router.push("/dashboard");
+                        if (role === "employee") {
+                            router.push("/bpidashboard");
+                        } else if (role === "admin") {
+                            router.push("/admindashboard");
+                        } else {
+                            router.push("/dashboard");
+                        }
                     }}
                     className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
                 >
@@ -106,43 +111,35 @@ export default function FindCollabPage() {
             {/* Search Bar */}
             <div className="w-full mb-6 px-[19.5%]">
                 <div className="flex items-center border border-gray-300 rounded-lg px-4 py-2 flex-wrap gap-2">
+                    {/* Magnifying Glass */}
                     <div className="relative mr-3">
-                        {/* Magnifying Glass */}
                         <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
                             <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
                             <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" />
                         </svg>
                     </div>
 
-                    {searchMode === "company" ? (
-                        <input
-                            type="text"
-                            placeholder="Enter company name..."
-                            className="flex-1 outline-none"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    ) : (
-                        <div className="flex flex-wrap gap-2 flex-1">
-                            {selectedTraits.length === 0 && (
-                                <span className="text-gray-400">Select traits below...</span>
-                            )}
-                            {selectedTraits.map((trait, index) => (
-                                <span
-                                    key={index}
-                                    className="bg-[#B11016] text-white px-3 py-1 rounded-full text-sm flex items-center"
-                                >
-                                    {trait}
-                                    <button
-                                        onClick={() => removeTraitFromSearch(trait)}
-                                        className="ml-2 text-white hover:text-gray-300"
-                                    >
-                                        ×
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                    {/* Always show input */}
+                    <input
+                        type="text"
+                        placeholder={
+                            searchMode === "company"
+                                ? "Enter company name..."
+                                : "Type a trait and press Enter..."
+                        }
+                        className="flex-1 outline-none"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (searchMode === "traits" && e.key === "Enter" && searchTerm.trim()) {
+                                e.preventDefault();
+                                if (!selectedTraits.includes(searchTerm.trim())) {
+                                    setSelectedTraits([...selectedTraits, searchTerm.trim()]);
+                                }
+                                setSearchTerm(""); // Clear input after adding trait
+                            }
+                        }}
+                    />
 
                     <button
                         className="text-[#B11016] font-bold"
@@ -151,6 +148,27 @@ export default function FindCollabPage() {
                         ➤
                     </button>
                 </div>
+
+                {/* Show trait chips when in traits mode */}
+                {searchMode === "traits" && selectedTraits.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                        {selectedTraits.map((trait, index) => (
+                            <span
+                                key={index}
+                                className="bg-[#B11016] text-white px-3 py-1 rounded-full text-sm flex items-center"
+                            >
+                                {trait}
+                                <button
+                                    onClick={() => removeTraitFromSearch(trait)}
+                                    className="ml-2 text-white hover:text-gray-300"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                    </div>
+                )}
+
             </div>
 
 
@@ -164,7 +182,7 @@ export default function FindCollabPage() {
                                 onClick={() => handleTraitClick(trait)}
                                 disabled={selectedTraits.includes(trait)}
                                 className={`px-3 py-1 rounded-sm text-sm border transition-colors ${selectedTraits.includes(trait)
-                                    ? "bg-[#333333] text-white cursor-not-allowed"
+                                    ? "bg-[#333333] text-whited"
                                     : "bg-white border-gray-300 hover:bg-[#B11016] hover:text-white cursor-pointer"
                                     }`}
                             >

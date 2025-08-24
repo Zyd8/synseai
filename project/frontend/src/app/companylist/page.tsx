@@ -71,7 +71,7 @@ export default function CompanyList() {
     };
 
     return (
-        <ProtectedRoute allowedRoles={["employee"]}>
+        <ProtectedRoute allowedRoles={["employee", "admin"]}>
             <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
                 {/* Sidebar */}
                 <Sidebar />
