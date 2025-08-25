@@ -93,11 +93,12 @@ class SynseaiLLM:
         """
 
         try:
-            response_msg = self._openai_chat(
+            response = self._openai_chat(
                 input=prompt,
                 temperature=0.7,
             )
-            content = response_msg['content'].strip()
+            content = response.strip()
+
             recommendations = []
 
             for i in range(1, 4):

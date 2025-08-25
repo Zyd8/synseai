@@ -1,5 +1,9 @@
-from .webscrape import company_webscraper, company_project_reccomender, company_traits_webscraper
-from .synseai_llm import SynseaiLLM
+try:
+    from .webscrape import company_webscraper, company_project_reccomender, company_traits_webscraper
+    from .synseai_llm import SynseaiLLM
+except ImportError:
+    from webscrape import company_webscraper, company_project_reccomender, company_traits_webscraper
+    from synseai_llm import SynseaiLLM
 from flask import jsonify
 
 
