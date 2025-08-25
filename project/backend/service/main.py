@@ -4,7 +4,6 @@ try:
 except ImportError:
     from webscrape import company_webscraper, company_project_reccomender, company_traits_webscraper
     from synseai_llm import SynseaiLLM
-from flask import jsonify
 
 
 def company_scoring_scrape(company):
@@ -49,14 +48,12 @@ def company_scoring_scrape(company):
     except Exception as e:
         return {
             'error': str(e)
-        }, 500
+        }
 
 def company_project_recommendation_scrape(company):
     try:
 
         scraped_pages = company_project_reccomender(company)
-        if 'error' in scraped_pages:
-            return jsonify({'error': scraped_pages['error']}), 400    
  
         synseai_llm = SynseaiLLM(company)
 
@@ -73,26 +70,24 @@ def company_project_recommendation_scrape(company):
     except Exception as e:
         return {
             'error': str(e)
-        }, 500
+        }
 
 
 def company_names_from_traits(company_traits):
     if not company_traits:
         return {
             'error': 'Company traits are required'
-        }, 400
+        }
 
     try:
         scraped_pages = company_traits_webscraper(company_traits)
         company_names = SynseaiLLM.get_company_names(scraped_pages)
 
-        return {
-            'company_names': company_names
-        }
+        return company_names
     except Exception as e:
         return {
             'error': str(e)
-        }, 500
+        }
 
 
 def company_name_webscraper(company_name):
@@ -100,7 +95,7 @@ def company_name_webscraper(company_name):
     if not company_name:
         return {
             'error': 'Company name is required'
-        }, 400
+        }
 
     try:
         synseai_llm = SynseaiLLM(company_name)
@@ -157,4 +152,4 @@ def company_name_webscraper(company_name):
     except Exception as e:
         return {
             'error': str(e)
-        }, 500
+        }

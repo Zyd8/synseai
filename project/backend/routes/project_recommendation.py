@@ -6,7 +6,7 @@ import pytz
 import requests
 import os
 from dotenv import load_dotenv
-from service.main import company_project_reccomender
+from service.main import company_project_recommendation_scrape
 
 load_dotenv()
 
@@ -16,27 +16,16 @@ def _create_company_project_recommendation(company_id, company_name):
     """Core function to create company project recommendation without JWT requirements"""
     try:
         # Get project recommendations
-        response_data = company_project_reccomender(company_name)
-        
-        # Check for error response
-        if 'error' in response_data:
-            return False, response_data['error']
-            
-        # Initialize SynseaiLLM to generate project recommendations
-        from service.synseai_llm import SynseaiLLM
-        llm = SynseaiLLM(company_name)
-        
-        # Generate project recommendations using the LLM
-        recommendations = llm.project_recommendation(response_data)
+        recommendations = company_project_recommendation_scrape(company_name)
         
         # Format the response to match the expected structure
         project_data = {
-            'title1': recommendations[0][0] if len(recommendations) > 0 else 'No recommendation',
-            'description1': recommendations[0][1] if len(recommendations) > 0 else 'No description',
-            'title2': recommendations[1][0] if len(recommendations) > 1 else 'No recommendation',
-            'description2': recommendations[1][1] if len(recommendations) > 1 else 'No description',
-            'title3': recommendations[2][0] if len(recommendations) > 2 else 'No recommendation',
-            'description3': recommendations[2][1] if len(recommendations) > 2 else 'No description',
+            'title1': recommendations['title1'],
+            'description1': recommendations['description1'],
+            'title2': recommendations['title2'],
+            'description2': recommendations['description2'],
+            'title3': recommendations['title3'],
+            'description3': recommendations['description3'],
             'company_id': company_id
         }
             

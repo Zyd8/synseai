@@ -241,33 +241,33 @@ class SynseaiLLM:
             )
             raw_names = response.output[0].content[0].text
 
-            clean_prompt = f"""
-            Clean the following list of potential company names.
+            # clean_prompt = f"""
+            # Clean the following list of potential company names.
 
-            RULES:
-            - Remove any numbers, bullets, or list markers (e.g., "1. ", "- ", "• ")
-            - Remove any introductory text (e.g., "Here are the companies:")
-            - Remove any explanations or additional text after the company name
-            - Keep only one company name per line
-            - Remove any empty lines
-            - Return only the cleaned company names, one per line
-            - Remove INTRODUCTIONS, CONCLUSIONS, and AFTERWORDS
+            # RULES:
+            # - Remove any numbers, bullets, or list markers (e.g., "1. ", "- ", "• ")
+            # - Remove any introductory text (e.g., "Here are the companies:")
+            # - Remove any explanations or additional text after the company name
+            # - Keep only one company name per line
+            # - Remove any empty lines
+            # - Return only the cleaned company names, one per line
+            # - Remove INTRODUCTIONS, CONCLUSIONS, and AFTERWORDS
 
-            INPUT:
-            {raw_names}
+            # INPUT:
+            # {raw_names}
 
-            OUTPUT (cleaned company names, one per line):
-            """
+            # OUTPUT (cleaned company names, one per line):
+            # """
 
-            clean_response = client.responses.create(
-                model="gpt-4.1",
-                input=clean_prompt,
-                temperature=0.3,
-            )
-            cleaned_text = clean_response.output[0].content[0].text
+            # clean_response = client.responses.create(
+            #     model="gpt-4.1",
+            #     input=clean_prompt,
+            #     temperature=0.3,
+            # )
+            # cleaned_text = clean_response.output[0].content[0].text
 
             company_names = []
-            for line in cleaned_text.split('\n'):
+            for line in raw_names.split('\n'):
                 # Remove JSON-like structures if present
                 line = re.sub(r'\{.*?\}', '', line)
                 # Remove any remaining quotes
