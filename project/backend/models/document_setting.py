@@ -12,6 +12,7 @@ class Document_setting(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     current_location = db.Column(db.Integer, nullable=False)
+    approved = db.Column(db.Boolean, nullable=False, default=False)
     iteration = db.Column(JSON, nullable=False, default=list)
     created_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
     updated_at = db.Column(db.DateTime, default=datetime.now(pytz.timezone(os.getenv('APP_TIMEZONE'))))
@@ -20,12 +21,14 @@ class Document_setting(db.Model):
     document_id = db.Column(db.String(36), db.ForeignKey('documents.id'), nullable=False)
 
     document = db.relationship("Document", backref="settings")
+    # department = db.relationship("Department", backref="iterations")
 
     def to_dict(self):
         return {
             "id": self.id,
             "current_location": self.current_location,
             "iteration": self.iteration,
+            "approved": self.approved,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.created_at.isoformat() if self.created_at else None,
             "document_id": self.document_id,

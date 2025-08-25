@@ -64,6 +64,7 @@ def get_all():
                 "id": setting.id,
                 "document_id": setting.document_id,
                 "current_location": setting.current_location,
+                "approved": setting.approved,
                 "document_name": setting.document.name if setting.document else None,
                 "iteration": setting.iteration,
             })
@@ -93,6 +94,7 @@ def get_by_id(setting_id):
         result = {
             "id": setting.id,
             "current_location": setting.current_location,
+            "approved": setting.approved,
             "iteration": setting.iteration,
             "iteration_text": iteration_text,  # 👈 department names
             "updated_at": setting.updated_at,
@@ -314,7 +316,8 @@ def get_by_current_location(location_id):
         for setting in settings:
             result.append({
                 "id": setting.id,
-                "document_name": setting.document.name if setting.document else None
+                "document_name": setting.document.name if setting.document else None,
+                "approved": setting.approved
             })
 
         return jsonify(result), 200
@@ -335,12 +338,35 @@ def get_if_included(check_id):
                 result.append({
                     "id": setting.id,
                     "document_name": setting.document.name if setting.document else None,
+                    "approved": setting.approved
                 })
 
         return jsonify(result), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@document_setting_bp.route('/setapproved/<int:setting_id>', methods=['PUT'])
+@jwt_required()
+def set_approved(setting_id):
+    try:
+        setting = Document_setting.query.get(setting_id)
+        if not setting:
+            return jsonify({"error": "Document_setting not found"}), 404
+
+        setting.approved = True
+        db.session.commit()
+
+        return jsonify({
+            "message": "Approval set successfully",
+            "id": setting.id,
+            "approved": setting.approved
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 
 
 
