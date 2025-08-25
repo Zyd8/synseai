@@ -35,7 +35,8 @@ class SynseaiLLM:
             input=input,
             temperature=temperature,
         )
-        return response['choices'][0].message.content
+        print(response.output[0].content[0].text)
+        return response.output[0].content[0].text
 
     def project_recommendation(self, page):
         """
@@ -202,7 +203,7 @@ class SynseaiLLM:
             input=f'Summarize the reasonings in cohesive bullet points based on the {criteria} criteria. Answer directly, no unnecessary introductions. Strictly Do not mention any score.',
             temperature=0.5,
         )
-        return reason_response['content'].strip()
+        return reason_response.strip()
 
     @staticmethod
     def get_company_names(pages):
