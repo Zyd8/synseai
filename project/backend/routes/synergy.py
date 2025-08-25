@@ -4,6 +4,7 @@ from models import db, User, Synergy, Company, UserRole
 import requests
 from dotenv import load_dotenv
 import os
+from ..service.main import company_scoring_scrape
 
 load_dotenv()
 
@@ -12,14 +13,7 @@ synergy_bp = Blueprint('synergy', __name__)
 def _create_company_synergy(company_id, company_name):
     """Core function to create company synergy without JWT requirements"""
     try:
-        service_url = os.getenv('COMPANY_SCORING_SCRAPE_URL')
-        response = requests.post(
-            service_url,
-            json={"company": company_name},
-            timeout=3600
-        )
-
-        data = response.json()
+        data = company_scoring_scrape(company_name)
         
         synergy = Synergy(
             company_id=company_id,
