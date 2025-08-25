@@ -28,7 +28,12 @@ class Document_setting(db.Model):
             "iteration": self.iteration,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.created_at.isoformat() if self.created_at else None,
-            "document_id": self.document_id
+            "document_id": self.document_id,
+                "document": {
+                    "id": self.document.id,
+                    "name": self.document.name,
+                    "proposal_id": self.document.proposal_id
+                }
         }
 
     def __repr__(self):

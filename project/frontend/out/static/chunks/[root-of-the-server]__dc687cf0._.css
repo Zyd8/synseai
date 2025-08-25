@@ -2884,6 +2884,10 @@
     color: var(--color-gray-900);
   }
 
+  .text-green-500 {
+    color: var(--color-green-500);
+  }
+
   .text-green-600 {
     color: var(--color-green-600);
   }
@@ -3670,6 +3674,10 @@
     border-color: #b11016;
   }
 
+  .focus\:border-blue-500:focus {
+    border-color: var(--color-blue-500);
+  }
+
   .focus\:border-transparent:focus {
     border-color: rgba(0, 0, 0, 0);
   }
@@ -3686,6 +3694,10 @@
 
   .focus\:ring-\[\#B11016\]:focus {
     --tw-ring-color: #b11016;
+  }
+
+  .focus\:ring-blue-500:focus {
+    --tw-ring-color: var(--color-blue-500);
   }
 
   .focus\:ring-red-500:focus {

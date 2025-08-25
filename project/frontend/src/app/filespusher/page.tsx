@@ -2,10 +2,11 @@
 import Head from "next/head";
 import React, { useState, useEffect, useRef } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { FaArrowLeft, FaFileAlt, FaDownload, FaTimes, FaCheck, FaTimes as FaReject } from "react-icons/fa";
+import { FaArrowLeft, FaFileAlt, FaDownload, FaTimes, FaCheck, FaTimes as FaReject, FaExclamationTriangle, FaCheckCircle, FaInfoCircle } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Department {
   id: number;
@@ -38,6 +39,185 @@ interface DocumentSetting {
   download_url: string;
 }
 
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  onConfirm?: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  showInput?: boolean;
+  inputPlaceholder?: string;
+  inputValue?: string;
+  onInputChange?: (value: string) => void;
+}
+
+// Custom Modal Component
+const CustomModal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  message,
+  type,
+  onConfirm,
+  confirmText = "OK",
+  cancelText = "Cancel",
+  showInput = false,
+  inputPlaceholder = "",
+  inputValue = "",
+  onInputChange
+}) => {
+  if (!isOpen) return null;
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-4xl" />;
+      case 'error':
+        return <FaExclamationTriangle className="text-red-500 text-4xl" />;
+      case 'warning':
+        return <FaExclamationTriangle className="text-yellow-500 text-4xl" />;
+      case 'info':
+        return <FaInfoCircle className="text-blue-500 text-4xl" />;
+      default:
+        return <FaInfoCircle className="text-gray-500 text-4xl" />;
+    }
+  };
+
+  const getButtonColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-600 hover:bg-green-700';
+      case 'error':
+        return 'bg-red-600 hover:bg-red-700';
+      case 'warning':
+        return 'bg-yellow-600 hover:bg-yellow-700';
+      case 'info':
+        return 'bg-blue-600 hover:bg-blue-700';
+      default:
+        return 'bg-gray-600 hover:bg-gray-700';
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+        >
+          <motion.div
+            key="modal"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 mx-4"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                {getIcon()}
+                <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Message */}
+            <div className="mb-6">
+              <p className="text-gray-600 leading-relaxed">{message}</p>
+            </div>
+
+            {/* Input field if needed */}
+            {showInput && (
+              <div className="mb-6">
+                <textarea
+                  value={inputValue}
+                  onChange={(e) => onInputChange?.(e.target.value)}
+                  placeholder={inputPlaceholder}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  rows={3}
+                />
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3">
+              {onConfirm ? (
+                <>
+                  <button
+                    onClick={onClose}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    {cancelText}
+                  </button>
+                  <button
+                    onClick={() => {
+                      onConfirm();
+                      onClose();
+                    }}
+                    className={`px-4 py-2 text-white rounded-lg transition-colors ${getButtonColor()}`}
+                  >
+                    {confirmText}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={onClose}
+                  className={`px-6 py-2 text-white rounded-lg transition-colors ${getButtonColor()}`}
+                >
+                  {confirmText}
+                </button>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Loading Modal Component
+const LoadingModal: React.FC<{ isOpen: boolean; message: string }> = ({ isOpen, message }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="loading-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+        >
+          <motion.div
+            key="loading-box"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="bg-white rounded-lg shadow-xl p-6 mx-4"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B11016]"></div>
+              <p className="text-gray-700 font-medium">{message}</p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 export default function FilesPusher() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -67,11 +247,119 @@ function FilesPusherContent() {
   const [fileName, setFileName] = useState<string>('');
   const [fileDescription, setFileDescription] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isPushing, setIsPushing] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
+
+  // Modal states
+  const [modal, setModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+    onConfirm?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    showInput?: boolean;
+    inputPlaceholder?: string;
+    inputValue?: string;
+    onInputChange?: (value: string) => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
+
+  const [loadingModal, setLoadingModal] = useState({
+    isOpen: false,
+    message: ''
+  });
+
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const [files, setFiles] = useState<FileItem[]>([]);
+
+  // Modal helper functions
+  const showSuccessModal = (message: string, onConfirm?: () => void) => {
+    setModal({
+      isOpen: true,
+      title: 'Success',
+      message,
+      type: 'success',
+      onConfirm,
+      confirmText: 'OK'
+    });
+  };
+
+  const showErrorModal = (message: string) => {
+    setModal({
+      isOpen: true,
+      title: 'Error',
+      message,
+      type: 'error',
+      confirmText: 'OK'
+    });
+  };
+
+  const showWarningModal = (message: string, onConfirm?: () => void, confirmText = 'Continue') => {
+    setModal({
+      isOpen: true,
+      title: 'Warning',
+      message,
+      type: 'warning',
+      onConfirm,
+      confirmText,
+      cancelText: 'Cancel'
+    });
+  };
+
+  const showInfoModal = (message: string) => {
+    setModal({
+      isOpen: true,
+      title: 'Information',
+      message,
+      type: 'info',
+      confirmText: 'OK'
+    });
+  };
+
+  const showInputModal = (title: string, message: string, placeholder: string, onConfirm: (value: string) => void) => {
+    setRejectionReason('');
+    setModal({
+      isOpen: true,
+      title,
+      message,
+      type: 'warning',
+      showInput: true,
+      inputPlaceholder: placeholder,
+      inputValue: rejectionReason,
+      onInputChange: setRejectionReason,
+      onConfirm: () => onConfirm(rejectionReason),
+      confirmText: 'Submit',
+      cancelText: 'Cancel'
+    });
+  };
+
+  const showLoadingModal = (message: string) => {
+    setLoadingModal({
+      isOpen: true,
+      message
+    });
+  };
+
+  const hideLoadingModal = () => {
+    setLoadingModal({
+      isOpen: false,
+      message: ''
+    });
+  };
+
+  const closeModal = () => {
+    setModal({
+      isOpen: false,
+      title: '',
+      message: '',
+      type: 'info'
+    });
+  };
 
   // Fetch all departments from database
   const fetchDepartments = async () => {
@@ -130,23 +418,18 @@ function FilesPusherContent() {
 
         if (deptId) {
           setUserDepartmentId(deptId);
-
         } else {
           console.warn("❌ Department ID missing in user data");
           setUserDepartmentId(null);
-
         }
       } catch (error) {
         console.error("Error fetching user department:", error);
         setUserDepartmentId(null);
-
       }
     };
 
     fetchUserDepartmentId();
   }, [API]);
-
-
 
   // Handle file selection from input or drag & drop
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,16 +448,18 @@ function FilesPusherContent() {
   // Update handler
   const handleFileUpdate = async () => {
     if (!selectedFile || !settingId) {
-      alert("Please select a file first.");
+      showErrorModal("Please select a file first.");
       return;
     }
 
     if (!canInteract) {
-      alert("You can only update documents that are currently at your department.");
+      showErrorModal("You can only update documents that are currently at your department.");
       return;
     }
 
     try {
+      showLoadingModal("Updating file...");
+
       const token = sessionStorage.getItem("access_token");
       if (!token) throw new Error("No token found.");
 
@@ -192,24 +477,24 @@ function FilesPusherContent() {
       const responseText = await res.text();
       console.log("Update response:", responseText);
 
+      hideLoadingModal();
+
       if (!res.ok) {
         throw new Error(`Update failed: ${responseText}`);
       }
 
-      alert("File updated successfully!");
-      setIsUploadModalOpen(false);
-      setSelectedFile(null);
-      setFileName("");
-      setFileDescription("");
-      window.location.reload();
+      showSuccessModal("File updated successfully!", () => {
+        setIsUploadModalOpen(false);
+        setSelectedFile(null);
+        setFileName("");
+        setFileDescription("");
+        window.location.reload();
+      });
     } catch (err) {
-      if (err instanceof Error) {
-        console.error(err.message);
-        alert(`Error updating file: ${err.message}`);
-      } else {
-        console.error(err);
-        alert("Error updating file.");
-      }
+      hideLoadingModal();
+      const errorMessage = err instanceof Error ? err.message : "Error updating file.";
+      console.error(errorMessage);
+      showErrorModal(`Error updating file: ${errorMessage}`);
     }
   };
 
@@ -223,73 +508,102 @@ function FilesPusherContent() {
   // Push handler - moves document to next department in iteration
   const handlePushDocument = async () => {
     if (!settingId || !documentSetting) {
-      alert("No document setting found.");
+      showErrorModal("No document setting found.");
       return;
     }
 
     if (!canInteract) {
-      alert("You can only push documents that are currently at your department.");
+      showErrorModal("You can only push documents that are currently at your department.");
       return;
     }
 
     // Check if we're at the last department
     if (isAtFinalDepartment()) {
-      alert("This document is already at the final department.");
+      showWarningModal("This document is already at the final department.");
       return;
     }
 
-    try {
-      setIsPushing(true);
-      const token = sessionStorage.getItem("access_token");
-      if (!token) throw new Error("No token found.");
+    showWarningModal(
+      "Are you sure you want to push this document to the next department? This action cannot be undone.",
+      async () => {
+        try {
+          showLoadingModal("Pushing document to next department...");
 
-      const res = await fetch(`${API}/api/document_setting/push/${settingId}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+          const token = sessionStorage.getItem("access_token");
+          if (!token) throw new Error("No token found.");
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Push failed: ${errorText}`);
-      }
+          const res = await fetch(`${API}/api/document_setting/push/${settingId}`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
 
-      const result = await res.json();
-      alert("Document pushed to next department successfully!");
+          hideLoadingModal();
 
-      // Refresh the page to get updated data
-      window.location.reload();
-    } catch (err) {
-      console.error("Error pushing document:", err);
-      alert(`Error pushing document: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsPushing(false);
-    }
+          if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Push failed: ${errorText}`);
+          }
+
+          const result = await res.json();
+          showSuccessModal("Document pushed to next department successfully!", () => {
+            window.location.reload();
+          });
+        } catch (err) {
+          hideLoadingModal();
+          console.error("Error pushing document:", err);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          showErrorModal(`Error pushing document: ${errorMessage}`);
+        }
+      },
+      "Push Document"
+    );
   };
 
   // Generic status update handler (similar to BpiDashboard pattern)
   const handleStatusUpdate = async (newStatus: string, reason?: string) => {
-    if (!settingId || !documentSetting) {
-      alert("No document setting found.");
+    const token = sessionStorage.getItem("access_token");
+    if (!token) return;
+
+    if (!settingId) {
+      showErrorModal("No document setting found.");
       return;
     }
 
     if (!canInteract) {
-      alert("You can only update documents that are currently at your department.");
+      showErrorModal("You can only update documents that are currently at your department.");
       return;
     }
 
     try {
-      setIsApproving(newStatus === 'APPROVED');
-      setIsRejecting(newStatus === 'REJECTED');
+      const statusLabel = newStatus === 'APPROVED' ? 'Approving' :
+        newStatus === 'REJECTED' ? 'Rejecting' : 'Updating';
+      showLoadingModal(`${statusLabel} document...`);
 
-      const token = sessionStorage.getItem("access_token");
-      if (!token) throw new Error("No token found.");
+      // ✅ Step 1: Fetch document setting details to get proposal_id
+      const settingRes = await fetch(`${API}/api/document_setting/${settingId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      // Update document status in database (following BpiDashboard pattern)
-      const res = await fetch(`${API}/api/document_setting/${settingId}/status`, {
+      if (!settingRes.ok) {
+        hideLoadingModal();
+        throw new Error("Failed to fetch document setting details");
+      }
+
+      const settingData = await settingRes.json();
+      const proposalId = settingData?.document?.proposal_id;
+
+      if (!proposalId) {
+        hideLoadingModal();
+        throw new Error("Proposal ID not found for this document");
+      }
+
+      // ✅ Step 2: Update proposal status
+      const res = await fetch(`${API}/api/proposal/${proposalId}/status`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -297,58 +611,67 @@ function FilesPusherContent() {
         },
         body: JSON.stringify({
           status: newStatus,
-          ...(reason && { rejection_reason: reason })
+          ...(reason && { rejection_reason: reason }),
         }),
       });
 
+      hideLoadingModal();
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(errorData.error || `Failed to update document status`);
+        throw new Error(errorData.error || `Failed to update proposal status`);
       }
 
       const result = await res.json();
 
-      // Update local state with new status
+      // ✅ Step 3: Update local state
       setDocumentSetting(prev => prev ? {
         ...prev,
-        status: result.document_setting?.status || newStatus,
+        status: result.proposal?.status || newStatus,
         updated_at: new Date().toISOString()
       } : null);
 
-      const statusLabel = newStatus === 'APPROVED' ? 'approved' :
+      const statusMessage = newStatus === 'APPROVED' ? 'approved' :
         newStatus === 'REJECTED' ? 'rejected' : 'updated';
-      alert(`Document ${statusLabel} successfully!`);
+      showSuccessModal(`Proposal ${statusMessage} successfully!`, () => {
+        window.location.reload();
+      });
 
-      // Refresh the page to get updated data
-      window.location.reload();
     } catch (err) {
-      console.error(`Error updating document status:`, err);
-      alert(`Error updating document status: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsApproving(false);
-      setIsRejecting(false);
+      hideLoadingModal();
+      console.error(`Error updating proposal status:`, err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      showErrorModal(`Error updating proposal status: ${errorMessage}`);
     }
   };
 
   // Approve handler for final department
   const handleApproveDocument = async () => {
     if (!isAtFinalDepartment()) {
-      alert("You can only approve documents at the final department.");
+      showErrorModal("You can only approve documents at the final department.");
       return;
     }
 
-    await handleStatusUpdate('APPROVED');
+    showWarningModal(
+      "Are you sure you want to approve this document? This action will mark the document as approved.",
+      () => handleStatusUpdate('APPROVED'),
+      "Approve Document"
+    );
   };
 
   // Reject handler for final department
   const handleRejectDocument = async () => {
     if (!isAtFinalDepartment()) {
-      alert("You can only reject documents at the final department.");
+      showErrorModal("You can only reject documents at the final department.");
       return;
     }
 
-    const reason = prompt("Please provide a reason for rejection (optional):");
-    await handleStatusUpdate('REJECTED', reason || "No reason provided");
+    showInputModal(
+      "Reject Document",
+      "Please provide a reason for rejection:",
+      "Enter rejection reason (optional)...",
+      (reason) => handleStatusUpdate('REJECTED', reason || "No reason provided")
+    );
   };
 
   // Helper function to get department name by ID
@@ -520,7 +843,7 @@ function FilesPusherContent() {
   // Download function
   const handleDownload = (file: FileItem) => {
     if (!file.downloadUrl) {
-      alert("No download URL available for this file");
+      showErrorModal("No download URL available for this file");
       return;
     }
 
@@ -740,13 +1063,13 @@ function FilesPusherContent() {
             {!isAtFinalDepartment() && (
               <button
                 onClick={handlePushDocument}
-                disabled={!canInteract || isPushing || userDepartmentId === null}
-                className={`w-full max-w-xs px-6 py-3 rounded transition-colors ${canInteract && !isPushing && userDepartmentId !== null
+                disabled={!canInteract || userDepartmentId === null}
+                className={`w-full max-w-xs px-6 py-3 rounded transition-colors ${canInteract && userDepartmentId !== null
                   ? "bg-[#B11016] text-white hover:bg-[#800b10]"
                   : "bg-gray-400 text-gray-600 cursor-not-allowed"
                   }`}
               >
-                {isPushing ? "Pushing..." : "Push"}
+                Push
               </button>
             )}
 
@@ -755,26 +1078,26 @@ function FilesPusherContent() {
               <>
                 <button
                   onClick={handleApproveDocument}
-                  disabled={!canInteract || isApproving || userDepartmentId === null}
-                  className={`w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ${canInteract && !isApproving && userDepartmentId !== null
+                  disabled={!canInteract || userDepartmentId === null}
+                  className={`w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ${canInteract && userDepartmentId !== null
                     ? "bg-green-600 text-white hover:bg-green-700"
                     : "bg-gray-400 text-gray-600 cursor-not-allowed"
                     }`}
                 >
                   <FaCheck className="mr-2" />
-                  {isApproving ? "Approving..." : "Approve"}
+                  Approve
                 </button>
 
                 <button
                   onClick={handleRejectDocument}
-                  disabled={!canInteract || isRejecting || userDepartmentId === null}
-                  className={`w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ${canInteract && !isRejecting && userDepartmentId !== null
+                  disabled={!canInteract || userDepartmentId === null}
+                  className={`w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ${canInteract && userDepartmentId !== null
                     ? "bg-red-600 text-white hover:bg-red-700"
                     : "bg-gray-400 text-gray-600 cursor-not-allowed"
                     }`}
                 >
                   <FaReject className="mr-2" />
-                  {isRejecting ? "Rejecting..." : "Reject"}
+                  Reject
                 </button>
               </>
             )}
@@ -863,6 +1186,28 @@ function FilesPusherContent() {
             </div>
           </div>
         )}
+
+        {/* Custom Modal */}
+        <CustomModal
+          isOpen={modal.isOpen}
+          onClose={closeModal}
+          title={modal.title}
+          message={modal.message}
+          type={modal.type}
+          onConfirm={modal.onConfirm}
+          confirmText={modal.confirmText}
+          cancelText={modal.cancelText}
+          showInput={modal.showInput}
+          inputPlaceholder={modal.inputPlaceholder}
+          inputValue={modal.inputValue}
+          onInputChange={modal.onInputChange}
+        />
+
+        {/* Loading Modal */}
+        <LoadingModal
+          isOpen={loadingModal.isOpen}
+          message={loadingModal.message}
+        />
       </div>
     </ProtectedRoute>
   );

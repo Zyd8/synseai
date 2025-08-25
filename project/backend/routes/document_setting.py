@@ -97,6 +97,11 @@ def get_by_id(setting_id):
             "iteration_text": iteration_text,  # 👈 department names
             "updated_at": setting.updated_at,
             "document_id": setting.document_id,
+                "document": {
+                        "id": setting.document.id,
+                        "name": setting.document.name,
+                        "proposal_id": setting.document.proposal_id
+                    },
             "document_name": doc.name if doc else None,
             "document_created_at": doc.created_at if doc else None,
             "document_description": doc.description if doc else None,

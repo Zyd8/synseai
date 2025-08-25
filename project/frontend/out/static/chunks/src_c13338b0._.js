@@ -70,6 +70,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Protect
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/image.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature();
 "use client";
@@ -79,27 +81,326 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+;
+// Custom Modal Component
+const CustomModal = (param)=>{
+    let { isOpen, onClose, title, message, type, onConfirm, confirmText = "OK", cancelText = "Cancel", showInput = false, inputPlaceholder = "", inputValue = "", onInputChange } = param;
+    if (!isOpen) return null;
+    const getIcon = ()=>{
+        switch(type){
+            case 'success':
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaCheckCircle"], {
+                    className: "text-green-500 text-4xl"
+                }, void 0, false, {
+                    fileName: "[project]/src/app/filespusher/page.tsx",
+                    lineNumber: 77,
+                    columnNumber: 16
+                }, ("TURBOPACK compile-time value", void 0));
+            case 'error':
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaExclamationTriangle"], {
+                    className: "text-red-500 text-4xl"
+                }, void 0, false, {
+                    fileName: "[project]/src/app/filespusher/page.tsx",
+                    lineNumber: 79,
+                    columnNumber: 16
+                }, ("TURBOPACK compile-time value", void 0));
+            case 'warning':
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaExclamationTriangle"], {
+                    className: "text-yellow-500 text-4xl"
+                }, void 0, false, {
+                    fileName: "[project]/src/app/filespusher/page.tsx",
+                    lineNumber: 81,
+                    columnNumber: 16
+                }, ("TURBOPACK compile-time value", void 0));
+            case 'info':
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaInfoCircle"], {
+                    className: "text-blue-500 text-4xl"
+                }, void 0, false, {
+                    fileName: "[project]/src/app/filespusher/page.tsx",
+                    lineNumber: 83,
+                    columnNumber: 16
+                }, ("TURBOPACK compile-time value", void 0));
+            default:
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaInfoCircle"], {
+                    className: "text-gray-500 text-4xl"
+                }, void 0, false, {
+                    fileName: "[project]/src/app/filespusher/page.tsx",
+                    lineNumber: 85,
+                    columnNumber: 16
+                }, ("TURBOPACK compile-time value", void 0));
+        }
+    };
+    const getButtonColor = ()=>{
+        switch(type){
+            case 'success':
+                return 'bg-green-600 hover:bg-green-700';
+            case 'error':
+                return 'bg-red-600 hover:bg-red-700';
+            case 'warning':
+                return 'bg-yellow-600 hover:bg-yellow-700';
+            case 'info':
+                return 'bg-blue-600 hover:bg-blue-700';
+            default:
+                return 'bg-gray-600 hover:bg-gray-700';
+        }
+    };
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
+        children: isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+            initial: {
+                opacity: 0
+            },
+            animate: {
+                opacity: 1
+            },
+            exit: {
+                opacity: 0
+            },
+            className: "fixed inset-0 flex items-center justify-center bg-black/50 z-50",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+                initial: {
+                    opacity: 0,
+                    scale: 0.8
+                },
+                animate: {
+                    opacity: 1,
+                    scale: 1
+                },
+                exit: {
+                    opacity: 0,
+                    scale: 0.8
+                },
+                transition: {
+                    duration: 0.3,
+                    ease: "easeOut"
+                },
+                className: "bg-white rounded-lg shadow-xl w-full max-w-md p-6 mx-4",
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "flex items-center justify-between mb-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-center space-x-3",
+                                children: [
+                                    getIcon(),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                        className: "text-xl font-semibold text-gray-800",
+                                        children: title
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/filespusher/page.tsx",
+                                        lineNumber: 126,
+                                        columnNumber: 17
+                                    }, ("TURBOPACK compile-time value", void 0))
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/filespusher/page.tsx",
+                                lineNumber: 124,
+                                columnNumber: 15
+                            }, ("TURBOPACK compile-time value", void 0)),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                onClick: onClose,
+                                className: "text-gray-400 hover:text-gray-600 transition-colors",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaTimes"], {}, void 0, false, {
+                                    fileName: "[project]/src/app/filespusher/page.tsx",
+                                    lineNumber: 132,
+                                    columnNumber: 17
+                                }, ("TURBOPACK compile-time value", void 0))
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/filespusher/page.tsx",
+                                lineNumber: 128,
+                                columnNumber: 15
+                            }, ("TURBOPACK compile-time value", void 0))
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/filespusher/page.tsx",
+                        lineNumber: 123,
+                        columnNumber: 13
+                    }, ("TURBOPACK compile-time value", void 0)),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "mb-6",
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            className: "text-gray-600 leading-relaxed",
+                            children: message
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/filespusher/page.tsx",
+                            lineNumber: 138,
+                            columnNumber: 15
+                        }, ("TURBOPACK compile-time value", void 0))
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/filespusher/page.tsx",
+                        lineNumber: 137,
+                        columnNumber: 13
+                    }, ("TURBOPACK compile-time value", void 0)),
+                    showInput && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "mb-6",
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
+                            value: inputValue,
+                            onChange: (e)=>onInputChange === null || onInputChange === void 0 ? void 0 : onInputChange(e.target.value),
+                            placeholder: inputPlaceholder,
+                            className: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none",
+                            rows: 3
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/filespusher/page.tsx",
+                            lineNumber: 144,
+                            columnNumber: 17
+                        }, ("TURBOPACK compile-time value", void 0))
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/filespusher/page.tsx",
+                        lineNumber: 143,
+                        columnNumber: 15
+                    }, ("TURBOPACK compile-time value", void 0)),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "flex justify-end space-x-3",
+                        children: onConfirm ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: onClose,
+                                    className: "px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors",
+                                    children: cancelText
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/filespusher/page.tsx",
+                                    lineNumber: 158,
+                                    columnNumber: 19
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: ()=>{
+                                        onConfirm();
+                                        onClose();
+                                    },
+                                    className: "px-4 py-2 text-white rounded-lg transition-colors ".concat(getButtonColor()),
+                                    children: confirmText
+                                }, void 0, false, {
+                                    fileName: "[project]/src/app/filespusher/page.tsx",
+                                    lineNumber: 164,
+                                    columnNumber: 19
+                                }, ("TURBOPACK compile-time value", void 0))
+                            ]
+                        }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            onClick: onClose,
+                            className: "px-6 py-2 text-white rounded-lg transition-colors ".concat(getButtonColor()),
+                            children: confirmText
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/filespusher/page.tsx",
+                            lineNumber: 175,
+                            columnNumber: 17
+                        }, ("TURBOPACK compile-time value", void 0))
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/filespusher/page.tsx",
+                        lineNumber: 155,
+                        columnNumber: 13
+                    }, ("TURBOPACK compile-time value", void 0))
+                ]
+            }, "modal", true, {
+                fileName: "[project]/src/app/filespusher/page.tsx",
+                lineNumber: 114,
+                columnNumber: 11
+            }, ("TURBOPACK compile-time value", void 0))
+        }, "backdrop", false, {
+            fileName: "[project]/src/app/filespusher/page.tsx",
+            lineNumber: 107,
+            columnNumber: 9
+        }, ("TURBOPACK compile-time value", void 0))
+    }, void 0, false, {
+        fileName: "[project]/src/app/filespusher/page.tsx",
+        lineNumber: 105,
+        columnNumber: 5
+    }, ("TURBOPACK compile-time value", void 0));
+};
+_c = CustomModal;
+// Loading Modal Component
+const LoadingModal = (param)=>{
+    let { isOpen, message } = param;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
+        children: isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+            initial: {
+                opacity: 0
+            },
+            animate: {
+                opacity: 1
+            },
+            exit: {
+                opacity: 0
+            },
+            className: "fixed inset-0 flex items-center justify-center bg-black/50 z-50",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
+                initial: {
+                    opacity: 0,
+                    scale: 0.8
+                },
+                animate: {
+                    opacity: 1,
+                    scale: 1
+                },
+                exit: {
+                    opacity: 0,
+                    scale: 0.8
+                },
+                transition: {
+                    duration: 0.3,
+                    ease: "easeOut"
+                },
+                className: "bg-white rounded-lg shadow-xl p-6 mx-4",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex items-center space-x-4",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "animate-spin rounded-full h-8 w-8 border-b-2 border-[#B11016]"
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/filespusher/page.tsx",
+                            lineNumber: 211,
+                            columnNumber: 15
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            className: "text-gray-700 font-medium",
+                            children: message
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/filespusher/page.tsx",
+                            lineNumber: 212,
+                            columnNumber: 15
+                        }, ("TURBOPACK compile-time value", void 0))
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/src/app/filespusher/page.tsx",
+                    lineNumber: 210,
+                    columnNumber: 13
+                }, ("TURBOPACK compile-time value", void 0))
+            }, "loading-box", false, {
+                fileName: "[project]/src/app/filespusher/page.tsx",
+                lineNumber: 202,
+                columnNumber: 11
+            }, ("TURBOPACK compile-time value", void 0))
+        }, "loading-backdrop", false, {
+            fileName: "[project]/src/app/filespusher/page.tsx",
+            lineNumber: 195,
+            columnNumber: 9
+        }, ("TURBOPACK compile-time value", void 0))
+    }, void 0, false, {
+        fileName: "[project]/src/app/filespusher/page.tsx",
+        lineNumber: 193,
+        columnNumber: 5
+    }, ("TURBOPACK compile-time value", void 0));
+};
+_c1 = LoadingModal;
 function FilesPusher() {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Suspense"], {
         fallback: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             children: "Loading..."
         }, void 0, false, {
             fileName: "[project]/src/app/filespusher/page.tsx",
-            lineNumber: 43,
+            lineNumber: 223,
             columnNumber: 25
         }, void 0),
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(FilesPusherContent, {}, void 0, false, {
             fileName: "[project]/src/app/filespusher/page.tsx",
-            lineNumber: 44,
+            lineNumber: 224,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/filespusher/page.tsx",
-        lineNumber: 43,
+        lineNumber: 223,
         columnNumber: 5
     }, this);
 }
-_c = FilesPusher;
+_c2 = FilesPusher;
 function FilesPusherContent() {
     _s();
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
@@ -120,10 +421,96 @@ function FilesPusherContent() {
     const [fileName, setFileName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [fileDescription, setFileDescription] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const fileInputRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
-    const [isPushing, setIsPushing] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
-    const [isApproving, setIsApproving] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
-    const [isRejecting, setIsRejecting] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    // Modal states
+    const [modal, setModal] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+    const [loadingModal, setLoadingModal] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
+        isOpen: false,
+        message: ''
+    });
+    const [rejectionReason, setRejectionReason] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [files, setFiles] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
+    // Modal helper functions
+    const showSuccessModal = (message, onConfirm)=>{
+        setModal({
+            isOpen: true,
+            title: 'Success',
+            message,
+            type: 'success',
+            onConfirm,
+            confirmText: 'OK'
+        });
+    };
+    const showErrorModal = (message)=>{
+        setModal({
+            isOpen: true,
+            title: 'Error',
+            message,
+            type: 'error',
+            confirmText: 'OK'
+        });
+    };
+    const showWarningModal = function(message, onConfirm) {
+        let confirmText = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : 'Continue';
+        setModal({
+            isOpen: true,
+            title: 'Warning',
+            message,
+            type: 'warning',
+            onConfirm,
+            confirmText,
+            cancelText: 'Cancel'
+        });
+    };
+    const showInfoModal = (message)=>{
+        setModal({
+            isOpen: true,
+            title: 'Information',
+            message,
+            type: 'info',
+            confirmText: 'OK'
+        });
+    };
+    const showInputModal = (title, message, placeholder, onConfirm)=>{
+        setRejectionReason('');
+        setModal({
+            isOpen: true,
+            title,
+            message,
+            type: 'warning',
+            showInput: true,
+            inputPlaceholder: placeholder,
+            inputValue: rejectionReason,
+            onInputChange: setRejectionReason,
+            onConfirm: ()=>onConfirm(rejectionReason),
+            confirmText: 'Submit',
+            cancelText: 'Cancel'
+        });
+    };
+    const showLoadingModal = (message)=>{
+        setLoadingModal({
+            isOpen: true,
+            message
+        });
+    };
+    const hideLoadingModal = ()=>{
+        setLoadingModal({
+            isOpen: false,
+            message: ''
+        });
+    };
+    const closeModal = ()=>{
+        setModal({
+            isOpen: false,
+            title: '',
+            message: '',
+            type: 'info'
+        });
+    };
     // Fetch all departments from database
     const fetchDepartments = async ()=>{
         try {
@@ -204,14 +591,15 @@ function FilesPusherContent() {
     // Update handler
     const handleFileUpdate = async ()=>{
         if (!selectedFile || !settingId) {
-            alert("Please select a file first.");
+            showErrorModal("Please select a file first.");
             return;
         }
         if (!canInteract) {
-            alert("You can only update documents that are currently at your department.");
+            showErrorModal("You can only update documents that are currently at your department.");
             return;
         }
         try {
+            showLoadingModal("Updating file...");
             const token = sessionStorage.getItem("access_token");
             if (!token) throw new Error("No token found.");
             const formData = new FormData();
@@ -225,23 +613,22 @@ function FilesPusherContent() {
             });
             const responseText = await res.text();
             console.log("Update response:", responseText);
+            hideLoadingModal();
             if (!res.ok) {
                 throw new Error("Update failed: ".concat(responseText));
             }
-            alert("File updated successfully!");
-            setIsUploadModalOpen(false);
-            setSelectedFile(null);
-            setFileName("");
-            setFileDescription("");
-            window.location.reload();
+            showSuccessModal("File updated successfully!", ()=>{
+                setIsUploadModalOpen(false);
+                setSelectedFile(null);
+                setFileName("");
+                setFileDescription("");
+                window.location.reload();
+            });
         } catch (err) {
-            if (err instanceof Error) {
-                console.error(err.message);
-                alert("Error updating file: ".concat(err.message));
-            } else {
-                console.error(err);
-                alert("Error updating file.");
-            }
+            hideLoadingModal();
+            const errorMessage = err instanceof Error ? err.message : "Error updating file.";
+            console.error(errorMessage);
+            showErrorModal("Error updating file: ".concat(errorMessage));
         }
     };
     // Check if document is at the final department
@@ -253,61 +640,81 @@ function FilesPusherContent() {
     // Push handler - moves document to next department in iteration
     const handlePushDocument = async ()=>{
         if (!settingId || !documentSetting) {
-            alert("No document setting found.");
+            showErrorModal("No document setting found.");
             return;
         }
         if (!canInteract) {
-            alert("You can only push documents that are currently at your department.");
+            showErrorModal("You can only push documents that are currently at your department.");
             return;
         }
         // Check if we're at the last department
         if (isAtFinalDepartment()) {
-            alert("This document is already at the final department.");
+            showWarningModal("This document is already at the final department.");
             return;
         }
-        try {
-            setIsPushing(true);
-            const token = sessionStorage.getItem("access_token");
-            if (!token) throw new Error("No token found.");
-            const res = await fetch("".concat(API, "/api/document_setting/push/").concat(settingId), {
-                method: "POST",
-                headers: {
-                    Authorization: "Bearer ".concat(token),
-                    "Content-Type": "application/json"
+        showWarningModal("Are you sure you want to push this document to the next department? This action cannot be undone.", async ()=>{
+            try {
+                showLoadingModal("Pushing document to next department...");
+                const token = sessionStorage.getItem("access_token");
+                if (!token) throw new Error("No token found.");
+                const res = await fetch("".concat(API, "/api/document_setting/push/").concat(settingId), {
+                    method: "POST",
+                    headers: {
+                        Authorization: "Bearer ".concat(token),
+                        "Content-Type": "application/json"
+                    }
+                });
+                hideLoadingModal();
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error("Push failed: ".concat(errorText));
                 }
-            });
-            if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error("Push failed: ".concat(errorText));
+                const result = await res.json();
+                showSuccessModal("Document pushed to next department successfully!", ()=>{
+                    window.location.reload();
+                });
+            } catch (err) {
+                hideLoadingModal();
+                console.error("Error pushing document:", err);
+                const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                showErrorModal("Error pushing document: ".concat(errorMessage));
             }
-            const result = await res.json();
-            alert("Document pushed to next department successfully!");
-            // Refresh the page to get updated data
-            window.location.reload();
-        } catch (err) {
-            console.error("Error pushing document:", err);
-            alert("Error pushing document: ".concat(err instanceof Error ? err.message : 'Unknown error'));
-        } finally{
-            setIsPushing(false);
-        }
+        }, "Push Document");
     };
     // Generic status update handler (similar to BpiDashboard pattern)
     const handleStatusUpdate = async (newStatus, reason)=>{
-        if (!settingId || !documentSetting) {
-            alert("No document setting found.");
+        const token = sessionStorage.getItem("access_token");
+        if (!token) return;
+        if (!settingId) {
+            showErrorModal("No document setting found.");
             return;
         }
         if (!canInteract) {
-            alert("You can only update documents that are currently at your department.");
+            showErrorModal("You can only update documents that are currently at your department.");
             return;
         }
         try {
-            setIsApproving(newStatus === 'APPROVED');
-            setIsRejecting(newStatus === 'REJECTED');
-            const token = sessionStorage.getItem("access_token");
-            if (!token) throw new Error("No token found.");
-            // Update document status in database (following BpiDashboard pattern)
-            const res = await fetch("".concat(API, "/api/document_setting/").concat(settingId, "/status"), {
+            var _settingData_document;
+            const statusLabel = newStatus === 'APPROVED' ? 'Approving' : newStatus === 'REJECTED' ? 'Rejecting' : 'Updating';
+            showLoadingModal("".concat(statusLabel, " document..."));
+            // ✅ Step 1: Fetch document setting details to get proposal_id
+            const settingRes = await fetch("".concat(API, "/api/document_setting/").concat(settingId), {
+                headers: {
+                    Authorization: "Bearer ".concat(token)
+                }
+            });
+            if (!settingRes.ok) {
+                hideLoadingModal();
+                throw new Error("Failed to fetch document setting details");
+            }
+            const settingData = await settingRes.json();
+            const proposalId = settingData === null || settingData === void 0 ? void 0 : (_settingData_document = settingData.document) === null || _settingData_document === void 0 ? void 0 : _settingData_document.proposal_id;
+            if (!proposalId) {
+                hideLoadingModal();
+                throw new Error("Proposal ID not found for this document");
+            }
+            // ✅ Step 2: Update proposal status
+            const res = await fetch("".concat(API, "/api/proposal/").concat(proposalId, "/status"), {
                 method: 'PATCH',
                 headers: {
                     Authorization: "Bearer ".concat(token),
@@ -320,50 +727,49 @@ function FilesPusherContent() {
                     }
                 })
             });
+            hideLoadingModal();
             if (!res.ok) {
                 const errorData = await res.json().catch(()=>({
                         error: "Unknown error"
                     }));
-                throw new Error(errorData.error || "Failed to update document status");
+                throw new Error(errorData.error || "Failed to update proposal status");
             }
             const result = await res.json();
-            // Update local state with new status
+            // ✅ Step 3: Update local state
             setDocumentSetting((prev)=>{
-                var _result_document_setting;
+                var _result_proposal;
                 return prev ? {
                     ...prev,
-                    status: ((_result_document_setting = result.document_setting) === null || _result_document_setting === void 0 ? void 0 : _result_document_setting.status) || newStatus,
+                    status: ((_result_proposal = result.proposal) === null || _result_proposal === void 0 ? void 0 : _result_proposal.status) || newStatus,
                     updated_at: new Date().toISOString()
                 } : null;
             });
-            const statusLabel = newStatus === 'APPROVED' ? 'approved' : newStatus === 'REJECTED' ? 'rejected' : 'updated';
-            alert("Document ".concat(statusLabel, " successfully!"));
-            // Refresh the page to get updated data
-            window.location.reload();
+            const statusMessage = newStatus === 'APPROVED' ? 'approved' : newStatus === 'REJECTED' ? 'rejected' : 'updated';
+            showSuccessModal("Proposal ".concat(statusMessage, " successfully!"), ()=>{
+                window.location.reload();
+            });
         } catch (err) {
-            console.error("Error updating document status:", err);
-            alert("Error updating document status: ".concat(err instanceof Error ? err.message : 'Unknown error'));
-        } finally{
-            setIsApproving(false);
-            setIsRejecting(false);
+            hideLoadingModal();
+            console.error("Error updating proposal status:", err);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            showErrorModal("Error updating proposal status: ".concat(errorMessage));
         }
     };
     // Approve handler for final department
     const handleApproveDocument = async ()=>{
         if (!isAtFinalDepartment()) {
-            alert("You can only approve documents at the final department.");
+            showErrorModal("You can only approve documents at the final department.");
             return;
         }
-        await handleStatusUpdate('APPROVED');
+        showWarningModal("Are you sure you want to approve this document? This action will mark the document as approved.", ()=>handleStatusUpdate('APPROVED'), "Approve Document");
     };
     // Reject handler for final department
     const handleRejectDocument = async ()=>{
         if (!isAtFinalDepartment()) {
-            alert("You can only reject documents at the final department.");
+            showErrorModal("You can only reject documents at the final department.");
             return;
         }
-        const reason = prompt("Please provide a reason for rejection (optional):");
-        await handleStatusUpdate('REJECTED', reason || "No reason provided");
+        showInputModal("Reject Document", "Please provide a reason for rejection:", "Enter rejection reason (optional)...", (reason)=>handleStatusUpdate('REJECTED', reason || "No reason provided"));
     };
     // Helper function to get department name by ID
     const getDepartmentNameById = (deptId)=>{
@@ -526,7 +932,7 @@ function FilesPusherContent() {
     // Download function
     const handleDownload = (file)=>{
         if (!file.downloadUrl) {
-            alert("No download URL available for this file");
+            showErrorModal("No download URL available for this file");
             return;
         }
         console.log("Opening download URL:", file.downloadUrl);
@@ -564,7 +970,7 @@ function FilesPusherContent() {
                             className: "animate-spin rounded-full h-12 w-12 border-b-2 border-[#B11016] mx-auto mb-4"
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 559,
+                            lineNumber: 882,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -572,23 +978,23 @@ function FilesPusherContent() {
                             children: "Loading document..."
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 560,
+                            lineNumber: 883,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 558,
+                    lineNumber: 881,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/filespusher/page.tsx",
-                lineNumber: 557,
+                lineNumber: 880,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/filespusher/page.tsx",
-            lineNumber: 556,
+            lineNumber: 879,
             columnNumber: 7
         }, this);
     }
@@ -612,7 +1018,7 @@ function FilesPusherContent() {
                                     className: "mr-2"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 576,
+                                    lineNumber: 899,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -620,13 +1026,13 @@ function FilesPusherContent() {
                                     children: "Back"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 577,
+                                    lineNumber: 900,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 572,
+                            lineNumber: 895,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -637,7 +1043,7 @@ function FilesPusherContent() {
                                     children: "Files Pusher"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 581,
+                                    lineNumber: 904,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -645,26 +1051,26 @@ function FilesPusherContent() {
                                     children: "Push the files to the departments for review and approval."
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 584,
+                                    lineNumber: 907,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "mx-2 border-b-[3px] border-[#B11016]"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 587,
+                                    lineNumber: 910,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 580,
+                            lineNumber: 903,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 571,
+                    lineNumber: 894,
                     columnNumber: 9
                 }, this),
                 error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -674,12 +1080,12 @@ function FilesPusherContent() {
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/src/app/filespusher/page.tsx",
-                        lineNumber: 594,
+                        lineNumber: 917,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 593,
+                    lineNumber: 916,
                     columnNumber: 11
                 }, this),
                 userDepartmentId === null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -691,7 +1097,7 @@ function FilesPusherContent() {
                                 children: "Note:"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 602,
+                                lineNumber: 925,
                                 columnNumber: 15
                             }, this),
                             " Department information not found.",
@@ -701,18 +1107,18 @@ function FilesPusherContent() {
                                 children: "Refresh Access"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 603,
+                                lineNumber: 926,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/filespusher/page.tsx",
-                        lineNumber: 601,
+                        lineNumber: 924,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 600,
+                    lineNumber: 923,
                     columnNumber: 11
                 }, this),
                 !canInteract && documentSetting && userDepartmentId !== null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -731,18 +1137,18 @@ function FilesPusherContent() {
                                 children: "Refresh Access"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 618,
+                                lineNumber: 941,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/filespusher/page.tsx",
-                        lineNumber: 615,
+                        lineNumber: 938,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 614,
+                    lineNumber: 937,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -755,7 +1161,7 @@ function FilesPusherContent() {
                                     children: "File Name:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 630,
+                                    lineNumber: 953,
                                     columnNumber: 16
                                 }, this),
                                 " ",
@@ -763,7 +1169,7 @@ function FilesPusherContent() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 630,
+                            lineNumber: 953,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -773,7 +1179,7 @@ function FilesPusherContent() {
                                     children: "File Description:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 631,
+                                    lineNumber: 954,
                                     columnNumber: 16
                                 }, this),
                                 "  ",
@@ -781,7 +1187,7 @@ function FilesPusherContent() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 631,
+                            lineNumber: 954,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -791,7 +1197,7 @@ function FilesPusherContent() {
                                     children: "Date created:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 633,
+                                    lineNumber: 956,
                                     columnNumber: 13
                                 }, this),
                                 " ",
@@ -799,13 +1205,13 @@ function FilesPusherContent() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 632,
+                            lineNumber: 955,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 629,
+                    lineNumber: 952,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -821,17 +1227,17 @@ function FilesPusherContent() {
                                         children: dept.name
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 652,
+                                        lineNumber: 975,
                                         columnNumber: 17
                                     }, this)
                                 }, dept.id, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 643,
+                                    lineNumber: 966,
                                     columnNumber: 15
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 641,
+                            lineNumber: 964,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -856,17 +1262,17 @@ function FilesPusherContent() {
                                                         className: "mx-auto"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                                        lineNumber: 674,
+                                                        lineNumber: 997,
                                                         columnNumber: 27
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                                    lineNumber: 673,
+                                                    lineNumber: 996,
                                                     columnNumber: 25
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 668,
+                                                lineNumber: 991,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -875,7 +1281,7 @@ function FilesPusherContent() {
                                                 children: deptFile.name
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 684,
+                                                lineNumber: 1007,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -888,20 +1294,20 @@ function FilesPusherContent() {
                                                         size: 10
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                                        lineNumber: 694,
+                                                        lineNumber: 1017,
                                                         columnNumber: 25
                                                     }, this),
                                                     "Download"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 689,
+                                                lineNumber: 1012,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 667,
+                                        lineNumber: 990,
                                         columnNumber: 21
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "text-center py-8 text-gray-400",
@@ -910,7 +1316,7 @@ function FilesPusherContent() {
                                                 className: "mx-auto text-2xl mb-2 opacity-30"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 700,
+                                                lineNumber: 1023,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -918,24 +1324,24 @@ function FilesPusherContent() {
                                                 children: "No file"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 701,
+                                                lineNumber: 1024,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 699,
+                                        lineNumber: 1022,
                                         columnNumber: 21
                                     }, this)
                                 }, dept.id, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 665,
+                                    lineNumber: 988,
                                     columnNumber: 17
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 660,
+                            lineNumber: 983,
                             columnNumber: 11
                         }, this),
                         files.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -945,7 +1351,7 @@ function FilesPusherContent() {
                                     className: "mx-auto text-4xl mb-4 opacity-30"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 714,
+                                    lineNumber: 1037,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -953,7 +1359,7 @@ function FilesPusherContent() {
                                     children: "No document available"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 715,
+                                    lineNumber: 1038,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -961,19 +1367,19 @@ function FilesPusherContent() {
                                     children: "Document will appear here when loaded"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 718,
+                                    lineNumber: 1041,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 713,
+                            lineNumber: 1036,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 639,
+                    lineNumber: 962,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -989,57 +1395,57 @@ function FilesPusherContent() {
                                     children: "Update"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 728,
+                                    lineNumber: 1051,
                                     columnNumber: 13
                                 }, this),
                                 !isAtFinalDepartment() && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     onClick: handlePushDocument,
-                                    disabled: !canInteract || isPushing || userDepartmentId === null,
-                                    className: "w-full max-w-xs px-6 py-3 rounded transition-colors ".concat(canInteract && !isPushing && userDepartmentId !== null ? "bg-[#B11016] text-white hover:bg-[#800b10]" : "bg-gray-400 text-gray-600 cursor-not-allowed"),
-                                    children: isPushing ? "Pushing..." : "Push"
+                                    disabled: !canInteract || userDepartmentId === null,
+                                    className: "w-full max-w-xs px-6 py-3 rounded transition-colors ".concat(canInteract && userDepartmentId !== null ? "bg-[#B11016] text-white hover:bg-[#800b10]" : "bg-gray-400 text-gray-600 cursor-not-allowed"),
+                                    children: "Push"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 741,
+                                    lineNumber: 1064,
                                     columnNumber: 15
                                 }, this),
                                 isAtFinalDepartment() && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: handleApproveDocument,
-                                            disabled: !canInteract || isApproving || userDepartmentId === null,
-                                            className: "w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ".concat(canInteract && !isApproving && userDepartmentId !== null ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-400 text-gray-600 cursor-not-allowed"),
+                                            disabled: !canInteract || userDepartmentId === null,
+                                            className: "w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ".concat(canInteract && userDepartmentId !== null ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-400 text-gray-600 cursor-not-allowed"),
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaCheck"], {
                                                     className: "mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                                    lineNumber: 764,
+                                                    lineNumber: 1087,
                                                     columnNumber: 19
                                                 }, this),
-                                                isApproving ? "Approving..." : "Approve"
+                                                "Approve"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/filespusher/page.tsx",
-                                            lineNumber: 756,
+                                            lineNumber: 1079,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: handleRejectDocument,
-                                            disabled: !canInteract || isRejecting || userDepartmentId === null,
-                                            className: "w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ".concat(canInteract && !isRejecting && userDepartmentId !== null ? "bg-red-600 text-white hover:bg-red-700" : "bg-gray-400 text-gray-600 cursor-not-allowed"),
+                                            disabled: !canInteract || userDepartmentId === null,
+                                            className: "w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ".concat(canInteract && userDepartmentId !== null ? "bg-red-600 text-white hover:bg-red-700" : "bg-gray-400 text-gray-600 cursor-not-allowed"),
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaTimes"], {
                                                     className: "mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                                    lineNumber: 776,
+                                                    lineNumber: 1099,
                                                     columnNumber: 19
                                                 }, this),
-                                                isRejecting ? "Rejecting..." : "Reject"
+                                                "Reject"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/filespusher/page.tsx",
-                                            lineNumber: 768,
+                                            lineNumber: 1091,
                                             columnNumber: 17
                                         }, this)
                                     ]
@@ -1047,7 +1453,7 @@ function FilesPusherContent() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 727,
+                            lineNumber: 1050,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1056,36 +1462,36 @@ function FilesPusherContent() {
                                 children: "Department information not available. Please check your login setup or refresh access."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 786,
+                                lineNumber: 1109,
                                 columnNumber: 15
                             }, this) : !canInteract ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "You can only interact with documents that are currently at your department."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 788,
+                                lineNumber: 1111,
                                 columnNumber: 15
                             }, this) : isAtFinalDepartment() ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "Document has reached the final department. You can update, approve, or reject the document."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 790,
+                                lineNumber: 1113,
                                 columnNumber: 15
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "You can update the document or push it to the next department."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 792,
+                                lineNumber: 1115,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 784,
+                            lineNumber: 1107,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 726,
+                    lineNumber: 1049,
                     columnNumber: 9
                 }, this),
                 isUploadModalOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1103,12 +1509,12 @@ function FilesPusherContent() {
                                 className: "absolute top-3 right-3 text-gray-500 hover:text-gray-700",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaTimes"], {}, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 811,
+                                    lineNumber: 1134,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 802,
+                                lineNumber: 1125,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -1116,7 +1522,7 @@ function FilesPusherContent() {
                                 children: "Update File"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 814,
+                                lineNumber: 1137,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1134,7 +1540,7 @@ function FilesPusherContent() {
                                         className: "mx-auto h-12 w-12 object-contain"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 825,
+                                        lineNumber: 1148,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1147,13 +1553,13 @@ function FilesPusherContent() {
                                                 children: "Browse"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 833,
+                                                lineNumber: 1156,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 831,
+                                        lineNumber: 1154,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1161,7 +1567,7 @@ function FilesPusherContent() {
                                         children: "Supported formats: JPEG, PNG, PDF, DOCX"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 835,
+                                        lineNumber: 1158,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1172,13 +1578,13 @@ function FilesPusherContent() {
                                         onChange: handleFileChange
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 839,
+                                        lineNumber: 1162,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 819,
+                                lineNumber: 1142,
                                 columnNumber: 15
                             }, this),
                             selectedFile && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1189,7 +1595,7 @@ function FilesPusherContent() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 850,
+                                lineNumber: 1173,
                                 columnNumber: 17
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1199,42 +1605,70 @@ function FilesPusherContent() {
                                 children: "Update File"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 856,
+                                lineNumber: 1179,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/filespusher/page.tsx",
-                        lineNumber: 800,
+                        lineNumber: 1123,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 799,
+                    lineNumber: 1122,
                     columnNumber: 11
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(CustomModal, {
+                    isOpen: modal.isOpen,
+                    onClose: closeModal,
+                    title: modal.title,
+                    message: modal.message,
+                    type: modal.type,
+                    onConfirm: modal.onConfirm,
+                    confirmText: modal.confirmText,
+                    cancelText: modal.cancelText,
+                    showInput: modal.showInput,
+                    inputPlaceholder: modal.inputPlaceholder,
+                    inputValue: modal.inputValue,
+                    onInputChange: modal.onInputChange
+                }, void 0, false, {
+                    fileName: "[project]/src/app/filespusher/page.tsx",
+                    lineNumber: 1191,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(LoadingModal, {
+                    isOpen: loadingModal.isOpen,
+                    message: loadingModal.message
+                }, void 0, false, {
+                    fileName: "[project]/src/app/filespusher/page.tsx",
+                    lineNumber: 1207,
+                    columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/filespusher/page.tsx",
-            lineNumber: 569,
+            lineNumber: 892,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/filespusher/page.tsx",
-        lineNumber: 568,
+        lineNumber: 891,
         columnNumber: 5
     }, this);
 }
-_s(FilesPusherContent, "aJ3yyakanX/rY7nA78v1VpBSm1I=", false, function() {
+_s(FilesPusherContent, "94sVCNZGyOGcCvS0PTsyTWrjGHY=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"]
     ];
 });
-_c1 = FilesPusherContent;
-var _c, _c1;
-__turbopack_context__.k.register(_c, "FilesPusher");
-__turbopack_context__.k.register(_c1, "FilesPusherContent");
+_c3 = FilesPusherContent;
+var _c, _c1, _c2, _c3;
+__turbopack_context__.k.register(_c, "CustomModal");
+__turbopack_context__.k.register(_c1, "LoadingModal");
+__turbopack_context__.k.register(_c2, "FilesPusher");
+__turbopack_context__.k.register(_c3, "FilesPusherContent");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
 }

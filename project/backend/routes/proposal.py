@@ -182,8 +182,8 @@ def update_proposal_status(proposal_id):
     
     # Check if user has employee role
     user = User.query.get(current_user_id)
-    if not user or user.role != UserRole.EMPLOYEE:
-        return jsonify({"error": "Unauthorized: Employee role required"}), 403
+    if not user or user.role not in [UserRole.EMPLOYEE, UserRole.ADMIN]:
+        return jsonify({"error": "Unauthorized: Employee or Admin role required"}), 403
     
     # Validate required fields
     status = data.get('status')
