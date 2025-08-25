@@ -229,13 +229,12 @@ class SynseaiLLM:
             # Since this method is static, we need to instantiate openai outside or create a helper.
             # For consistency, we can instantiate openai here as well.
 
-            response = client.chat.completions.create(
+            response = client.responses.create(
                 model="gpt-4.1",
-                messages=[{"role": "user", "content": extract_prompt}],
-                               temperature=0.3,
-                max_tokens=1000,
+                input=extract_prompt,
+                temperature=0.3,
             )
-            raw_names = response.choices[0].message.content
+            raw_names = response.output[0].content[0].text
 
             clean_prompt = f"""
             Clean the following list of potential company names.
@@ -255,13 +254,12 @@ class SynseaiLLM:
             OUTPUT (cleaned company names, one per line):
             """
 
-            clean_response = openai.ChatCompletion.create(
+            clean_response = client.responses.create(
                 model="gpt-4.1",
-                messages=[{"role": "user", "content": clean_prompt}],
+                input=clean_prompt,
                 temperature=0.3,
-                max_tokens=1000,
             )
-            cleaned_text = clean_response['choices'][0]['message']['content']
+            cleaned_text = clean_response.output[0].content[0].text
 
             company_names = []
             for line in cleaned_text.split('\n'):
