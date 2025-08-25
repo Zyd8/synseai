@@ -20,7 +20,12 @@ class SynseaiLLM:
     def _load_bpi_context(self):
         """Load BPI context from the text file."""
         try:
-            with open('BPI_context.txt', 'r', encoding='utf-8') as f:
+            import os
+            # Get the directory where this file is located
+            dir_path = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(dir_path, 'BPI_context.txt')
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
                 return f.read()
         except Exception as e:
             print(f"Warning: Could not load BPI context: {str(e)}")
