@@ -1,6 +1,6 @@
 search_settings:
-  num_results: 1
-  target_num_results: 1
+  num_results: 5
+  target_num_results: 2
   min_delay: 1
   max_delay: 3
   timeout: 10

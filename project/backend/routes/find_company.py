@@ -117,8 +117,6 @@ def find_company_by_trait():
         companies_to_scrape = []
 
         print("Company names from traits:", company_names)
-
-        company_names = ["Amazon", "Microsoft"]
         
         for company_name in company_names:
             try:
