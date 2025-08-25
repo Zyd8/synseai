@@ -30,16 +30,34 @@
     "[project]/src/app/bpiinprocess/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
+    "[project]/src/app/bpirejected/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/collabhome/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
     "[project]/src/app/companylist/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
     "[project]/src/app/companyprofile/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
+    "[project]/src/app/companysetup/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/dashboard/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
     "[project]/src/app/filespusher/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
     "[project]/src/app/login/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/signup/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ]
   },
