@@ -88,12 +88,23 @@ const AdminFilesViewerPage = () => {
                     throw new Error(`Failed to fetch files: ${errorText}`);
                 }
 
-                const data = await res.json();
+                let data = await res.json();
 
+                // ✅ Normalize if response is wrapped in {data: [...]}
+                if (data && data.data) {
+                    data = data.data;
+                }
+
+                // ✅ Apply filtering (only include items where approved === false)
+                if (Array.isArray(data)) {
+                    data = data.filter((file: any) => file.approved === false);
+                }
+
+                // ✅ Update state
                 if (activeTab === "all") {
-                    setFiles(data); // For "all" tab
+                    setFiles(data);
                 } else {
-                    setPendingFiles(data); // For current tab
+                    setPendingFiles(data);
                 }
             } catch (error) {
                 console.error("Error fetching files:", error);
@@ -101,6 +112,7 @@ const AdminFilesViewerPage = () => {
                 setLoading(false);
             }
         };
+
 
         if (token && selectedDepartment) fetchFiles();
     }, [API, token, selectedDepartment, activeTab]);
@@ -173,7 +185,7 @@ const AdminFilesViewerPage = () => {
                             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
                                 <FaBuilding className="text-[#B11016] text-sm" />
                             </div>
-                            
+
                             {/* Select Input */}
                             <select
                                 value={selectedDepartment ?? ""}
@@ -221,16 +233,16 @@ const AdminFilesViewerPage = () => {
                                     </option>
                                 )}
                             </select>
-                            
+
                             {/* Custom Dropdown Arrow */}
                             <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
                                 <FaChevronDown className="text-[#B11016] text-sm transition-transform duration-200 group-hover:scale-110" />
                             </div>
-                            
+
                             {/* Subtle gradient overlay for depth */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-gray-50/20 rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                         </div>
-                        
+
                         {/* Helper Text */}
                         <p className="text-xs text-gray-500 mt-2 ml-1">
                             Choose a department to view its files
@@ -343,7 +355,7 @@ const FileTable = ({
                         </th>
                     </tr>
                 </thead>
-                
+
                 {/* Enhanced Table Body */}
                 <tbody className="divide-y divide-gray-100">
                     {files.map((file, i) => (
@@ -360,7 +372,7 @@ const FileTable = ({
                                     </div>
                                 </div>
                             </td>
-                            
+
                             {/* Document Name Column */}
                             <td className="px-6 py-4">
                                 <div className="flex items-center space-x-3">
@@ -377,7 +389,7 @@ const FileTable = ({
                                     </div>
                                 </div>
                             </td>
-                            
+
                             {/* Action Column */}
                             <td className="px-6 py-4 text-center">
                                 <div className="flex items-center justify-center">

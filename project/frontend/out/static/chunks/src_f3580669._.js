@@ -395,11 +395,22 @@ const AdminFilesViewerPage = ()=>{
                             const errorText = await res.text();
                             throw new Error("Failed to fetch files: ".concat(errorText));
                         }
-                        const data = await res.json();
+                        let data = await res.json();
+                        // ✅ Normalize if response is wrapped in {data: [...]}
+                        if (data && data.data) {
+                            data = data.data;
+                        }
+                        // ✅ Apply filtering (only include items where approved === false)
+                        if (Array.isArray(data)) {
+                            data = data.filter({
+                                "AdminFilesViewerPage.useEffect.fetchFiles": (file)=>file.approved === false
+                            }["AdminFilesViewerPage.useEffect.fetchFiles"]);
+                        }
+                        // ✅ Update state
                         if (activeTab === "all") {
-                            setFiles(data); // For "all" tab
+                            setFiles(data);
                         } else {
-                            setPendingFiles(data); // For current tab
+                            setPendingFiles(data);
                         }
                     } catch (error) {
                         console.error("Error fetching files:", error);
@@ -454,7 +465,7 @@ const AdminFilesViewerPage = ()=>{
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$DashboardSidebar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                    lineNumber: 143,
+                    lineNumber: 155,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -471,7 +482,7 @@ const AdminFilesViewerPage = ()=>{
                                             className: "mr-2"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 151,
+                                            lineNumber: 163,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -479,13 +490,13 @@ const AdminFilesViewerPage = ()=>{
                                             children: "Back"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 152,
+                                            lineNumber: 164,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 147,
+                                    lineNumber: 159,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -496,7 +507,7 @@ const AdminFilesViewerPage = ()=>{
                                             children: departmentName || "Loading Department..."
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 156,
+                                            lineNumber: 168,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -504,26 +515,26 @@ const AdminFilesViewerPage = ()=>{
                                             children: "Files"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 159,
+                                            lineNumber: 171,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "mx-2 border-b-[3px] border-[#B11016]"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 162,
+                                            lineNumber: 174,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 155,
+                                    lineNumber: 167,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                            lineNumber: 146,
+                            lineNumber: 158,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -534,7 +545,7 @@ const AdminFilesViewerPage = ()=>{
                                     children: "View files as:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 168,
+                                    lineNumber: 180,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -546,12 +557,12 @@ const AdminFilesViewerPage = ()=>{
                                                 className: "text-[#B11016] text-sm"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 174,
+                                                lineNumber: 186,
                                                 columnNumber: 33
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 173,
+                                            lineNumber: 185,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -566,7 +577,7 @@ const AdminFilesViewerPage = ()=>{
                                                     children: "Select Department"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                    lineNumber: 209,
+                                                    lineNumber: 221,
                                                     columnNumber: 33
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 departments.length > 0 ? departments.map((dept)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -575,7 +586,7 @@ const AdminFilesViewerPage = ()=>{
                                                         children: dept.name
                                                     }, dept.id, false, {
                                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                        lineNumber: 214,
+                                                        lineNumber: 226,
                                                         columnNumber: 41
                                                     }, ("TURBOPACK compile-time value", void 0))) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     disabled: true,
@@ -583,13 +594,13 @@ const AdminFilesViewerPage = ()=>{
                                                     children: "No departments found"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                    lineNumber: 219,
+                                                    lineNumber: 231,
                                                     columnNumber: 37
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 178,
+                                            lineNumber: 190,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -598,25 +609,25 @@ const AdminFilesViewerPage = ()=>{
                                                 className: "text-[#B11016] text-sm transition-transform duration-200 group-hover:scale-110"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 227,
+                                                lineNumber: 239,
                                                 columnNumber: 33
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 226,
+                                            lineNumber: 238,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-gray-50/20 rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 231,
+                                            lineNumber: 243,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 171,
+                                    lineNumber: 183,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -624,13 +635,13 @@ const AdminFilesViewerPage = ()=>{
                                     children: "Choose a department to view its files"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 235,
+                                    lineNumber: 247,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                            lineNumber: 167,
+                            lineNumber: 179,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -642,7 +653,7 @@ const AdminFilesViewerPage = ()=>{
                                     children: "Files Pending"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 242,
+                                    lineNumber: 254,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -651,13 +662,13 @@ const AdminFilesViewerPage = ()=>{
                                     children: "All Files"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 251,
+                                    lineNumber: 263,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                            lineNumber: 241,
+                            lineNumber: 253,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -673,7 +684,7 @@ const AdminFilesViewerPage = ()=>{
                                                 className: "inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#B11016] border-t-transparent mb-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 268,
+                                                lineNumber: 280,
                                                 columnNumber: 41
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -681,18 +692,18 @@ const AdminFilesViewerPage = ()=>{
                                                 children: "Loading files..."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 269,
+                                                lineNumber: 281,
                                                 columnNumber: 41
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                        lineNumber: 267,
+                                        lineNumber: 279,
                                         columnNumber: 37
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 266,
+                                    lineNumber: 278,
                                     columnNumber: 33
                                 }, ("TURBOPACK compile-time value", void 0)) : error ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "flex items-center justify-center py-16",
@@ -713,17 +724,17 @@ const AdminFilesViewerPage = ()=>{
                                                         d: "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                        lineNumber: 277,
+                                                        lineNumber: 289,
                                                         columnNumber: 49
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                    lineNumber: 276,
+                                                    lineNumber: 288,
                                                     columnNumber: 45
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 275,
+                                                lineNumber: 287,
                                                 columnNumber: 41
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -731,18 +742,18 @@ const AdminFilesViewerPage = ()=>{
                                                 children: error
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 280,
+                                                lineNumber: 292,
                                                 columnNumber: 41
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                        lineNumber: 274,
+                                        lineNumber: 286,
                                         columnNumber: 37
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 273,
+                                    lineNumber: 285,
                                     columnNumber: 33
                                 }, ("TURBOPACK compile-time value", void 0)) : activeTab === "all" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(FileTable, {
                                     files: files,
@@ -750,7 +761,7 @@ const AdminFilesViewerPage = ()=>{
                                     emptyMessage: "No files found."
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 284,
+                                    lineNumber: 296,
                                     columnNumber: 33
                                 }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(FileTable, {
                                     files: pendingFiles,
@@ -758,34 +769,34 @@ const AdminFilesViewerPage = ()=>{
                                     emptyMessage: "No pending files found."
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 286,
+                                    lineNumber: 298,
                                     columnNumber: 33
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                lineNumber: 264,
+                                lineNumber: 276,
                                 columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                            lineNumber: 263,
+                            lineNumber: 275,
                             columnNumber: 21
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                    lineNumber: 144,
+                    lineNumber: 156,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-            lineNumber: 142,
+            lineNumber: 154,
             columnNumber: 13
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-        lineNumber: 141,
+        lineNumber: 153,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -816,17 +827,17 @@ const FileTable = (param)=>{
                             d: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         }, void 0, false, {
                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                            lineNumber: 311,
+                            lineNumber: 323,
                             columnNumber: 25
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                        lineNumber: 310,
+                        lineNumber: 322,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                    lineNumber: 309,
+                    lineNumber: 321,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -834,7 +845,7 @@ const FileTable = (param)=>{
                     children: "No files found"
                 }, void 0, false, {
                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                    lineNumber: 314,
+                    lineNumber: 326,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -842,13 +853,13 @@ const FileTable = (param)=>{
                     children: emptyMessage
                 }, void 0, false, {
                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                    lineNumber: 315,
+                    lineNumber: 327,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-            lineNumber: 308,
+            lineNumber: 320,
             columnNumber: 13
         }, ("TURBOPACK compile-time value", void 0));
     }
@@ -870,74 +881,12 @@ const FileTable = (param)=>{
                                             className: "w-2 h-2 bg-[#B11016] rounded-full"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 328,
-                                            columnNumber: 33
-                                        }, ("TURBOPACK compile-time value", void 0)),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            className: "text-sm font-semibold text-gray-700 uppercase tracking-wider",
-                                            children: "ID"
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 329,
-                                            columnNumber: 33
-                                        }, ("TURBOPACK compile-time value", void 0))
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 327,
-                                    columnNumber: 29
-                                }, ("TURBOPACK compile-time value", void 0))
-                            }, void 0, false, {
-                                fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                lineNumber: 326,
-                                columnNumber: 25
-                            }, ("TURBOPACK compile-time value", void 0)),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                className: "px-6 py-4 text-left",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex items-center space-x-2",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "w-2 h-2 bg-[#B11016] rounded-full"
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 334,
-                                            columnNumber: 33
-                                        }, ("TURBOPACK compile-time value", void 0)),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            className: "text-sm font-semibold text-gray-700 uppercase tracking-wider",
-                                            children: "Document Name"
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 335,
-                                            columnNumber: 33
-                                        }, ("TURBOPACK compile-time value", void 0))
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 333,
-                                    columnNumber: 29
-                                }, ("TURBOPACK compile-time value", void 0))
-                            }, void 0, false, {
-                                fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                lineNumber: 332,
-                                columnNumber: 25
-                            }, ("TURBOPACK compile-time value", void 0)),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                className: "px-6 py-4 text-center",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex items-center justify-center space-x-2",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "w-2 h-2 bg-[#B11016] rounded-full"
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/app/adminfilesviewer/page.tsx",
                                             lineNumber: 340,
                                             columnNumber: 33
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "text-sm font-semibold text-gray-700 uppercase tracking-wider",
-                                            children: "Action"
+                                            children: "ID"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
                                             lineNumber: 341,
@@ -953,16 +902,78 @@ const FileTable = (param)=>{
                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
                                 lineNumber: 338,
                                 columnNumber: 25
+                            }, ("TURBOPACK compile-time value", void 0)),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
+                                className: "px-6 py-4 text-left",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center space-x-2",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "w-2 h-2 bg-[#B11016] rounded-full"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/adminfilesviewer/page.tsx",
+                                            lineNumber: 346,
+                                            columnNumber: 33
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-sm font-semibold text-gray-700 uppercase tracking-wider",
+                                            children: "Document Name"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/adminfilesviewer/page.tsx",
+                                            lineNumber: 347,
+                                            columnNumber: 33
+                                        }, ("TURBOPACK compile-time value", void 0))
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/app/adminfilesviewer/page.tsx",
+                                    lineNumber: 345,
+                                    columnNumber: 29
+                                }, ("TURBOPACK compile-time value", void 0))
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/adminfilesviewer/page.tsx",
+                                lineNumber: 344,
+                                columnNumber: 25
+                            }, ("TURBOPACK compile-time value", void 0)),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
+                                className: "px-6 py-4 text-center",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-center space-x-2",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "w-2 h-2 bg-[#B11016] rounded-full"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/adminfilesviewer/page.tsx",
+                                            lineNumber: 352,
+                                            columnNumber: 33
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-sm font-semibold text-gray-700 uppercase tracking-wider",
+                                            children: "Action"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/adminfilesviewer/page.tsx",
+                                            lineNumber: 353,
+                                            columnNumber: 33
+                                        }, ("TURBOPACK compile-time value", void 0))
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/app/adminfilesviewer/page.tsx",
+                                    lineNumber: 351,
+                                    columnNumber: 29
+                                }, ("TURBOPACK compile-time value", void 0))
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/adminfilesviewer/page.tsx",
+                                lineNumber: 350,
+                                columnNumber: 25
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                        lineNumber: 325,
+                        lineNumber: 337,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                    lineNumber: 324,
+                    lineNumber: 336,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -985,22 +996,22 @@ const FileTable = (param)=>{
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 359,
+                                                lineNumber: 371,
                                                 columnNumber: 41
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 358,
+                                            lineNumber: 370,
                                             columnNumber: 37
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                        lineNumber: 357,
+                                        lineNumber: 369,
                                         columnNumber: 33
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 356,
+                                    lineNumber: 368,
                                     columnNumber: 29
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1022,17 +1033,17 @@ const FileTable = (param)=>{
                                                         d: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                        lineNumber: 369,
+                                                        lineNumber: 381,
                                                         columnNumber: 45
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                    lineNumber: 368,
+                                                    lineNumber: 380,
                                                     columnNumber: 41
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 367,
+                                                lineNumber: 379,
                                                 columnNumber: 37
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1042,7 +1053,7 @@ const FileTable = (param)=>{
                                                         children: file.document_name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                        lineNumber: 373,
+                                                        lineNumber: 385,
                                                         columnNumber: 41
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1050,24 +1061,24 @@ const FileTable = (param)=>{
                                                         children: "Document file"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                        lineNumber: 376,
+                                                        lineNumber: 388,
                                                         columnNumber: 41
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 372,
+                                                lineNumber: 384,
                                                 columnNumber: 37
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                        lineNumber: 366,
+                                        lineNumber: 378,
                                         columnNumber: 33
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 365,
+                                    lineNumber: 377,
                                     columnNumber: 29
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1088,49 +1099,49 @@ const FileTable = (param)=>{
                                                     d: "M9 5l7 7-7 7"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                    lineNumber: 391,
+                                                    lineNumber: 403,
                                                     columnNumber: 45
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                                lineNumber: 385,
+                                                lineNumber: 397,
                                                 columnNumber: 41
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                            lineNumber: 384,
+                                            lineNumber: 396,
                                             columnNumber: 37
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                        lineNumber: 383,
+                                        lineNumber: 395,
                                         columnNumber: 33
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                                    lineNumber: 382,
+                                    lineNumber: 394,
                                     columnNumber: 29
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, i, true, {
                             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                            lineNumber: 350,
+                            lineNumber: 362,
                             columnNumber: 25
                         }, ("TURBOPACK compile-time value", void 0)))
                 }, void 0, false, {
                     fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-                    lineNumber: 348,
+                    lineNumber: 360,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-            lineNumber: 322,
+            lineNumber: 334,
             columnNumber: 13
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/src/app/adminfilesviewer/page.tsx",
-        lineNumber: 321,
+        lineNumber: 333,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };

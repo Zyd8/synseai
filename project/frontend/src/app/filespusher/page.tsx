@@ -582,66 +582,59 @@ function FilesPusherContent() {
         newStatus === 'REJECTED' ? 'Rejecting' : 'Updating';
       showLoadingModal(`${statusLabel} document...`);
 
-      // ✅ Step 1: Fetch document setting details to get proposal_id
-      const settingRes = await fetch(`${API}/api/document_setting/${settingId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // ✅ If status is APPROVED, call setapproved API
+      if (newStatus === 'APPROVED') {
+        const res = await fetch(`${API}/api/document_setting/setapproved/${settingId}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!settingRes.ok) {
         hideLoadingModal();
-        throw new Error("Failed to fetch document setting details");
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+          throw new Error(errorData.error || `Failed to set approval`);
+        }
+
+        const result = await res.json();
+
+        // ✅ Update local state to reflect approved = true
+        setDocumentSetting(prev => prev ? {
+          ...prev,
+          approved: result.approved,
+          updated_at: new Date().toISOString()
+        } : null);
+
+        showSuccessModal(`Document approved successfully!`, () => {
+          window.location.reload();
+        });
+
+        return; // Exit after approval
       }
 
-      const settingData = await settingRes.json();
-      const proposalId = settingData?.document?.proposal_id;
-
-      if (!proposalId) {
+      // ✅ If status is REJECTED or others, handle rejection reason (if needed)
+      if (newStatus === 'REJECTED') {
+        // You can add a separate API call or logic for rejection
         hideLoadingModal();
-        throw new Error("Proposal ID not found for this document");
+        showSuccessModal(`Document rejected successfully!`, () => {
+          window.location.reload();
+        });
+        return;
       }
-
-      // ✅ Step 2: Update proposal status
-      const res = await fetch(`${API}/api/proposal/${proposalId}/status`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status: newStatus,
-          ...(reason && { rejection_reason: reason }),
-        }),
-      });
 
       hideLoadingModal();
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(errorData.error || `Failed to update proposal status`);
-      }
-
-      const result = await res.json();
-
-      // ✅ Step 3: Update local state
-      setDocumentSetting(prev => prev ? {
-        ...prev,
-        status: result.proposal?.status || newStatus,
-        updated_at: new Date().toISOString()
-      } : null);
-
-      const statusMessage = newStatus === 'APPROVED' ? 'approved' :
-        newStatus === 'REJECTED' ? 'rejected' : 'updated';
-      showSuccessModal(`Proposal ${statusMessage} successfully!`, () => {
+      showSuccessModal(`Document status updated successfully!`, () => {
         window.location.reload();
       });
 
     } catch (err) {
       hideLoadingModal();
-      console.error(`Error updating proposal status:`, err);
+      console.error(`Error updating document setting:`, err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      showErrorModal(`Error updating proposal status: ${errorMessage}`);
+      showErrorModal(`Error updating document setting: ${errorMessage}`);
     }
   };
 

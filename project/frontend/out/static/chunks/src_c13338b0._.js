@@ -694,65 +694,54 @@ function FilesPusherContent() {
             return;
         }
         try {
-            var _settingData_document;
             const statusLabel = newStatus === 'APPROVED' ? 'Approving' : newStatus === 'REJECTED' ? 'Rejecting' : 'Updating';
             showLoadingModal("".concat(statusLabel, " document..."));
-            // ✅ Step 1: Fetch document setting details to get proposal_id
-            const settingRes = await fetch("".concat(API, "/api/document_setting/").concat(settingId), {
-                headers: {
-                    Authorization: "Bearer ".concat(token)
-                }
-            });
-            if (!settingRes.ok) {
-                hideLoadingModal();
-                throw new Error("Failed to fetch document setting details");
-            }
-            const settingData = await settingRes.json();
-            const proposalId = settingData === null || settingData === void 0 ? void 0 : (_settingData_document = settingData.document) === null || _settingData_document === void 0 ? void 0 : _settingData_document.proposal_id;
-            if (!proposalId) {
-                hideLoadingModal();
-                throw new Error("Proposal ID not found for this document");
-            }
-            // ✅ Step 2: Update proposal status
-            const res = await fetch("".concat(API, "/api/proposal/").concat(proposalId, "/status"), {
-                method: 'PATCH',
-                headers: {
-                    Authorization: "Bearer ".concat(token),
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    status: newStatus,
-                    ...reason && {
-                        rejection_reason: reason
+            // ✅ If status is APPROVED, call setapproved API
+            if (newStatus === 'APPROVED') {
+                const res = await fetch("".concat(API, "/api/document_setting/setapproved/").concat(settingId), {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: "Bearer ".concat(token),
+                        "Content-Type": "application/json"
                     }
-                })
-            });
-            hideLoadingModal();
-            if (!res.ok) {
-                const errorData = await res.json().catch(()=>({
-                        error: "Unknown error"
-                    }));
-                throw new Error(errorData.error || "Failed to update proposal status");
+                });
+                hideLoadingModal();
+                if (!res.ok) {
+                    const errorData = await res.json().catch(()=>({
+                            error: "Unknown error"
+                        }));
+                    throw new Error(errorData.error || "Failed to set approval");
+                }
+                const result = await res.json();
+                // ✅ Update local state to reflect approved = true
+                setDocumentSetting((prev)=>prev ? {
+                        ...prev,
+                        approved: result.approved,
+                        updated_at: new Date().toISOString()
+                    } : null);
+                showSuccessModal("Document approved successfully!", ()=>{
+                    window.location.reload();
+                });
+                return; // Exit after approval
             }
-            const result = await res.json();
-            // ✅ Step 3: Update local state
-            setDocumentSetting((prev)=>{
-                var _result_proposal;
-                return prev ? {
-                    ...prev,
-                    status: ((_result_proposal = result.proposal) === null || _result_proposal === void 0 ? void 0 : _result_proposal.status) || newStatus,
-                    updated_at: new Date().toISOString()
-                } : null;
-            });
-            const statusMessage = newStatus === 'APPROVED' ? 'approved' : newStatus === 'REJECTED' ? 'rejected' : 'updated';
-            showSuccessModal("Proposal ".concat(statusMessage, " successfully!"), ()=>{
+            // ✅ If status is REJECTED or others, handle rejection reason (if needed)
+            if (newStatus === 'REJECTED') {
+                // You can add a separate API call or logic for rejection
+                hideLoadingModal();
+                showSuccessModal("Document rejected successfully!", ()=>{
+                    window.location.reload();
+                });
+                return;
+            }
+            hideLoadingModal();
+            showSuccessModal("Document status updated successfully!", ()=>{
                 window.location.reload();
             });
         } catch (err) {
             hideLoadingModal();
-            console.error("Error updating proposal status:", err);
+            console.error("Error updating document setting:", err);
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-            showErrorModal("Error updating proposal status: ".concat(errorMessage));
+            showErrorModal("Error updating document setting: ".concat(errorMessage));
         }
     };
     // Approve handler for final department
@@ -970,7 +959,7 @@ function FilesPusherContent() {
                             className: "animate-spin rounded-full h-12 w-12 border-b-2 border-[#B11016] mx-auto mb-4"
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 882,
+                            lineNumber: 875,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -978,23 +967,23 @@ function FilesPusherContent() {
                             children: "Loading document..."
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 883,
+                            lineNumber: 876,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 881,
+                    lineNumber: 874,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/filespusher/page.tsx",
-                lineNumber: 880,
+                lineNumber: 873,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/filespusher/page.tsx",
-            lineNumber: 879,
+            lineNumber: 872,
             columnNumber: 7
         }, this);
     }
@@ -1018,7 +1007,7 @@ function FilesPusherContent() {
                                     className: "mr-2"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 899,
+                                    lineNumber: 892,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1026,13 +1015,13 @@ function FilesPusherContent() {
                                     children: "Back"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 900,
+                                    lineNumber: 893,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 895,
+                            lineNumber: 888,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1043,7 +1032,7 @@ function FilesPusherContent() {
                                     children: "Files Pusher"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 904,
+                                    lineNumber: 897,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1051,26 +1040,26 @@ function FilesPusherContent() {
                                     children: "Push the files to the departments for review and approval."
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 907,
+                                    lineNumber: 900,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "mx-2 border-b-[3px] border-[#B11016]"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 910,
+                                    lineNumber: 903,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 903,
+                            lineNumber: 896,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 894,
+                    lineNumber: 887,
                     columnNumber: 9
                 }, this),
                 error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1080,12 +1069,12 @@ function FilesPusherContent() {
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/src/app/filespusher/page.tsx",
-                        lineNumber: 917,
+                        lineNumber: 910,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 916,
+                    lineNumber: 909,
                     columnNumber: 11
                 }, this),
                 userDepartmentId === null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1097,7 +1086,7 @@ function FilesPusherContent() {
                                 children: "Note:"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 925,
+                                lineNumber: 918,
                                 columnNumber: 15
                             }, this),
                             " Department information not found.",
@@ -1107,18 +1096,18 @@ function FilesPusherContent() {
                                 children: "Refresh Access"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 926,
+                                lineNumber: 919,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/filespusher/page.tsx",
-                        lineNumber: 924,
+                        lineNumber: 917,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 923,
+                    lineNumber: 916,
                     columnNumber: 11
                 }, this),
                 !canInteract && documentSetting && userDepartmentId !== null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1137,18 +1126,18 @@ function FilesPusherContent() {
                                 children: "Refresh Access"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 941,
+                                lineNumber: 934,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/filespusher/page.tsx",
-                        lineNumber: 938,
+                        lineNumber: 931,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 937,
+                    lineNumber: 930,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1161,7 +1150,7 @@ function FilesPusherContent() {
                                     children: "File Name:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 953,
+                                    lineNumber: 946,
                                     columnNumber: 16
                                 }, this),
                                 " ",
@@ -1169,7 +1158,7 @@ function FilesPusherContent() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 953,
+                            lineNumber: 946,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1179,7 +1168,7 @@ function FilesPusherContent() {
                                     children: "File Description:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 954,
+                                    lineNumber: 947,
                                     columnNumber: 16
                                 }, this),
                                 "  ",
@@ -1187,7 +1176,7 @@ function FilesPusherContent() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 954,
+                            lineNumber: 947,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1197,7 +1186,7 @@ function FilesPusherContent() {
                                     children: "Date created:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 956,
+                                    lineNumber: 949,
                                     columnNumber: 13
                                 }, this),
                                 " ",
@@ -1205,13 +1194,13 @@ function FilesPusherContent() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 955,
+                            lineNumber: 948,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 952,
+                    lineNumber: 945,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1227,17 +1216,17 @@ function FilesPusherContent() {
                                         children: dept.name
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 975,
+                                        lineNumber: 968,
                                         columnNumber: 17
                                     }, this)
                                 }, dept.id, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 966,
+                                    lineNumber: 959,
                                     columnNumber: 15
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 964,
+                            lineNumber: 957,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1262,17 +1251,17 @@ function FilesPusherContent() {
                                                         className: "mx-auto"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                                        lineNumber: 997,
+                                                        lineNumber: 990,
                                                         columnNumber: 27
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                                    lineNumber: 996,
+                                                    lineNumber: 989,
                                                     columnNumber: 25
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 991,
+                                                lineNumber: 984,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1281,7 +1270,7 @@ function FilesPusherContent() {
                                                 children: deptFile.name
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 1007,
+                                                lineNumber: 1000,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1294,20 +1283,20 @@ function FilesPusherContent() {
                                                         size: 10
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                                        lineNumber: 1017,
+                                                        lineNumber: 1010,
                                                         columnNumber: 25
                                                     }, this),
                                                     "Download"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 1012,
+                                                lineNumber: 1005,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 990,
+                                        lineNumber: 983,
                                         columnNumber: 21
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "text-center py-8 text-gray-400",
@@ -1316,7 +1305,7 @@ function FilesPusherContent() {
                                                 className: "mx-auto text-2xl mb-2 opacity-30"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 1023,
+                                                lineNumber: 1016,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1324,24 +1313,24 @@ function FilesPusherContent() {
                                                 children: "No file"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 1024,
+                                                lineNumber: 1017,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 1022,
+                                        lineNumber: 1015,
                                         columnNumber: 21
                                     }, this)
                                 }, dept.id, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 988,
+                                    lineNumber: 981,
                                     columnNumber: 17
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 983,
+                            lineNumber: 976,
                             columnNumber: 11
                         }, this),
                         files.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1351,7 +1340,7 @@ function FilesPusherContent() {
                                     className: "mx-auto text-4xl mb-4 opacity-30"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 1037,
+                                    lineNumber: 1030,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1359,7 +1348,7 @@ function FilesPusherContent() {
                                     children: "No document available"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 1038,
+                                    lineNumber: 1031,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1367,19 +1356,19 @@ function FilesPusherContent() {
                                     children: "Document will appear here when loaded"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 1041,
+                                    lineNumber: 1034,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 1036,
+                            lineNumber: 1029,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 962,
+                    lineNumber: 955,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1395,7 +1384,7 @@ function FilesPusherContent() {
                                     children: "Update"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 1051,
+                                    lineNumber: 1044,
                                     columnNumber: 13
                                 }, this),
                                 !isAtFinalDepartment() && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1405,7 +1394,7 @@ function FilesPusherContent() {
                                     children: "Push"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 1064,
+                                    lineNumber: 1057,
                                     columnNumber: 15
                                 }, this),
                                 isAtFinalDepartment() && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -1419,14 +1408,14 @@ function FilesPusherContent() {
                                                     className: "mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                                    lineNumber: 1087,
+                                                    lineNumber: 1080,
                                                     columnNumber: 19
                                                 }, this),
                                                 "Approve"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/filespusher/page.tsx",
-                                            lineNumber: 1079,
+                                            lineNumber: 1072,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1438,14 +1427,14 @@ function FilesPusherContent() {
                                                     className: "mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                                    lineNumber: 1099,
+                                                    lineNumber: 1092,
                                                     columnNumber: 19
                                                 }, this),
                                                 "Reject"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/filespusher/page.tsx",
-                                            lineNumber: 1091,
+                                            lineNumber: 1084,
                                             columnNumber: 17
                                         }, this)
                                     ]
@@ -1453,7 +1442,7 @@ function FilesPusherContent() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 1050,
+                            lineNumber: 1043,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1462,36 +1451,36 @@ function FilesPusherContent() {
                                 children: "Department information not available. Please check your login setup or refresh access."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1109,
+                                lineNumber: 1102,
                                 columnNumber: 15
                             }, this) : !canInteract ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "You can only interact with documents that are currently at your department."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1111,
+                                lineNumber: 1104,
                                 columnNumber: 15
                             }, this) : isAtFinalDepartment() ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "Document has reached the final department. You can update, approve, or reject the document."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1113,
+                                lineNumber: 1106,
                                 columnNumber: 15
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "You can update the document or push it to the next department."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1115,
+                                lineNumber: 1108,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/filespusher/page.tsx",
-                            lineNumber: 1107,
+                            lineNumber: 1100,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 1049,
+                    lineNumber: 1042,
                     columnNumber: 9
                 }, this),
                 isUploadModalOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1509,12 +1498,12 @@ function FilesPusherContent() {
                                 className: "absolute top-3 right-3 text-gray-500 hover:text-gray-700",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaTimes"], {}, void 0, false, {
                                     fileName: "[project]/src/app/filespusher/page.tsx",
-                                    lineNumber: 1134,
+                                    lineNumber: 1127,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1125,
+                                lineNumber: 1118,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -1522,7 +1511,7 @@ function FilesPusherContent() {
                                 children: "Update File"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1137,
+                                lineNumber: 1130,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1540,7 +1529,7 @@ function FilesPusherContent() {
                                         className: "mx-auto h-12 w-12 object-contain"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 1148,
+                                        lineNumber: 1141,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1553,13 +1542,13 @@ function FilesPusherContent() {
                                                 children: "Browse"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                                lineNumber: 1156,
+                                                lineNumber: 1149,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 1154,
+                                        lineNumber: 1147,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1567,7 +1556,7 @@ function FilesPusherContent() {
                                         children: "Supported formats: JPEG, PNG, PDF, DOCX"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 1158,
+                                        lineNumber: 1151,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1578,13 +1567,13 @@ function FilesPusherContent() {
                                         onChange: handleFileChange
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/filespusher/page.tsx",
-                                        lineNumber: 1162,
+                                        lineNumber: 1155,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1142,
+                                lineNumber: 1135,
                                 columnNumber: 15
                             }, this),
                             selectedFile && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1595,7 +1584,7 @@ function FilesPusherContent() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1173,
+                                lineNumber: 1166,
                                 columnNumber: 17
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1605,18 +1594,18 @@ function FilesPusherContent() {
                                 children: "Update File"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/filespusher/page.tsx",
-                                lineNumber: 1179,
+                                lineNumber: 1172,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/filespusher/page.tsx",
-                        lineNumber: 1123,
+                        lineNumber: 1116,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 1122,
+                    lineNumber: 1115,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(CustomModal, {
@@ -1634,7 +1623,7 @@ function FilesPusherContent() {
                     onInputChange: modal.onInputChange
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 1191,
+                    lineNumber: 1184,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(LoadingModal, {
@@ -1642,18 +1631,18 @@ function FilesPusherContent() {
                     message: loadingModal.message
                 }, void 0, false, {
                     fileName: "[project]/src/app/filespusher/page.tsx",
-                    lineNumber: 1207,
+                    lineNumber: 1200,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/filespusher/page.tsx",
-            lineNumber: 892,
+            lineNumber: 885,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/filespusher/page.tsx",
-        lineNumber: 891,
+        lineNumber: 884,
         columnNumber: 5
     }, this);
 }

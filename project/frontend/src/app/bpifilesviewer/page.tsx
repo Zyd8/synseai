@@ -65,8 +65,21 @@ const BpiFilesViewerPage = () => {
                         "Content-Type": "application/json",
                     },
                 });
-                const data = await res.json();
 
+                let data = await res.json();
+
+                // ✅ Normalize: Extract actual array if API returns {data: []}
+                if (data && data.data) {
+                    data = data.data;
+                }
+                console.log("Fetched Data:", data);
+
+                // ✅ Ensure it's an array before filtering
+                if (Array.isArray(data)) {
+                    data = data.filter((file: any) => file.approved === false);
+                }
+
+                // ✅ Set state
                 if (activeTab === "all") {
                     setFiles(data);
                 } else {
@@ -78,6 +91,7 @@ const BpiFilesViewerPage = () => {
             }
             setLoading(false);
         };
+
 
         fetchFiles();
     }, [activeTab, API]);
