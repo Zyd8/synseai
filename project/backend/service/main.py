@@ -1,9 +1,7 @@
-try:
-    from .webscrape import company_webscraper, company_project_reccomender, company_traits_webscraper
-    from .synseai_llm import SynseaiLLM
-except ImportError:
-    from webscrape import company_webscraper, company_project_reccomender, company_traits_webscraper
-    from synseai_llm import SynseaiLLM
+# Import webscrape functions
+from .webscrape import company_webscraper, company_project_reccomender, company_traits_webscraper
+# Import SynseaiLLM class
+from .synseai_llm import SynseaiLLM
 
 
 def company_scoring_scrape(company):
