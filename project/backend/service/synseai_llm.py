@@ -1,12 +1,12 @@
 import re
 from dotenv import load_dotenv
 import os
-import openai
+from openai import OpenAI
 
 load_dotenv()
 
 # Initialize OpenAI API key
-openai.api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 class SynseaiLLM:
     def __init__(self, company):
@@ -15,6 +15,7 @@ class SynseaiLLM:
         self.compliance_reasonings = []
         self.company = company
         self.project_contexts = []
+        self.client = OpenAI()
 
     def _load_bpi_context(self):
         """Load BPI context from the text file."""
@@ -25,17 +26,16 @@ class SynseaiLLM:
             print(f"Warning: Could not load BPI context: {str(e)}")
             return ""
 
-    def _openai_chat(self, messages, temperature=0.7, max_tokens=1500):
+    def _openai_chat(self, input, temperature=0.7):
         """
         Helper method to call OpenAI ChatCompletion.
         """
-        response = openai.ChatCompletion.create(
+        response = client.responses.create(
             model="gpt-4o-mini",
-            messages=messages,
+            input=input,
             temperature=temperature,
-            max_tokens=max_tokens,
         )
-        return response['choices'][0]['message']
+        return response['choices'][0].message.content
 
     def project_recommendation(self, page):
         """
@@ -94,12 +94,8 @@ class SynseaiLLM:
 
         try:
             response_msg = self._openai_chat(
-                messages=[{
-                    'role': 'user',
-                    'content': prompt,
-                }],
+                input=prompt,
                 temperature=0.7,
-                max_tokens=2500
             )
             content = response_msg['content'].strip()
             recommendations = []
@@ -167,23 +163,15 @@ class SynseaiLLM:
         """
         try:
             score_response = self._openai_chat(
-                messages=[{
-                    'role': 'user',
-                    'content': prompt,
-                }],
+                input=prompt,
                 temperature=0.0,
-                max_tokens=50
             )
             score_text = score_response['content'].strip()
             score = float(re.search(r'[0-9]*\.?[0-9]+', score_text).group())
 
             reason_response = self._openai_chat(
-                messages=[
-                    {'role': 'assistant', 'content': score_response['content']},
-                    {'role': 'user', 'content': f'Why did you give this score, based on the {criteria} criteria?'}
-                ],
+                input=f'Why did you give this score, based on the {criteria} criteria?',
                 temperature=0.7,
-                max_tokens=500
             )
             reason_text = reason_response['content'].strip()
 
@@ -211,12 +199,8 @@ class SynseaiLLM:
             return "Invalid criteria"
 
         reason_response = self._openai_chat(
-            messages=[
-                {'role': 'assistant', 'content': reasonings},
-                {'role': 'user', 'content': f'Summarize the reasonings in cohesive bullet points based on the {criteria} criteria. Answer directly, no unnecessary introductions. Strictly Do not mention any score.'}
-            ],
+            input=f'Summarize the reasonings in cohesive bullet points based on the {criteria} criteria. Answer directly, no unnecessary introductions. Strictly Do not mention any score.',
             temperature=0.5,
-            max_tokens=500
         )
         return reason_response['content'].strip()
 
