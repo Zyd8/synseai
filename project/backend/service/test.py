@@ -1,10 +1,7 @@
-from synseai_llm import SynseaiLLM
-from webscrape import company_traits_webscraper
-
-scraped_pages = company_traits_webscraper("Fast Food")
-company_names = SynseaiLLM.get_company_names(scraped_pages)
-print(company_names)
+from main import company_scoring_scrape, company_project_recommendation_scrape, company_names_from_traits, company_name_webscraper
 
 
-
-
+print(company_scoring_scrape("ING bank"))
+# company_project_recommendation_scrape("ING bank")
+# company_names_from_traits("ING bank")
+# company_name_webscraper("ING bank")

@@ -35,7 +35,6 @@ class SynseaiLLM:
             input=input,
             temperature=temperature,
         )
-        print(response.output[0].content[0].text)
         return response.output[0].content[0].text
 
     def project_recommendation(self, page):
