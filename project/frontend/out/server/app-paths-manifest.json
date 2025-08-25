@@ -1,6 +1,15 @@
 {
+  "/adminassigndocument/page": "app/adminassigndocument/page.js",
   "/admindashboard/page": "app/admindashboard/page.js",
+  "/admindocumentmanagement/page": "app/admindocumentmanagement/page.js",
   "/adminfilesviewer/page": "app/adminfilesviewer/page.js",
+  "/bpiapproved/page": "app/bpiapproved/page.js",
+  "/bpidashboard/page": "app/bpidashboard/page.js",
+  "/bpifindcollab/page": "app/bpifindcollab/page.js",
+  "/bpifindcollabcompany/page": "app/bpifindcollabcompany/page.js",
+  "/bpiinprocess/page": "app/bpiinprocess/page.js",
+  "/companylist/page": "app/companylist/page.js",
+  "/companyprofile/page": "app/companyprofile/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/filespusher/page": "app/filespusher/page.js",
   "/login/page": "app/login/page.js"

@@ -1,9 +1,36 @@
 {
   "app": {
+    "[project]/src/app/adminassigndocument/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
     "[project]/src/app/admindashboard/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
+    "[project]/src/app/admindocumentmanagement/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
     "[project]/src/app/adminfilesviewer/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/bpiapproved/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/bpidashboard/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/bpifindcollab/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/bpifindcollabcompany/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/bpiinprocess/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/companylist/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/companyprofile/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
     "[project]/src/app/filespusher/page": [

@@ -1,13 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import {
-  FaArrowLeft,
-  FaCheckCircle,
-  FaExclamationTriangle,
-} from "react-icons/fa";
-import { Suspense } from "react";
+import { FaArrowLeft } from "react-icons/fa";
 
 export default function BpiFindCollabCompany() {
   return (
@@ -25,8 +20,18 @@ function BpiFindCollabCompanyContent() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [scoring, setScoring] = useState<any>(null);
-  const [projects, setProjects] = useState<any>(null);
+  const [scoring, setScoring] = useState<{
+    credibility_score: number;
+    referential_score: number;
+    compliance_score: number;
+    credibility_reasoning?: string;
+    referential_reasoning?: string;
+    compliance_reasoning?: string;
+  } | null>(null);
+
+  const [projects, setProjects] = useState<
+    { title: string; description: string }[]
+  >([]);
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -53,9 +58,41 @@ function BpiFindCollabCompanyContent() {
         if (!res.ok) throw new Error("Failed to fetch company data");
 
         const data = await res.json();
-        setScoring(data.scoring);
-        setProjects(data.project_recommendations);
+
+        // ✅ Log the raw response for debugging
+        console.log("Fetched Company Data:", data);
+        const companyData = data.company_name_scrape;
+        if (!companyData) throw new Error("Invalid data format");
+
+        // ✅ Set scoring safely
+        setScoring({
+          credibility_score: Number(companyData.credibility_score) || 0,
+          referential_score: Number(companyData.referential_score) || 0,
+          compliance_score: Number(companyData.compliance_score) || 0,
+          credibility_reasoning: companyData.credibility_reasoning,
+          referential_reasoning: companyData.referential_reasoning,
+          compliance_reasoning: companyData.compliance_reasoning,
+        });
+
+        // ✅ Log computed scoring for clarity
+        console.log("Processed Scoring:", {
+          credibility_score: Number(data.credibility_score) || 0,
+          referential_score: Number(data.referential_score) || 0,
+          compliance_score: Number(data.compliance_score) || 0,
+        });
+
+        // ✅ Set projects
+        const projectList = [
+          { title: companyData.project_title1, description: companyData.project_description1 },
+          { title: companyData.project_title2, description: companyData.project_description2 },
+          { title: companyData.project_title3, description: companyData.project_description3 },
+        ];
+        setProjects(projectList);
+
+        // ✅ Log processed projects
+        console.log("Processed Projects:", projectList);
       } catch (err: any) {
+        console.error("Fetch Error:", err);
         setError(err.message || "Something went wrong");
       } finally {
         setLoading(false);
@@ -63,7 +100,8 @@ function BpiFindCollabCompanyContent() {
     };
 
     fetchCompanyData();
-  }, [company]);
+  }, [company, API]);
+
 
   if (loading) {
     return (
@@ -81,9 +119,14 @@ function BpiFindCollabCompanyContent() {
     );
   }
 
-  // Calculate overall synergy score (average of the three scores)
-  const overallSynergy = scoring ? 
-    ((scoring.credibility_score + scoring.referential_score + scoring.compliance_score) / 3 * 100) : 0;
+  // ✅ Calculate overall synergy score
+  const overallSynergy = scoring
+    ? Math.round(
+      ((scoring.credibility_score +
+        scoring.referential_score +
+        scoring.compliance_score) / 3) * 100
+    )
+    : 0;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -94,33 +137,37 @@ function BpiFindCollabCompanyContent() {
         <FaArrowLeft className="mr-2" /> Back
       </button>
 
-      <h1 className="text-2xl font-bold mb-6">Collaboration Details for {company}</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        Collaboration Details for {company}
+      </h1>
 
       {/* Synergy Scoring Section */}
       <section className="mb-8">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-red-600 mb-6">Synergy Score</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-6">
+            Synergy Score
+          </h2>
           <div className="flex justify-center mb-8">
-            <CircularProgress score={Math.round(overallSynergy)} />
+            <CircularProgress score={overallSynergy} />
           </div>
         </div>
 
         {/* Score Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ScoreCard 
-            title="Credibility" 
+          <ScoreCard
+            title="Credibility"
             score={scoring?.credibility_score}
             reasoning={scoring?.credibility_reasoning}
             color="bg-red-600"
           />
-          <ScoreCard 
-            title="Referential" 
+          <ScoreCard
+            title="Referential"
             score={scoring?.referential_score}
             reasoning={scoring?.referential_reasoning}
             color="bg-red-500"
           />
-          <ScoreCard 
-            title="Compliance" 
+          <ScoreCard
+            title="Compliance"
             score={scoring?.compliance_score}
             reasoning={scoring?.compliance_reasoning}
             color="bg-red-700"
@@ -132,13 +179,9 @@ function BpiFindCollabCompanyContent() {
       <section>
         <h2 className="text-xl font-semibold mb-4">Recommended Projects</h2>
         <div className="grid gap-4">
-          {projects && (
-            <>
-              <ProjectCard title={projects.title1} description={projects.description1} />
-              <ProjectCard title={projects.title2} description={projects.description2} />
-              <ProjectCard title={projects.title3} description={projects.description3} />
-            </>
-          )}
+          {projects.map((p, idx) => (
+            <ProjectCard key={idx} title={p.title} description={p.description} />
+          ))}
         </div>
       </section>
     </div>
@@ -182,46 +225,27 @@ function CircularProgress({ score }: { score: number }) {
   );
 }
 
-function ScoreCard({ title, score, reasoning, color }: { 
-  title: string; 
-  score: number; 
-  reasoning: string;
+function ScoreCard({
+  title,
+  score,
+  reasoning,
+  color,
+}: {
+  title: string;
+  score?: number;
+  reasoning?: string;
   color: string;
 }) {
-  const percentage = (score * 100).toFixed(0);
-  
+  const percentage = score !== undefined ? (score * 100).toFixed(0) : "0";
+
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-      {/* Header */}
       <div className="text-center py-4 border-b-2 border-gray-200">
         <h3 className="font-bold text-lg text-gray-800">{title}</h3>
         <p className="text-4xl font-bold text-gray-800 mt-2">{percentage}%</p>
       </div>
-      
-      {/* Content */}
+
       <div className={`${color} text-white p-4 space-y-4`}>
-        <div>
-          <h4 className="font-semibold text-sm mb-2">Market Leadership:</h4>
-          <p className="text-xs leading-relaxed">
-            GCash is the leading e-wallet in the Philippines with over 90M users, establishing it as a trusted financial platform.
-          </p>
-        </div>
-        
-        <div>
-          <h4 className="font-semibold text-sm mb-2">Strong Backing:</h4>
-          <p className="text-xs leading-relaxed">
-            Operated by Mynt, a partnership between Globe Telecom, Ayala Corporation, and Ant Group (Alibaba).
-          </p>
-        </div>
-        
-        <div>
-          <h4 className="font-semibold text-sm mb-2">Track Record:</h4>
-          <p className="text-xs leading-relaxed">
-            Recognized by the Bangko Sentral ng Pilipinas (BSP) and awarded for innovation in financial inclusion.
-          </p>
-        </div>
-        
-        {/* Reasoning Details */}
         {reasoning && (
           <details className="mt-4">
             <summary className="font-semibold text-sm cursor-pointer hover:text-gray-200">

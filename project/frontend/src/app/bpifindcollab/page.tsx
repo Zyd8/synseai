@@ -13,6 +13,11 @@ export default function FindCollabPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
 
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [results, setResults] = useState<any[]>([]);
+
+
     const overallSynergy = 75;
     // const token = sessionStorage.getItem("access_token");
     // console.log(token)
@@ -47,6 +52,36 @@ export default function FindCollabPage() {
         if (!searchTerm.trim()) return;
         router.push(`/bpifindcollabcompany?company=${encodeURIComponent(searchTerm.trim())}`);
     };
+
+    const handleSearchByTraits = async () => {
+        const API = process.env.NEXT_PUBLIC_API_URL;
+        const token = sessionStorage.getItem("access_token");
+        if (!token || selectedTraits.length === 0) return;
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const res = await fetch(`${API}/api/find_company_bp/trait`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ company_traits: selectedTraits }),
+            });
+
+            if (!res.ok) throw new Error("Failed to fetch companies");
+
+            const data = await res.json();
+            setResults(data); 
+        } catch (err: any) {
+            setError(err.message || "Something went wrong");
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     return (
         <ProtectedRoute allowedRoles={["employee", "admin"]}>
@@ -106,6 +141,7 @@ export default function FindCollabPage() {
                                 setSearchMode("traits");
                                 setSearchTerm("");
                                 setSelectedTraits([]);
+                                handleSearchByTraits();
                             }}
                             className={`px-4 py-2 rounded-sm font-bold min-w-[50%] sm:w-auto ${searchMode === "traits"
                                 ? "bg-[#B11016] text-white hover:bg-[#8f0d12]"
@@ -202,40 +238,55 @@ export default function FindCollabPage() {
                     )}
 
                     {/* Company Cards */}
-                    {/* <div className="w-full flex flex-col gap-4">
-                {filteredCompanies.map((company, index) => (
-                    <div
-                        key={index}
-                        className="bg-white shadow rounded-lg p-4 sm:p-6 flex justify-between items-center border border-gray-400"
-                    >
-                        <div className="flex-1">
-                            <h2 className="text-lg sm:text-xl font-bold text-[#B11016]">{company.name}</h2>
-                            <p className="text-sm text-gray-700 mt-1">{company.description}</p>
 
-                            <button className="mt-3 bg-[#B11016] text-white px-4 py-2 rounded font-semibold hover:bg-[#8f0d12]" onClick={handleCheckProjects}>
-                                VIEW DETAILS
-                            </button>
-                        </div>
-                        <div className="flex flex-col items-center ml-4">
-                            <span className="text-sm font-semibold mb-1">Synergy</span>
-                            <div className="w-25 h-25">
-                                <CircularProgressbar
-                                    value={company.synergy}
-                                    text={`${company.synergy}%`}
-                                    styles={buildStyles({
-                                        textSize: "16px",
-                                        textColor: "#111827",
-                                        pathColor: "#B11016",
-                                        trailColor: "#d1d5db",
-                                    })}
-                                    strokeWidth={15}
-                                />
+                    {/* Show loading state */}
+                    {loading && <p className="text-center text-gray-500">Searching...</p>}
+
+                    {/* Show error */}
+                    {error && <p className="text-center text-red-600">{error}</p>}
+
+                    {/* Show results */}
+                    <div className="w-full flex flex-col gap-4">
+                        {results.map((company, index) => (
+                            <div
+                                key={index}
+                                className="bg-white shadow rounded-lg p-4 sm:p-6 flex justify-between items-center border border-gray-400"
+                            >
+                                <div className="flex-1">
+                                    <h2 className="text-lg sm:text-xl font-bold text-[#B11016]">
+                                        {company.company_name}
+                                    </h2>
+                                    <p className="text-sm text-gray-700 mt-1">
+                                        {company.project_description1 || "No description"}
+                                    </p>
+
+                                    <button
+                                        className="mt-3 bg-[#B11016] text-white px-4 py-2 rounded font-semibold hover:bg-[#8f0d12]"
+                                        onClick={handleCheckProjects}
+                                    >
+                                        VIEW DETAILS
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col items-center ml-4">
+                                    <span className="text-sm font-semibold mb-1">Synergy</span>
+                                    <div className="w-20 h-20">
+                                        <CircularProgressbar
+                                            value={company.credibility_score || 0}
+                                            text={`${company.credibility_score || 0}%`}
+                                            styles={buildStyles({
+                                                textSize: "16px",
+                                                textColor: "#111827",
+                                                pathColor: "#B11016",
+                                                trailColor: "#d1d5db",
+                                            })}
+                                            strokeWidth={15}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        ))}
                     </div>
-                ))}
-
-            </div> */}
                 </div>
             </div>
         </ProtectedRoute>
