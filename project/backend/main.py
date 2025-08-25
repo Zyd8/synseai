@@ -29,6 +29,10 @@ app = Flask(__name__,
             static_folder="frontend/out",
             static_url_path="")
 
+# Use a session object to avoid unnecessary overhead of creating a new connection each time
+with requests.Session() as session:
+    session.get(os.getenv('SERVICE_PING_URL'))
+
 # Load configuration
 env = os.getenv('FLASK_ENV', 'development')
 app.config.from_object(config[env])
@@ -94,9 +98,6 @@ def server_error(error):
 # Serve index.html for the root
 @app.route("/")
 def index():
-    # Use a session object to avoid unnecessary overhead of creating a new connection each time
-    with requests.Session() as session:
-        session.get(os.getenv('SERVICE_PING_URL'))
     return send_from_directory(app.static_folder, "index.html")
 
 # Catch-all route for client-side routing
