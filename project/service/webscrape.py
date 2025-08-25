@@ -299,7 +299,7 @@ def company_traits_webscraper(company_traits):
     valid_results = 0
 
     links = search(
-        f"Companies known for {company_traits}",
+        f"{company_traits} Companies",
         num_results=search_settings.get('num_results'),
         advanced=True
     )
