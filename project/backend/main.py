@@ -19,6 +19,7 @@ from routes.department_preset import department_preset_bp
 from routes.project_recommendation import bp as project_recommendation_bp
 from routes.user import user_bp
 from routes.find_company import find_company_bp
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -93,6 +94,9 @@ def server_error(error):
 # Serve index.html for the root
 @app.route("/")
 def index():
+    # Use a session object to avoid unnecessary overhead of creating a new connection each time
+    with requests.Session() as session:
+        session.get(os.getenv('SERVICE_PING_URL'))
     return send_from_directory(app.static_folder, "index.html")
 
 # Catch-all route for client-side routing
