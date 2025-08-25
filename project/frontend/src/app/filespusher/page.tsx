@@ -105,93 +105,48 @@ function FilesPusherContent() {
   };
 
   // Enhanced function to get and refresh user's department ID
-  const fetchUserDepartmentId = async () => {
-    try {
-      console.log("=== Fetching User Department ID ===");
-      
-      // First try to get from sessionStorage
-      const storedDeptId = sessionStorage.getItem("department_id");
-      if (storedDeptId && storedDeptId !== "null" && storedDeptId !== "undefined") {
-        const deptId = parseInt(storedDeptId);
-        console.log("✅ Found department_id in sessionStorage:", deptId);
-        setUserDepartmentId(deptId);
-        return deptId;
-      }
+  useEffect(() => {
+    const token = sessionStorage.getItem("access_token");
+    const fetchUserDepartmentId = async () => {
+      if (!token) return;
 
-      // If not in sessionStorage, try to fetch from user data or API
-      const token = sessionStorage.getItem('access_token');
-      const userId = sessionStorage.getItem('user_id');
-      
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      // Try to fetch user profile/info from API to get department_id
       try {
-        const userRes = await fetch(`${API}/api/user/profile`, {
-          method: 'GET',
+        console.log("=== Fetching User Department from API ===");
+        const res = await fetch(`${API}/api/user/me`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
 
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          console.log("Fetched user data from API:", userData);
-          
-          if (userData.department_id || userData.user?.department_id) {
-            const deptId = userData.department_id || userData.user.department_id;
-            console.log("✅ Found department_id from API:", deptId);
-            
-            // Store it for future use
-            sessionStorage.setItem("department_id", deptId.toString());
-            setUserDepartmentId(deptId);
-            return deptId;
-          }
+        if (!res.ok) throw new Error("Failed to fetch user details");
+
+        const data = await res.json();
+        console.log("✅ User data fetched:", data);
+
+        // Extract department info
+        const deptId = data.department_id || data.user?.department_id;
+        const deptName = data.department_name || data.user?.department_name;
+
+        if (deptId) {
+          setUserDepartmentId(deptId);
+
+        } else {
+          console.warn("❌ Department ID missing in user data");
+          setUserDepartmentId(null);
+
         }
-      } catch (apiError) {
-        console.warn("Failed to fetch user data from API:", apiError);
+      } catch (error) {
+        console.error("Error fetching user department:", error);
+        setUserDepartmentId(null);
+
       }
+    };
 
-      // Alternative: Try to get from stored user data in sessionStorage
-      const possibleUserKeys = ['user', 'userData', 'currentUser', 'userInfo'];
-      for (const userKey of possibleUserKeys) {
-        const storedUserData = sessionStorage.getItem(userKey);
-        if (storedUserData && storedUserData !== "null" && storedUserData !== "undefined") {
-          try {
-            const userData = JSON.parse(storedUserData);
-            console.log(`Found user data in '${userKey}':`, userData);
-
-            if (userData && typeof userData === 'object' && userData.department_id !== undefined && userData.department_id !== null) {
-              console.log("✅ Found department_id in stored user data:", userData.department_id);
-              const deptId = userData.department_id;
-              sessionStorage.setItem("department_id", deptId.toString());
-              setUserDepartmentId(deptId);
-              return deptId;
-            }
-          } catch (parseError) {
-            console.warn(`Error parsing '${userKey}' data:`, parseError);
-          }
-        }
-      }
-
-      // If we reach here, department_id wasn't found
-      console.warn("❌ Department ID not found anywhere");
-      setUserDepartmentId(null);
-      return null;
-
-    } catch (error) {
-      console.error("Error fetching user department:", error);
-      setUserDepartmentId(null);
-      return null;
-    }
-  };
-
-  // Effect to fetch user department ID on component mount and when needed
-  useEffect(() => {
     fetchUserDepartmentId();
-  }, []);
+  }, [API]);
+
+
 
   // Handle file selection from input or drag & drop
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -329,7 +284,7 @@ function FilesPusherContent() {
     try {
       setIsApproving(newStatus === 'APPROVED');
       setIsRejecting(newStatus === 'REJECTED');
-      
+
       const token = sessionStorage.getItem("access_token");
       if (!token) throw new Error("No token found.");
 
@@ -352,7 +307,7 @@ function FilesPusherContent() {
       }
 
       const result = await res.json();
-      
+
       // Update local state with new status
       setDocumentSetting(prev => prev ? {
         ...prev,
@@ -360,8 +315,8 @@ function FilesPusherContent() {
         updated_at: new Date().toISOString()
       } : null);
 
-      const statusLabel = newStatus === 'APPROVED' ? 'approved' : 
-                         newStatus === 'REJECTED' ? 'rejected' : 'updated';
+      const statusLabel = newStatus === 'APPROVED' ? 'approved' :
+        newStatus === 'REJECTED' ? 'rejected' : 'updated';
       alert(`Document ${statusLabel} successfully!`);
 
       // Refresh the page to get updated data
@@ -381,7 +336,7 @@ function FilesPusherContent() {
       alert("You can only approve documents at the final department.");
       return;
     }
-    
+
     await handleStatusUpdate('APPROVED');
   };
 
@@ -426,10 +381,7 @@ function FilesPusherContent() {
   // Refresh user access when document or user department changes
   const refreshUserAccess = async () => {
     console.log("Refreshing user access...");
-    
-    // Re-fetch department ID to ensure it's current
-    await fetchUserDepartmentId();
-    
+
     // Re-check interaction permissions
     if (documentSetting && userDepartmentId !== null) {
       const canUserInteract = documentSetting.current_location === userDepartmentId;
@@ -618,16 +570,7 @@ function FilesPusherContent() {
         {/* Header */}
         <div className="relative flex items-center w-full mt-2 mb-4">
           <button
-            onClick={() => {
-              const role = sessionStorage.getItem("role");
-              if (role === "employee") {
-                router.push("/bpidashboard");
-              } else if (role === "admin") {
-                router.push("/admindashboard");
-              } else {
-                router.push("/dashboard");
-              }
-            }}
+            onClick={() => router.back()}
             className="absolute left-0 flex items-center text-[#B11016] hover:text-[#800b10] text-sm sm:text-base"
           >
             <FaArrowLeft className="mr-2" />
@@ -656,9 +599,9 @@ function FilesPusherContent() {
         {userDepartmentId === null && (
           <div className="w-full max-w-6xl mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded">
             <p className="text-sm">
-              <strong>Note:</strong> Department information not found. 
-              <button 
-                onClick={refreshUserAccess} 
+              <strong>Note:</strong> Department information not found.
+              <button
+                onClick={refreshUserAccess}
                 className="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
               >
                 Refresh Access
@@ -672,8 +615,8 @@ function FilesPusherContent() {
             <p className="text-sm">
               This document is currently at {getDepartmentNameById(documentSetting.current_location)}.
               You can only interact with documents that are at your department (Department ID: {userDepartmentId}).
-              <button 
-                onClick={refreshUserAccess} 
+              <button
+                onClick={refreshUserAccess}
                 className="ml-2 px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
               >
                 Refresh Access
@@ -700,10 +643,10 @@ function FilesPusherContent() {
               <div
                 key={dept.id}
                 className={`flex-1 h-10 rounded flex items-center justify-center text-xs font-medium transition-colors duration-300 ${dept.isCompleted
-                    ? "bg-[#333333] text-white"
-                    : dept.isActive
-                      ? "bg-[#B11016] text-white"
-                      : "bg-gray-300 text-gray-700"
+                  ? "bg-[#333333] text-white"
+                  : dept.isActive
+                    ? "bg-[#B11016] text-white"
+                    : "bg-gray-300 text-gray-700"
                   }`}
               >
                 <span className="text-center px-1 truncate" title={dept.name}>
@@ -786,8 +729,8 @@ function FilesPusherContent() {
               onClick={() => setIsUploadModalOpen(true)}
               disabled={!canInteract || userDepartmentId === null}
               className={`${isAtFinalDepartment() ? 'w-full max-w-xs' : 'w-full max-w-xs'} px-6 py-3 rounded transition-colors ${canInteract && userDepartmentId !== null
-                  ? "bg-[#333333] text-white hover:bg-[#0f0f0f]"
-                  : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                ? "bg-[#333333] text-white hover:bg-[#0f0f0f]"
+                : "bg-gray-400 text-gray-600 cursor-not-allowed"
                 }`}
             >
               Update
@@ -799,8 +742,8 @@ function FilesPusherContent() {
                 onClick={handlePushDocument}
                 disabled={!canInteract || isPushing || userDepartmentId === null}
                 className={`w-full max-w-xs px-6 py-3 rounded transition-colors ${canInteract && !isPushing && userDepartmentId !== null
-                    ? "bg-[#B11016] text-white hover:bg-[#800b10]"
-                    : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  ? "bg-[#B11016] text-white hover:bg-[#800b10]"
+                  : "bg-gray-400 text-gray-600 cursor-not-allowed"
                   }`}
               >
                 {isPushing ? "Pushing..." : "Push"}
@@ -814,8 +757,8 @@ function FilesPusherContent() {
                   onClick={handleApproveDocument}
                   disabled={!canInteract || isApproving || userDepartmentId === null}
                   className={`w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ${canInteract && !isApproving && userDepartmentId !== null
-                      ? "bg-green-600 text-white hover:bg-green-700"
-                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-gray-400 text-gray-600 cursor-not-allowed"
                     }`}
                 >
                   <FaCheck className="mr-2" />
@@ -826,8 +769,8 @@ function FilesPusherContent() {
                   onClick={handleRejectDocument}
                   disabled={!canInteract || isRejecting || userDepartmentId === null}
                   className={`w-full max-w-xs px-6 py-3 rounded transition-colors flex items-center justify-center ${canInteract && !isRejecting && userDepartmentId !== null
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-gray-400 text-gray-600 cursor-not-allowed"
                     }`}
                 >
                   <FaReject className="mr-2" />

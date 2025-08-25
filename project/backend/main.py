@@ -30,8 +30,8 @@ app = Flask(__name__,
             static_url_path="")
 
 # Use a session object to avoid unnecessary overhead of creating a new connection each time
-with requests.Session() as session:
-    session.get(os.getenv('SERVICE_PING_URL'))
+# with requests.Session() as session:
+#     session.get(os.getenv('SERVICE_PING_URL'))
 
 # Load configuration
 env = os.getenv('FLASK_ENV', 'development')

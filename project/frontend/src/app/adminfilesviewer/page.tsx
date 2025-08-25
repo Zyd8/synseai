@@ -259,17 +259,33 @@ const AdminFilesViewerPage = () => {
                         </button>
                     </div>
 
-                    {/* Content */}
-                    <div className="mx-auto w-full max-w-4xl mt-6 bg-white shadow rounded-lg p-4 overflow-x-auto border border-gray-400">
-                        {loading ? (
-                            <p className="text-center">Loading files...</p>
-                        ) : error ? (
-                            <p className="text-center text-red-500">{error}</p>
-                        ) : activeTab === "all" ? (
-                            <FileTable files={files} onRowClick={handleFilesClick} emptyMessage="No files found." />
-                        ) : (
-                            <FileTable files={pendingFiles} onRowClick={handleFilesClick} emptyMessage="No pending files found." />
-                        )}
+                    {/* Enhanced Content Container */}
+                    <div className="mx-auto w-full max-w-4xl mt-8">
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
+                            {loading ? (
+                                <div className="flex items-center justify-center py-16">
+                                    <div className="text-center">
+                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#B11016] border-t-transparent mb-4"></div>
+                                        <p className="text-gray-600 font-medium">Loading files...</p>
+                                    </div>
+                                </div>
+                            ) : error ? (
+                                <div className="flex items-center justify-center py-16">
+                                    <div className="text-center">
+                                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-red-600 font-medium">{error}</p>
+                                    </div>
+                                </div>
+                            ) : activeTab === "all" ? (
+                                <FileTable files={files} onRowClick={handleFilesClick} emptyMessage="No files found." />
+                            ) : (
+                                <FileTable files={pendingFiles} onRowClick={handleFilesClick} emptyMessage="No pending files found." />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -277,7 +293,7 @@ const AdminFilesViewerPage = () => {
     );
 };
 
-// ✅ Reusable Table Component
+// ✅ Enhanced Table Component
 const FileTable = ({
     files,
     emptyMessage,
@@ -286,53 +302,108 @@ const FileTable = ({
     files: { id: number; document_name: string }[];
     emptyMessage: string;
     onRowClick: (id: number) => void;
-}) => (
-    <table className="w-full text-sm rounded-lg overflow-hidden min-w-[600px]">
-        <thead>
-            <tr>
-                <th className="p-3 text-left text-red-700 whitespace-nowrap">ID</th>
-                <th className="p-3 text-left text-red-700 whitespace-nowrap">Document Name</th>
-                <th className="p-3 text-center text-red-700 whitespace-nowrap">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {files.length > 0 ? (
-                files.map((file, i) => (
-                    <tr
-                        key={i}
-                        className="border-t hover:bg-gray-100 transition cursor-pointer"
-                        onClick={() => onRowClick(file.id)}
-                    >
-                        <td className="p-3">{file.id}</td>
-                        <td className="p-3">{file.document_name}</td>
-                        <td className="p-3 text-center">
-                            <div className="flex items-center justify-center">
-                                <svg
-                                    className="w-4 h-4 text-gray-400"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M9 5l7 7-7 7"
-                                    />
-                                </svg>
+}) => {
+    if (files.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">No files found</h3>
+                <p className="text-gray-500 text-sm text-center max-w-sm">{emptyMessage}</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
+                {/* Enhanced Table Header */}
+                <thead>
+                    <tr className="border-b-2 border-gray-100">
+                        <th className="px-6 py-4 text-left">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-[#B11016] rounded-full"></div>
+                                <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">ID</span>
                             </div>
-                        </td>
+                        </th>
+                        <th className="px-6 py-4 text-left">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-[#B11016] rounded-full"></div>
+                                <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Document Name</span>
+                            </div>
+                        </th>
+                        <th className="px-6 py-4 text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                                <div className="w-2 h-2 bg-[#B11016] rounded-full"></div>
+                                <span className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Action</span>
+                            </div>
+                        </th>
                     </tr>
-                ))
-            ) : (
-                <tr>
-                    <td colSpan={3} className="text-center py-4">
-                        {emptyMessage}
-                    </td>
-                </tr>
-            )}
-        </tbody>
-    </table>
-);
+                </thead>
+                
+                {/* Enhanced Table Body */}
+                <tbody className="divide-y divide-gray-100">
+                    {files.map((file, i) => (
+                        <tr
+                            key={i}
+                            className="group hover:bg-gradient-to-r hover:from-gray-50 hover:to-white transition-all duration-200 cursor-pointer"
+                            onClick={() => onRowClick(file.id)}
+                        >
+                            {/* ID Column */}
+                            <td className="px-6 py-4">
+                                <div className="flex items-center">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-[#B11016] to-[#800b10] rounded-lg flex items-center justify-center mr-3">
+                                        <span className="text-white text-xs font-bold">#{file.id}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            {/* Document Name Column */}
+                            <td className="px-6 py-4">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900 group-hover:text-[#B11016] transition-colors">
+                                            {file.document_name}
+                                        </p>
+                                        <p className="text-xs text-gray-500">Document file</p>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            {/* Action Column */}
+                            <td className="px-6 py-4 text-center">
+                                <div className="flex items-center justify-center">
+                                    <div className="w-8 h-8 bg-gray-100 group-hover:bg-[#B11016] rounded-full flex items-center justify-center transition-all duration-200">
+                                        <svg
+                                            className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors duration-200"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M9 5l7 7-7 7"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
 
 export default AdminFilesViewerPage;

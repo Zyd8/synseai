@@ -1,0 +1,7 @@
+{
+  "/admindashboard/page": "app/admindashboard/page.js",
+  "/adminfilesviewer/page": "app/adminfilesviewer/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/filespusher/page": "app/filespusher/page.js",
+  "/login/page": "app/login/page.js"
+}
