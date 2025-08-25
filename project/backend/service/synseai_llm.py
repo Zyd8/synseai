@@ -159,22 +159,20 @@ class SynseaiLLM:
         - 0.5 = Neutral
         - 1.0 = Excellent
 
-        Score: 
-
         """
         try:
             score_response = self._openai_chat(
                 input=prompt,
                 temperature=0.0,
             )
-            score_text = score_response['content'].strip()
+            score_text = score_response.strip()
             score = float(re.search(r'[0-9]*\.?[0-9]+', score_text).group())
 
             reason_response = self._openai_chat(
                 input=f'Why did you give this score, based on the {criteria} criteria?',
                 temperature=0.7,
             )
-            reason_text = reason_response['content'].strip()
+            reason_text = reason_response.strip()
 
             if criteria == 'credibility':
                 self.credibility_reasonings.append(reason_text)
@@ -231,13 +229,12 @@ class SynseaiLLM:
             # Since this method is static, we need to instantiate openai outside or create a helper.
             # For consistency, we can instantiate openai here as well.
 
-            response = openai.ChatCompletion.create(
+            response = client.responses.create(
                 model="gpt-4.1",
-                messages=[{"role": "user", "content": extract_prompt}],
-                               temperature=0.3,
-                max_tokens=1000,
+                input=extract_prompt,
+                temperature=0.3,
             )
-            raw_names = response['choices'][0]['message']['content']
+            raw_names = response.output[0].content[0].text
 
             clean_prompt = f"""
             Clean the following list of potential company names.
@@ -257,13 +254,12 @@ class SynseaiLLM:
             OUTPUT (cleaned company names, one per line):
             """
 
-            clean_response = openai.ChatCompletion.create(
+            clean_response = client.responses.create(
                 model="gpt-4.1",
-                messages=[{"role": "user", "content": clean_prompt}],
+                input=clean_prompt,
                 temperature=0.3,
-                max_tokens=1000,
             )
-            cleaned_text = clean_response['choices'][0]['message']['content']
+            cleaned_text = clean_response.output[0].content[0].text
 
             company_names = []
             for line in cleaned_text.split('\n'):
