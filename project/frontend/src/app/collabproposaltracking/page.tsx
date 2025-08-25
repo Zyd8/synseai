@@ -1,6 +1,6 @@
 "use client";
 import Head from "next/head";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CollabCompanyProtectedRoute from "@/components/CollabCompanyProtectedRoute";
 import { FaArrowLeft } from 'react-icons/fa';
@@ -193,6 +193,14 @@ const createTimelineFromProposal = (proposal: any): TimelineItem[] => {
 };
 
 export default function CollabProposalTracking() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CollabProposalTrackingContent />
+    </Suspense>
+  );
+}
+
+function CollabProposalTrackingContent() {
   const [proposalData, setProposalData] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

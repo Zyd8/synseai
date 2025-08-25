@@ -4,6 +4,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 type Doc = {
   id: number;
@@ -30,7 +31,15 @@ type Preset = {
   department_queues: number[];
 };
 
-const AdminAssignDocument = () => {
+export default function AdminAssignDocument() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminAssignDocumentContent />
+    </Suspense>
+  );
+}
+
+function AdminAssignDocumentContent() {
   const router = useRouter();
   const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -995,4 +1004,5 @@ Debug info:
   );
 };
 
-export default AdminAssignDocument;
+
+

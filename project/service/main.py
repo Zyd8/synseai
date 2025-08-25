@@ -1,9 +1,27 @@
 from flask import Flask, request, jsonify, stream_with_context, Response
+from flask_cors import CORS
 from webscrape import company_webscraper, company_project_reccomender, company_traits_webscraper
-from llm import SynsaiLLM   
+from llm import SynsaiLLM
 import json
 
 app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+@app.route('/', methods=['GET'])
+def service_status():
+    """Simple endpoint to test if service is running"""
+    return jsonify({
+        'status': 'running',
+        'message': 'SynseAI Service is running',
+        'endpoints': [
+            '/company_scoring_scrape',
+            '/company_project_recommendation_scrape',
+            '/company_names_from_traits',
+            '/company_name_webscraper'
+        ]
+    })
 
 @app.route('/company_scoring_scrape', methods=['POST'])
 def company_scoring_scrape():

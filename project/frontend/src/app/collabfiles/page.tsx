@@ -1,6 +1,6 @@
 "use client";
 import Head from "next/head";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FaArrowLeft, FaFileAlt, FaDownload } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
@@ -27,6 +27,14 @@ interface CompanyData {
 }
 
 export default function CollabFiles() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CollabFilesContent />
+    </Suspense>
+  );
+}
+
+function CollabFilesContent() {
   const [proposalTitle, setproposalTitle] = useState<string>('');
   const [typeOfCollaboration, settypeOfCollaboration] = useState<string>('');
   const [expectedSupport, setexpectedSupport] = useState<string>('');

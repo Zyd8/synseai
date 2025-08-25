@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     FaArrowLeft,
@@ -32,8 +32,7 @@ interface CompanyData {
     user_id?: string;
 }
 
-
-export default function CompanyProfile() {
+function CompanyProfileContent() {
     const API = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -625,6 +624,20 @@ export default function CompanyProfile() {
                 projects={recommendedProjects}
             />
         </ProtectedRoute>
+    );
+}
+
+export default function CompanyProfile() {
+    return (
+        <Suspense fallback={
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        }>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
+                <CompanyProfileContent />
+            </ProtectedRoute>
+        </Suspense>
     );
 }
 

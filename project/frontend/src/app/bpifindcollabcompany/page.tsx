@@ -7,8 +7,17 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
 } from "react-icons/fa";
+import { Suspense } from "react";
 
 export default function BpiFindCollabCompany() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BpiFindCollabCompanyContent />
+    </Suspense>
+  );
+}
+
+function BpiFindCollabCompanyContent() {
   const API = process.env.NEXT_PUBLIC_API_URL;
   const searchParams = useSearchParams();
   const router = useRouter();
