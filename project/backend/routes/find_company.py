@@ -1,7 +1,7 @@
 import requests
 from flask import Blueprint, request, jsonify, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, UserRole, CompanyNameScrape, Company
+from models import db, User, UserRole, CompanyNameScrape
 from sqlalchemy import func
 import os
 from dotenv import load_dotenv
@@ -10,6 +10,20 @@ import json
 load_dotenv()
 
 find_company_bp = Blueprint('find_company', __name__)
+
+@find_company_bp.route("name", methods=["GET"])
+@jwt_required()
+def get_company_by_name():
+    """
+    Get a company by name.
+    """
+    company_name = request.args.get('company_name')
+    company = CompanyNameScrape.query.filter_by(company_name=company_name).first()
+    if company:
+        return jsonify(company.to_dict())
+    else:
+        return jsonify({'error': 'Company not found'}), 404
+
 
 def check_exists(company_name):
 
