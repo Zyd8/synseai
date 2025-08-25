@@ -1,0 +1,23 @@
+search_settings:
+  num_results: 5
+  target_num_results: 1
+  min_delay: 1
+  max_delay: 3
+  timeout: 10
+
+criteria:
+  credibility:
+    - What are the reviews of
+
+  referential:
+    - What are the partners of
+
+  compliance:
+    - What are the compliance papers of
+
+project_recommendation:
+  context:
+    - What is the company {company_name}?
+  
+  objective:
+    - what future projects can you reccomend between BPI and the company named {company_name}?

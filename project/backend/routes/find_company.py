@@ -6,6 +6,7 @@ from sqlalchemy import func
 import os
 from dotenv import load_dotenv
 import json
+from service.main import company_scoring_scrape, company_project_recommendation_scrape, company_names_from_traits, company_name_webscraper
 
 load_dotenv()
 
@@ -65,24 +66,9 @@ def find_company_by_name():
             return jsonify({
                 'company_name_scrape': company_name_scrape.to_dict()
             }), 200
-
-       
-        service_url = os.getenv('COMPANY_SCORING_SCRAPE_URL')
-        scoring_response = requests.post(
-            service_url,
-            json={"company": company_name},
-            timeout=3600
-        )
-
-        service_url = os.getenv('COMPANY_PROJECT_RECCOMENDER_SCRAPE_URL')
-        project_recommendation_response = requests.post(
-            service_url,
-            json={"company": company_name},
-            timeout=3600
-        )
         
-        scoring_data = scoring_response.json()
-        project_data = project_recommendation_response.json()
+        scoring_data =  company_scoring_scrape(company_name)
+        project_data = company_project_recommendation_scrape(company_name)
 
         company_name_scrape = CompanyNameScrape(
             company_name=company_name,
@@ -118,17 +104,10 @@ def find_company_by_trait():
         return jsonify({"error": "Company traits are required"}), 400
 
     results = []
+    companies_to_scrape = []
     
     try:
-        # First, get company names from traits
-        company_names_response = requests.post(
-            os.getenv('COMPANY_NAMES_FROM_TRAITS_URL'),
-            json={"company_traits": company_traits},
-            timeout=3600
-        )
-        company_names_response.raise_for_status()
-        company_names = company_names_response.json().get("company_names", [])
-        companies_to_scrape = []
+        company_names = company_names_from_traits(company_traits)
 
         print("Company names from traits:", company_names)
         
@@ -155,17 +134,8 @@ def find_company_by_trait():
         # Process companies that need to be scraped
         for company_name in companies_to_scrape:
             try:
-                # Make a request to the scraper service
-                response = requests.post(
-                    os.getenv('COMPANY_NAME_SCRAPE_URL'),
-                    json={"company_name": company_name},
-                    timeout=3600
-                )
-                response.raise_for_status()
-                
-                # Parse the response
-                data = response.json()
-                print(f"Received data for {company_name}: {data}")
+
+                data = company_name_webscraper(company_name)
                 
                 # Save to database
                 company = CompanyNameScrape(

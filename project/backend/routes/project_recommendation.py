@@ -6,6 +6,7 @@ import pytz
 import requests
 import os
 from dotenv import load_dotenv
+from service.main import company_project_recommendation_scrape
 
 load_dotenv()
 
@@ -14,37 +15,22 @@ bp = Blueprint('project_recommendation', __name__)
 def _create_company_project_recommendation(company_id, company_name):
     """Core function to create company project recommendation without JWT requirements"""
     try:
-        service_url = os.getenv('COMPANY_PROJECT_RECCOMENDER_SCRAPE_URL')
-        response = requests.post(
-            service_url,
-            json={"company": company_name},
-            timeout=3600
-        )
+        # Get project recommendations
+        recommendations = company_project_recommendation_scrape(company_name)
         
-        if response.status_code != 200:
-            error_msg = response.json().get('error', 'Unknown error')
-            return False, f"Service error: {error_msg}"
+        # Format the response to match the expected structure
+        project_data = {
+            'title1': recommendations['title1'],
+            'description1': recommendations['description1'],
+            'title2': recommendations['title2'],
+            'description2': recommendations['description2'],
+            'title3': recommendations['title3'],
+            'description3': recommendations['description3'],
+            'company_id': company_id
+        }
             
-        response_data = response.json()
-        
-        # The service returns the data directly in the response
-        # Check if we got an error response
-        if 'error' in response_data:
-            return False, response_data['error']
-            
-        # Extract the project recommendations from the response
-        try:
-            project_recommendation = ProjectRecommendation(
-                title1=response_data['title1'],
-                description1=response_data['description1'],
-                title2=response_data['title2'],
-                description2=response_data['description2'],
-                title3=response_data['title3'],
-                description3=response_data['description3'],
-                company_id=company_id,
-            )
-        except KeyError as e:
-            return False, f"Missing required field in response: {str(e)}"
+        # Create the project recommendation
+        project_recommendation = ProjectRecommendation(**project_data)
         
         db.session.add(project_recommendation)
         db.session.commit()

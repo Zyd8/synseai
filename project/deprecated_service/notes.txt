@@ -1,3 +1,4 @@
 data webscraped must be recent
 refine prompts
 refactor prompts into yaml 
+threads
