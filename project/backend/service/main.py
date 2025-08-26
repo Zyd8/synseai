@@ -80,8 +80,9 @@ def company_names_from_traits(company_traits):
     try:
         scraped_pages = company_traits_webscraper(company_traits)
         company_names = SynseaiLLM.get_company_names(scraped_pages)
-
-        return company_names
+        
+        return company_names[:5]
+        
     except Exception as e:
         return {
             'error': str(e)
