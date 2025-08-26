@@ -25,7 +25,7 @@ export default function DashboardSidebar() {
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
     { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
-    { href: "/bpifilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
+    { href: "/bpifilesviewer", icon: "/images/file-view.png", label: "FileViewer" },
     { href: "/companylist", icon: "/images/building-03.png", label: "Collaborators" },
     { href: "/bpifindcollab", icon: "/images/peer-to-peer-02.png", label: "Find Collaborators" },
   ];
@@ -35,7 +35,7 @@ export default function DashboardSidebar() {
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
     { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
-    { href: "/adminfilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
+    { href: "/adminfilesviewer", icon: "/images/file-view.png", label: "FileViewer" },
     { href: "/companylist", icon: "/images/building-03.png", label: "Collaborators" },
     { href: "/bpifindcollab", icon: "/images/peer-to-peer-02.png", label: "Find Collaborators" },
   ];

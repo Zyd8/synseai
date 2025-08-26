@@ -74,7 +74,7 @@ function DashboardSidebar() {
         },
         {
             href: "/bpifilesviewer",
-            icon: "/images/Folder_del.png",
+            icon: "/images/file-view.png",
             label: "FileViewer"
         },
         {
@@ -111,7 +111,7 @@ function DashboardSidebar() {
         },
         {
             href: "/adminfilesviewer",
-            icon: "/images/Folder_del.png",
+            icon: "/images/file-view.png",
             label: "FileViewer"
         },
         {
