@@ -25,7 +25,7 @@ export default function DashboardSidebar() {
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
     { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
-    { href: "/bpifilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
+    { href: "/bpifilesviewer", icon: "/images/file-view.png", label: "FileViewer" },
     { href: "/companylist", icon: "/images/building-03.png", label: "Collaborators" },
     { href: "/bpifindcollab", icon: "/images/peer-to-peer-02.png", label: "Find Collaborators" },
   ];
@@ -35,7 +35,7 @@ export default function DashboardSidebar() {
     { href: "/bpiapproved", icon: "/images/Folder_check.png", label: "Approved" },
     { href: "/bpiinprocess", icon: "/images/folder-send.png", label: "In Process" },
     { href: "/bpirejected", icon: "/images/Folder_del.png", label: "Rejected" },
-    { href: "/adminfilesviewer", icon: "/images/Folder_del.png", label: "FileViewer" },
+    { href: "/adminfilesviewer", icon: "/images/file-view.png", label: "FileViewer" },
     { href: "/companylist", icon: "/images/building-03.png", label: "Collaborators" },
     { href: "/bpifindcollab", icon: "/images/peer-to-peer-02.png", label: "Find Collaborators" },
   ];
@@ -52,7 +52,7 @@ export default function DashboardSidebar() {
         duration: 0.2,
         ease: [0.25, 0.1, 0.25, 1], // smooth cubic-bezier
       }}
-      className="pl-4 group relative bg-white border-r flex flex-col items-center items-start py-4 space-y-6 h-screen w-20 hover:w-56 transition-all duration-300 overflow-hidden"
+      className="pl-4 group relative bg-white border-r flex flex-col items-center items-start py-4 space-y-6 w-20 hover:w-56 transition-all duration-300 overflow-hidden"
     >
       {/* Logo */}
       <div className="flex items-center gap-3 pl-1">
