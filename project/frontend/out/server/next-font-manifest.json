@@ -6,19 +6,16 @@
     "[project]/src/app/adminusermanagement/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
-    "[project]/src/app/collabhome/page": [
+    "[project]/src/app/bpiapproved/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
-    "[project]/src/app/companysetup/page": [
+    "[project]/src/app/bpifindcollab/page": [
+      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
+    ],
+    "[project]/src/app/bpifindcollabcompany/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ],
     "[project]/src/app/login/page": [
-      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
-    ],
-    "[project]/src/app/page": [
-      "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
-    ],
-    "[project]/src/app/signup/page": [
       "static/media/06ba6ef833b337bc-s.p.0faac26c.woff2"
     ]
   },
