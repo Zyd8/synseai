@@ -258,7 +258,7 @@ export default function FindCollabPage() {
                                 placeholder={
                                     searchMode === "company"
                                         ? "Enter company name..."
-                                        : "Type a trait and press Enter..."
+                                        : "Select a trait and click ➤"
                                 }
                                 className="flex-1 outline-none text-gray-700 placeholder-gray-400"
                                 value={searchTerm}

@@ -52,7 +52,7 @@ export default function DashboardSidebar() {
         duration: 0.2,
         ease: [0.25, 0.1, 0.25, 1], // smooth cubic-bezier
       }}
-      className="pl-4 group relative bg-white border-r flex flex-col items-center items-start py-4 space-y-6 h-screen w-20 hover:w-56 transition-all duration-300 overflow-hidden"
+      className="pl-4 group relative bg-white border-r flex flex-col items-center items-start py-4 space-y-6 w-20 hover:w-56 transition-all duration-300 overflow-hidden"
     >
       {/* Logo */}
       <div className="flex items-center gap-3 pl-1">
