@@ -1,0 +1,9 @@
+{
+  "/admindashboard/page": "app/admindashboard/page.js",
+  "/adminusermanagement/page": "app/adminusermanagement/page.js",
+  "/bpiapproved/page": "app/bpiapproved/page.js",
+  "/bpifindcollab/page": "app/bpifindcollab/page.js",
+  "/bpifindcollabcompany/page": "app/bpifindcollabcompany/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/login/page": "app/login/page.js"
+}

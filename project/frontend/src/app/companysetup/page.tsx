@@ -169,30 +169,6 @@ export default function CompanySetup() {
         });
     };
 
-    const updateUserInfo = async (token: string) => {
-        try {
-            const res = await fetch(`${API}/api/auth/update_user`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    position,
-                    contact_number: contactNumber,
-                }),
-            });
-
-            if (!res.ok) {
-                console.error("Failed to update user info");
-            } else {
-                console.log("User info updated successfully");
-            }
-        } catch (err) {
-            console.error("Error updating user info:", err);
-        }
-    };
-
     // Handle Logo Upload
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -287,11 +263,11 @@ export default function CompanySetup() {
         setIsLoading(true);
 
         try {
+            // --- 1. Prepare company update payload ---
             let logoBase64 = "";
             if (companyLogo) {
                 logoBase64 = await fileToBase64(companyLogo);
             } else if (existingLogoUrl && !companyLogo) {
-                // Keep existing logo if no new logo is uploaded
                 logoBase64 = existingLogoUrl;
             }
 
@@ -311,21 +287,19 @@ export default function CompanySetup() {
                 if (isNaN(finalSize)) finalSize = undefined;
             }
 
-            const payload: any = {
+            const companyPayload: any = {
                 name: companyName,
                 contact_email: contactEmail,
-                position: position,
-                contact_number: contactNumber
             };
 
-            if (address.trim()) payload.address = address;
-            if (companyWebsite.trim()) payload.website = companyWebsite;
-            if (color.trim()) payload.color = color;
-            if (logoBase64) payload.logo = logoBase64;
-            if (bio.trim()) payload.bio = bio;
-            if (finalIndustry && finalIndustry.trim()) payload.industry = finalIndustry;
-            if (finalSize !== undefined) payload.size = finalSize;
-            if (collabType && collabType.trim()) payload.collab_type = collabType;
+            if (address.trim()) companyPayload.address = address;
+            if (companyWebsite.trim()) companyPayload.website = companyWebsite;
+            if (color.trim()) companyPayload.color = color;
+            if (logoBase64) companyPayload.logo = logoBase64;
+            if (bio.trim()) companyPayload.bio = bio;
+            if (finalIndustry && finalIndustry.trim()) companyPayload.industry = finalIndustry;
+            if (finalSize !== undefined) companyPayload.size = finalSize;
+            if (collabType && collabType.trim()) companyPayload.collab_type = collabType;
 
             const token = sessionStorage.getItem("access_token");
             if (!token) {
@@ -333,73 +307,53 @@ export default function CompanySetup() {
                 return;
             }
 
-            console.log("Token being sent:", token);
-            console.log("Payload being sent:", payload);
-
-            // Use PUT for existing company, POST for new company
+            // --- 2. Update company ---
             const method = hasExistingCompany ? "PUT" : "POST";
-            const response = await fetch(`${API}/api/company`, {
-                method: method,
+            const companyRes = await fetch(`${API}/api/company`, {
+                method,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(companyPayload),
             });
 
-            const data = await response.json();
-            console.log("Response:", response.status, data);
+            const companyData = await companyRes.json();
+            if (!companyRes.ok) throw new Error(companyData.error || "Company update failed");
 
-            if (response.ok) {
-                if (hasExistingCompany) {
-                    setModalMessage(`Company "${data.company.name}" updated successfully!`);
-                    setIsNewCompany(false);
-                    setIsEditMode(false);
+            // --- 3. Update user contact info ---
+            const userId = sessionStorage.getItem("user_id"); // Or however you get logged-in user ID
+            if (userId) {
+                const userPayload = {
+                    contact_number: contactNumber,
+                    position: position
+                };
 
-                    // Update original data with new values for future cancellations
-                    setOriginalCompanyData({
-                        name: data.company.name,
-                        website: data.company.website || "",
-                        address: data.company.address || "",
-                        industry: data.company.industry || "",
-                        size: data.company.size,
-                        bio: data.company.bio || "",
-                        color: data.company.color || "#000000",
-                        collab_type: data.company.collab_type || "",
-                        logo: data.company.logo || ""
-                    });
-                } else {
-                    setModalMessage(`Company "${data.company.name}" created successfully!`);
-                    setIsNewCompany(true);
-                    setHasExistingCompany(true);
-                    setCompanyId(data.company.id);
+                const userRes = await fetch(`${API}/api/user/${userId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(userPayload),
+                });
 
-                    // Store the newly created company data
-                    setOriginalCompanyData({
-                        name: data.company.name,
-                        website: data.company.website || "",
-                        address: data.company.address || "",
-                        industry: data.company.industry || "",
-                        size: data.company.size,
-                        bio: data.company.bio || "",
-                        color: data.company.color || "#000000",
-                        collab_type: data.company.collab_type || "",
-                        logo: data.company.logo || ""
-                    });
-                }
-
-                // Show success modal
-                setShowSuccessModal(true);
-            } else {
-                setError(data.error || `Failed to ${hasExistingCompany ? 'update' : 'create'} company (${response.status})`);
+                const userData = await userRes.json();
+                if (!userRes.ok) throw new Error(userData.message || "User update failed");
             }
-        } catch (err) {
-            console.error("Error with company operation:", err);
-            setError(`An unexpected error occurred while ${hasExistingCompany ? 'updating' : 'creating'} the company.`);
+
+            // Success handling
+            setModalMessage(`Company "${companyData.company.name}" ${hasExistingCompany ? "updated" : "created"} successfully!`);
+            setShowSuccessModal(true);
+
+        } catch (err: any) {
+            console.error("Error with update:", err);
+            setError(err.message || "An unexpected error occurred.");
         } finally {
             setIsLoading(false);
         }
     };
+
 
     // Check if fields should be read-only
     const isReadOnly = hasExistingCompany && !isEditMode;
@@ -1049,7 +1003,7 @@ const Confetti = ({ show }: { show: boolean }) => {
                 x: Math.random() * 100,
                 rotation: Math.random() * 360,
                 color: [
-                    '#ff6b6b', '#4ecdc4', '#45b7d1', 
+                    '#ff6b6b', '#4ecdc4', '#45b7d1',
                     '#f9ca24', '#6c5ce7', '#a29bfe',
                     '#fd79a8', '#00b894', '#e84393'
                 ][Math.floor(Math.random() * 9)],
