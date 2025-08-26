@@ -136,8 +136,8 @@ def update_user(user_id):
     current_user_id = get_jwt_identity()
     current_user = User.query.get(current_user_id)
     
-    if not current_user or current_user.role != UserRole.ADMIN:
-        return jsonify({'message': 'Admin access required'}), 403
+    if current_user.role != UserRole.ADMIN and current_user.id != user_id:
+        return jsonify({'message': 'Unauthorized to update this user'}), 403
     
     # Get user by ID
     user = User.query.get(user_id)

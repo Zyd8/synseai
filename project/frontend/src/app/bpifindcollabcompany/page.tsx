@@ -2,22 +2,160 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { FaArrowLeft, FaBuilding, FaChartLine, FaCheckCircle, FaUsers } from "react-icons/fa";
+import { FaArrowLeft, FaBuilding, FaChartLine, FaCheckCircle, FaUsers, FaRobot, FaGlobe, FaSearch } from "react-icons/fa";
 
 export default function BpiFindCollabCompany() {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<EnhancedLoadingSpinner />}>
       <BpiFindCollabCompanyContent />
     </Suspense>
   );
 }
 
-function LoadingSpinner() {
+function EnhancedLoadingSpinner() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  const loadingSteps = [
+    { icon: <FaSearch className="w-6 h-6" />, message: "Searching for company information...", duration: 3000 },
+    { icon: <FaGlobe className="w-6 h-6" />, message: "Scraping company pages and data...", duration: 4000 },
+    { icon: <FaRobot className="w-6 h-6" />, message: "Feeding data to AI for analysis...", duration: 3500 },
+    { icon: <FaChartLine className="w-6 h-6" />, message: "Calculating synergy scores...", duration: 2500 },
+    { icon: <FaBuilding className="w-6 h-6" />, message: "Finalizing collaboration report...", duration: 2000 }
+  ];
+
+  useEffect(() => {
+    let stepTimer: NodeJS.Timeout;
+    let progressTimer: NodeJS.Timeout;
+
+    const startStep = (stepIndex: number) => {
+      if (stepIndex >= loadingSteps.length) return;
+
+      setCurrentStep(stepIndex);
+      setProgress(0);
+
+      // Progress animation for current step
+      const stepDuration = loadingSteps[stepIndex].duration;
+      const progressInterval = stepDuration / 100;
+
+      progressTimer = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(progressTimer);
+            return 100;
+          }
+          return prev + 1;
+        });
+      }, progressInterval);
+
+      // Move to next step
+      stepTimer = setTimeout(() => {
+        startStep(stepIndex + 1);
+      }, stepDuration);
+    };
+
+    startStep(0);
+
+    return () => {
+      clearTimeout(stepTimer);
+      clearInterval(progressTimer);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p className="text-lg font-medium text-gray-600">Loading...</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-gray-100">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center animate-pulse">
+            <FaBuilding className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Analyzing Company</h2>
+          <p className="text-gray-600">This might take a minute...</p>
+        </div>
+
+        {/* Current Step */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white animate-bounce">
+              {loadingSteps[currentStep]?.icon}
+            </div>
+            <div className="flex-1">
+              <p className="text-gray-900 font-medium">
+                {loadingSteps[currentStep]?.message}
+              </p>
+              <div className="text-sm text-gray-500 mt-1">
+                Step {currentStep + 1} of {loadingSteps.length}
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <span>{progress}%</span>
+            <span>Processing...</span>
+          </div>
+        </div>
+
+        {/* Steps Preview */}
+        <div className="space-y-3">
+          {loadingSteps.map((step, index) => (
+            <div 
+              key={index}
+              className={`flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 ${
+                index === currentStep 
+                  ? 'bg-blue-50 border-2 border-blue-200' 
+                  : index < currentStep 
+                    ? 'bg-green-50 border-2 border-green-200' 
+                    : 'bg-gray-50 border-2 border-gray-200'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
+                index === currentStep
+                  ? 'bg-blue-500 text-white animate-pulse'
+                  : index < currentStep
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-300 text-gray-600'
+              }`}>
+                {index < currentStep ? (
+                  <FaCheckCircle className="w-4 h-4" />
+                ) : (
+                  step.icon
+                )}
+              </div>
+              <span className={`text-sm font-medium ${
+                index === currentStep
+                  ? 'text-blue-700'
+                  : index < currentStep
+                    ? 'text-green-700'
+                    : 'text-gray-500'
+              }`}>
+                {step.message.split('...')[0]}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Fun fact or tip */}
+        <div className="mt-8 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+          <div className="flex items-start space-x-3">
+            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-white text-xs font-bold">💡</span>
+            </div>
+            <div>
+              <p className="text-sm text-blue-800 font-medium mb-1">Did you know?</p>
+              <p className="text-sm text-blue-700">
+                Our AI analyzes over 50 data points to calculate accurate synergy scores for potential collaborations.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -109,7 +247,7 @@ function BpiFindCollabCompanyContent() {
   }, [company, API]);
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <EnhancedLoadingSpinner />;
   }
 
   if (error) {

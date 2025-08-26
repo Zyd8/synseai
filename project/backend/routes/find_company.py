@@ -167,3 +167,26 @@ def find_company_by_trait():
     except Exception as e:
         print(f"Error in find_company_by_trait: {str(e)}")
         return jsonify({"error": f"Failed to process request: {str(e)}"}), 500
+
+
+@find_company_bp.route('/trait', methods=['GET'])
+@jwt_required()
+def get_company_by_trait():
+    """
+    Get companies by trait.
+    """
+    try:
+        current_user_id = str(get_jwt_identity())
+        user = User.query.get(current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+    
+        if not user.role == UserRole.User:
+            return jsonify({"error": "Unauthorized"}), 403
+    
+        # Get all companies
+        companies = CompanyNameScrape.query.all()
+    
+        return jsonify([company.to_dict() for company in companies])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
