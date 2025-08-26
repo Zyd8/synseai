@@ -67,6 +67,101 @@ export default function LandingPage() {
         >
           Tap your role to continue.
         </motion.p>
+
+        {/* Premade Accounts Section */}
+        <motion.div
+          className="mt-12 w-full max-w-3xl px-4"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1, ease: [0.25, 0.1, 0.25, 1] }}
+        >
+          <h2 className="text-center text-lg sm:text-xl font-bold text-black mb-6">
+            Premade Accounts for Judges
+          </h2>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            {/* Collaborator Account */}
+            <motion.div
+              className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:border-[#B11016] transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              whileHover={{ y: -5 }}
+              onClick={() => {
+                const details = document.getElementById('collaborator-details');
+                if (details) details.classList.toggle('hidden');
+              }}
+            >
+              <div className="text-center">
+                <h3 className="font-bold text-[#B11016] text-lg mb-2">Collaborator</h3>
+                <p className="text-gray-600 text-sm">Click to view credentials</p>
+              </div>
+              <div id="collaborator-details" className="hidden mt-4 pt-4 border-t border-gray-200">
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-700">Email:</span>
+                    <p className="text-gray-600 break-all">user@gmail.com</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Password:</span>
+                    <p className="text-gray-600">1234</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* BPI Employee Account */}
+            <motion.div
+              className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:border-[#B11016] transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              whileHover={{ y: -5 }}
+              onClick={() => {
+                const details = document.getElementById('employee-details');
+                if (details) details.classList.toggle('hidden');
+              }}
+            >
+              <div className="text-center">
+                <h3 className="font-bold text-[#B11016] text-lg mb-2">BPI Employee</h3>
+                <p className="text-gray-600 text-sm">Click to view credentials</p>
+              </div>
+              <div id="employee-details" className="hidden mt-4 pt-4 border-t border-gray-200">
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-700">Email:</span>
+                    <p className="text-gray-600 break-all">employee@bpi.com</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Password:</span>
+                    <p className="text-gray-600">1234</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Admin Account */}
+            <motion.div
+              className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:border-[#B11016] transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              whileHover={{ y: -5 }}
+              onClick={() => {
+                const details = document.getElementById('admin-details');
+                if (details) details.classList.toggle('hidden');
+              }}
+            >
+              <div className="text-center">
+                <h3 className="font-bold text-[#B11016] text-lg mb-2">Admin</h3>
+                <p className="text-gray-600 text-sm">Click to view credentials</p>
+              </div>
+              <div id="admin-details" className="hidden mt-4 pt-4 border-t border-gray-200">
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-700">Email:</span>
+                    <p className="text-gray-600 break-all">admin@example.com</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Password:</span>
+                    <p className="text-gray-600">1234</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
     </main>
   )
