@@ -1,0 +1,9 @@
+{
+  "/admindashboard/page": "app/admindashboard/page.js",
+  "/adminusermanagement/page": "app/adminusermanagement/page.js",
+  "/collabhome/page": "app/collabhome/page.js",
+  "/companysetup/page": "app/companysetup/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/signup/page": "app/signup/page.js"
+}
