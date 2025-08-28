@@ -12,6 +12,33 @@ export default function BpiFindCollabCompany() {
   );
 }
 
+const parseReasoning = (text?: string): string[] => {
+  if (!text) return [];
+
+  return text
+    .split(/[•\n]/)
+    .map(part =>
+      part
+        .replace(/-/g, " ")
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/#+/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
+    .filter(Boolean);
+};
+
+const parseProject = (text?: string): string => {
+  if (!text) return "";
+
+  return text
+    .replace(/\*\*/g, "")
+    .replace(/---/g, "")
+    .replace(/#+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 function EnhancedLoadingSpinner() {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -92,7 +119,7 @@ function EnhancedLoadingSpinner() {
 
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
@@ -106,36 +133,33 @@ function EnhancedLoadingSpinner() {
         {/* Steps Preview */}
         <div className="space-y-3">
           {loadingSteps.map((step, index) => (
-            <div 
+            <div
               key={index}
-              className={`flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 ${
-                index === currentStep 
-                  ? 'bg-blue-50 border-2 border-blue-200' 
-                  : index < currentStep 
-                    ? 'bg-green-50 border-2 border-green-200' 
-                    : 'bg-gray-50 border-2 border-gray-200'
-              }`}
+              className={`flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 ${index === currentStep
+                ? 'bg-blue-50 border-2 border-blue-200'
+                : index < currentStep
+                  ? 'bg-green-50 border-2 border-green-200'
+                  : 'bg-gray-50 border-2 border-gray-200'
+                }`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
-                index === currentStep
-                  ? 'bg-blue-500 text-white animate-pulse'
-                  : index < currentStep
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-300 text-gray-600'
-              }`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${index === currentStep
+                ? 'bg-blue-500 text-white animate-pulse'
+                : index < currentStep
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-300 text-gray-600'
+                }`}>
                 {index < currentStep ? (
                   <FaCheckCircle className="w-4 h-4" />
                 ) : (
                   step.icon
                 )}
               </div>
-              <span className={`text-sm font-medium ${
-                index === currentStep
-                  ? 'text-blue-700'
-                  : index < currentStep
-                    ? 'text-green-700'
-                    : 'text-gray-500'
-              }`}>
+              <span className={`text-sm font-medium ${index === currentStep
+                ? 'text-blue-700'
+                : index < currentStep
+                  ? 'text-green-700'
+                  : 'text-gray-500'
+                }`}>
                 {step.message.split('...')[0]}
               </span>
             </div>
@@ -372,9 +396,19 @@ function BpiFindCollabCompanyContent() {
           </div>
 
           <div className="grid gap-6">
-            {projects.map((p, idx) => (
-              <ProjectCard key={idx} title={p.title} description={p.description} index={idx} />
-            ))}
+            {projects.map((p, idx) => {
+              const cleanTitle = parseProject(p.title);
+              const cleanDesc = parseProject(p.description);
+
+              return (
+                <ProjectCard
+                  key={idx}
+                  title={cleanTitle}
+                  description={cleanDesc}
+                  index={idx}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
@@ -448,10 +482,8 @@ function ScoreCard({
 }) {
   const percentage = score !== undefined ? (score * 100).toFixed(0) : "0";
 
-  // ✅ Split reasoning into bullet points
-  const reasoningPoints = reasoning
-    ? reasoning.split("•").map(point => point.trim()).filter(Boolean)
-    : [];
+  // ✅ Use the parser instead of just split("•")
+  const reasoningPoints = parseReasoning(reasoning);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300">
@@ -480,7 +512,10 @@ function ScoreCard({
                   key={idx}
                   className="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200"
                 >
-                  <p className="text-sm text-gray-700 leading-relaxed">{point}</p>
+                  <p
+                    className="text-sm text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: `• ${point}` }}
+                  />
                 </div>
               ))}
             </div>
@@ -490,6 +525,7 @@ function ScoreCard({
     </div>
   );
 }
+
 
 function ProjectCard({ title, description, index }: {
   title: string;
