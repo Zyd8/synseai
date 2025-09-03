@@ -113,7 +113,7 @@ export default function Navbar() {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <nav className="w-full bg-[#B11016] px-8 sm:px-14 py-5 sticky top-0 z-50 shadow-xl">
+    <nav className="w-full bg-[#B11016] px-8 sm:px-14 py-5 sticky top-0 z-100 shadow-xl">
       <div className="flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center mt-1">
