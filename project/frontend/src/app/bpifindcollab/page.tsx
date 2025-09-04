@@ -21,27 +21,27 @@ export default function FindCollabPage() {
 
     // Loading steps for trait search
     const loadingSteps = [
-        { 
-            icon: <FaSearch className="w-5 h-5" />, 
-            message: "Searching for companies with matching traits...", 
+        {
+            icon: <FaSearch className="w-5 h-5" />,
+            message: "Searching for companies with matching traits...",
             duration: 2500,
             description: "Scanning our database"
         },
-        { 
-            icon: <FaGlobe className="w-5 h-5" />, 
-            message: "Scraping company pages and analyzing data...", 
+        {
+            icon: <FaGlobe className="w-5 h-5" />,
+            message: "Scraping company pages and analyzing data...",
             duration: 3500,
             description: "Gathering latest information"
         },
-        { 
-            icon: <FaRobot className="w-5 h-5" />, 
-            message: "AI analyzing company compatibility...", 
+        {
+            icon: <FaRobot className="w-5 h-5" />,
+            message: "AI analyzing company compatibility...",
             duration: 3000,
             description: "Processing with machine learning"
         },
-        { 
-            icon: <FaChartLine className="w-5 h-5" />, 
-            message: "Calculating synergy scores...", 
+        {
+            icon: <FaChartLine className="w-5 h-5" />,
+            message: "Calculating synergy scores...",
             duration: 2000,
             description: "Computing collaboration potential"
         }
@@ -124,10 +124,10 @@ export default function FindCollabPage() {
         if (!text) return "";
 
         return text
-            .replace(/\*\*/g, "")          
-            .replace(/#+/g, "")          
-            .replace(/^\-+\s*/gm, "")    
-            .replace(/\s+/g, " ")        
+            .replace(/\*\*/g, "")
+            .replace(/#+/g, "")
+            .replace(/^\-+\s*/gm, "")
+            .replace(/\s+/g, " ")
             .trim();
     };
 
@@ -182,7 +182,7 @@ export default function FindCollabPage() {
             <div className="flex">
                 <Sidebar />
 
-                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex-1 flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex-1 flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8 overflow-y-auto">
                     {/* Back Button and Title */}
                     <div className="relative flex items-center w-full mt-2 mb-4">
                         <button
@@ -257,7 +257,7 @@ export default function FindCollabPage() {
                                 type="text"
                                 placeholder={
                                     searchMode === "company"
-                                        ? "Enter company name..."
+                                        ? "Enter company name and click ➤"
                                         : "Select a trait and click ➤"
                                 }
                                 className="flex-1 outline-none text-gray-700 placeholder-gray-400"
@@ -307,6 +307,18 @@ export default function FindCollabPage() {
                                     </span>
                                 ))}
                             </div>
+                        )}
+                    </div>
+                    {/* Search Instructions */}
+                    <div className="text-center mt-2 mb-2">
+                        {searchMode === "company" ? (
+                            <p className="text-xs text-gray-500 italic">
+                                💡 Enter a company name and click <span className="font-bold text-[#B11016]">➤</span> to search.
+                            </p>
+                        ) : (
+                            <p className="text-xs text-gray-500 italic">
+                                💡 Select traits or type one, then click <span className="font-bold text-[#B11016]">➤</span> to find matches.
+                            </p>
                         )}
                     </div>
 
@@ -362,7 +374,7 @@ export default function FindCollabPage() {
 
                                     {/* Progress Bar */}
                                     <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                        <div 
+                                        <div
                                             className="h-full bg-gradient-to-r from-[#B11016] to-[#8f0d12] rounded-full transition-all duration-300 ease-out"
                                             style={{ width: `${loadingProgress}%` }}
                                         />
@@ -376,23 +388,21 @@ export default function FindCollabPage() {
                                 {/* Mini steps preview */}
                                 <div className="flex justify-between">
                                     {loadingSteps.map((step, index) => (
-                                        <div 
+                                        <div
                                             key={index}
-                                            className={`flex flex-col items-center space-y-1 ${
-                                                index === loadingStep 
-                                                    ? 'text-[#B11016]' 
-                                                    : index < loadingStep 
-                                                        ? 'text-green-600' 
-                                                        : 'text-gray-400'
-                                            }`}
+                                            className={`flex flex-col items-center space-y-1 ${index === loadingStep
+                                                ? 'text-[#B11016]'
+                                                : index < loadingStep
+                                                    ? 'text-green-600'
+                                                    : 'text-gray-400'
+                                                }`}
                                         >
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                                                index === loadingStep
-                                                    ? 'bg-[#B11016] text-white animate-pulse'
-                                                    : index < loadingStep
-                                                        ? 'bg-green-500 text-white'
-                                                        : 'bg-gray-200 text-gray-500'
-                                            }`}>
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${index === loadingStep
+                                                ? 'bg-[#B11016] text-white animate-pulse'
+                                                : index < loadingStep
+                                                    ? 'bg-green-500 text-white'
+                                                    : 'bg-gray-200 text-gray-500'
+                                                }`}>
                                                 {index < loadingStep ? (
                                                     <FaCheckCircle className="w-3 h-3" />
                                                 ) : (
@@ -420,7 +430,7 @@ export default function FindCollabPage() {
 
                     {/* Enhanced Company Cards */}
                     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
-                        {!loading && !error && results.length > 0 && (
+                        {!loading && !error && results.length > 0 && searchMode === "traits" && (
                             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                                 <div className="flex items-center space-x-3 mb-4">
                                     <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
@@ -428,13 +438,15 @@ export default function FindCollabPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-bold text-gray-900">Companies Found</h3>
-                                        <p className="text-sm text-gray-600">{results.length} potential collaborators discovered</p>
+                                        <p className="text-sm text-gray-600">
+                                            {results.length} potential collaborators discovered
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {results.map((company, index) => {
+                        {searchMode === "traits" && results.map((company, index) => {
                             const credibility = company.credibility_score || 0;
                             const referential = company.referential_score || 0;
                             const compliance = company.compliance_score || 0;
@@ -528,7 +540,7 @@ export default function FindCollabPage() {
                                                         {overallSynergy}%
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div className="w-24 h-24 mb-3">
                                                     <CircularProgressbar
                                                         value={overallSynergy}
@@ -551,6 +563,16 @@ export default function FindCollabPage() {
                                 </div>
                             );
                         })}
+
+                        {searchMode === "company" && (
+                            <div className="w-full max-w-3xl mx-auto mb-6">
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center shadow-sm">
+                                    <p className="text-yellow-800 font-medium">
+                                        📊 Already searched companies — synergy reports ready for viewing:
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
