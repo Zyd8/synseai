@@ -12,7 +12,7 @@ load_dotenv()
 
 find_company_bp = Blueprint('find_company', __name__)
 
-@find_company_bp.route("name", methods=["GET"])
+@find_company_bp.route("/name", methods=["GET"])
 @jwt_required()
 def get_company_by_name():
     """
@@ -24,6 +24,29 @@ def get_company_by_name():
         return jsonify(company.to_dict())
     else:
         return jsonify({'error': 'Company not found'}), 404
+
+
+@find_company_bp.route("/all", methods=["GET"])
+@jwt_required()
+def get_all_companies():
+    """
+    Get all company name scrapes (Admin/Employee only).
+    Returns a list of all companies with their details.
+    """
+    current_user_id = str(get_jwt_identity())
+    user = User.query.get(current_user_id)
+
+    # Check if user has permission
+    if user.role not in [UserRole.ADMIN, UserRole.EMPLOYEE]:
+        return jsonify({"error": "Insufficient permissions. Employee or Admin role required."}), 403
+    
+    # Get all company name scrapes
+    companies = CompanyNameScrape.query.all()
+    
+    # Convert to list of dictionaries
+    result = [company.to_dict() for company in companies]
+    
+    return jsonify(result), 200
 
 
 def check_exists(company_name):
