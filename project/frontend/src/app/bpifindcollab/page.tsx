@@ -18,6 +18,9 @@ export default function FindCollabPage() {
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [results, setResults] = useState<any[]>([]);
+    const [scrapedCompanies, setScrapedCompanies] = useState<any[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const companiesPerPage = 10;
 
     // Loading steps for trait search
     const loadingSteps = [
@@ -95,6 +98,30 @@ export default function FindCollabPage() {
             clearInterval(progressTimer);
         };
     }, [loading, searchMode]);
+
+    useEffect(() => {
+        const fetchScrapedCompanies = async () => {
+            if (searchMode !== "company") return;
+            const API = process.env.NEXT_PUBLIC_API_URL;
+            const token = sessionStorage.getItem("access_token");
+            if (!token) return;
+
+            try {
+                const res = await fetch(`${API}/api/find_company/all`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                if (!res.ok) throw new Error("Failed to fetch scraped companies");
+                const data = await res.json();
+                setScrapedCompanies(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error("Error fetching scraped companies:", err);
+            }
+        };
+
+        fetchScrapedCompanies();
+    }, [searchMode]);
 
     const handleTraitClick = (trait: string) => {
         if (!selectedTraits.includes(trait)) {
@@ -176,6 +203,11 @@ export default function FindCollabPage() {
         if (score >= 55) return "#f59e0b"; // yellow
         return "#ef4444"; // red
     };
+    const indexOfLast = currentPage * companiesPerPage;
+    const indexOfFirst = indexOfLast - companiesPerPage;
+    const currentCompanies = scrapedCompanies.slice(indexOfFirst, indexOfLast);
+
+    const totalPages = Math.ceil(scrapedCompanies.length / companiesPerPage);
 
     return (
         <ProtectedRoute allowedRoles={["employee", "admin"]}>
@@ -428,7 +460,7 @@ export default function FindCollabPage() {
                         </div>
                     )}
 
-                    {/* Enhanced Company Cards */}
+                    {/* Company Cards */}
                     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
                         {!loading && !error && results.length > 0 && searchMode === "traits" && (
                             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -565,12 +597,95 @@ export default function FindCollabPage() {
                         })}
 
                         {searchMode === "company" && (
-                            <div className="w-full max-w-3xl mx-auto mb-6">
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center shadow-sm">
+                            <div className="w-full max-w-5xl mx-auto mt-6">
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center shadow-sm mb-4">
                                     <p className="text-yellow-800 font-medium">
                                         📊 Already searched companies — synergy reports ready for viewing:
                                     </p>
                                 </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {currentCompanies.length > 0 ? (
+                                        currentCompanies.map((company, index) => {
+                                            const credibility = company.credibility_score || 0;
+                                            const referential = company.referential_score || 0;
+                                            const compliance = company.compliance_score || 0;
+                                            const overallSynergy = Math.round(((credibility + referential + compliance) / 3) * 100);
+                                            const synergyLevel = getSynergyLevel(overallSynergy);
+
+                                            return (
+                                                <div
+                                                    key={index}
+                                                    className={`bg-white shadow-md rounded-xl p-5 border-2 ${synergyLevel.borderColor} hover:shadow-lg transition-transform hover:scale-[1.01]`}
+                                                >
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <h3 className="text-lg font-bold text-gray-900">{company.company_name}</h3>
+                                                        <span className={`px-2 py-1 text-xs rounded-full ${synergyLevel.color} ${synergyLevel.bgColor} border ${synergyLevel.borderColor}`}>
+                                                            {synergyLevel.label}
+                                                        </span>
+                                                    </div>
+
+                                                    <p className="text-sm text-gray-600 mb-4">
+                                                        {parseReasoningText(company.project_description1 || "No description available.")}
+                                                    </p>
+
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="w-16 h-16">
+                                                            <CircularProgressbar
+                                                                value={overallSynergy}
+                                                                text={`${overallSynergy}%`}
+                                                                styles={buildStyles({
+                                                                    pathColor: getProgressColor(overallSynergy),
+                                                                    trailColor: "#e5e7eb",
+                                                                    textColor: "#111827",
+                                                                    textSize: "28px",
+                                                                })}
+                                                            />
+                                                        </div>
+
+                                                        <button
+                                                            onClick={() => handleCheckProjects(company.company_name)}
+                                                            className="ml-4 bg-[#B11016] hover:bg-[#8f0d12] text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition"
+                                                        >
+                                                            View Report ➤
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-gray-500 text-center italic">No previously searched companies yet.</p>
+                                    )}
+                                </div>
+                                {totalPages > 1 && (
+                                    <div className="flex justify-center items-center mt-6 space-x-4">
+                                        <button
+                                            disabled={currentPage === 1}
+                                            onClick={() => setCurrentPage((prev) => prev - 1)}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-semibold shadow-sm transition 
+                ${currentPage === 1
+                                                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                                    : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"}`}
+                                        >
+                                            Previous
+                                        </button>
+
+                                        <span className="text-sm text-gray-600">
+                                            Page {currentPage} of {totalPages}
+                                        </span>
+
+                                        <button
+                                            disabled={currentPage === totalPages}
+                                            onClick={() => setCurrentPage((prev) => prev + 1)}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-semibold shadow-sm transition 
+                ${currentPage === totalPages
+                                                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                                    : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"}`}
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
