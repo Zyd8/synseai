@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaArrowLeft, FaBuilding, FaChartLine, FaUsers, FaCheckCircle, FaRobot, FaGlobe, FaSearch, FaStar, FaArrowUp } from "react-icons/fa";
+import { FaArrowLeft, FaBuilding, FaChartLine, FaUsers, FaCheckCircle, FaRobot, FaGlobe, FaSearch, FaStar, FaArrowUp, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import Sidebar from "@/components/DashboardSidebar";
@@ -18,30 +18,33 @@ export default function FindCollabPage() {
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [results, setResults] = useState<any[]>([]);
+    const [scrapedCompanies, setScrapedCompanies] = useState<any[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const companiesPerPage = 10;
 
     // Loading steps for trait search
     const loadingSteps = [
-        { 
-            icon: <FaSearch className="w-5 h-5" />, 
-            message: "Searching for companies with matching traits...", 
+        {
+            icon: <FaSearch className="w-5 h-5" />,
+            message: "Searching for companies with matching traits...",
             duration: 2500,
             description: "Scanning our database"
         },
-        { 
-            icon: <FaGlobe className="w-5 h-5" />, 
-            message: "Scraping company pages and analyzing data...", 
+        {
+            icon: <FaGlobe className="w-5 h-5" />,
+            message: "Scraping company pages and analyzing data...",
             duration: 3500,
             description: "Gathering latest information"
         },
-        { 
-            icon: <FaRobot className="w-5 h-5" />, 
-            message: "AI analyzing company compatibility...", 
+        {
+            icon: <FaRobot className="w-5 h-5" />,
+            message: "AI analyzing company compatibility...",
             duration: 3000,
             description: "Processing with machine learning"
         },
-        { 
-            icon: <FaChartLine className="w-5 h-5" />, 
-            message: "Calculating synergy scores...", 
+        {
+            icon: <FaChartLine className="w-5 h-5" />,
+            message: "Calculating synergy scores...",
             duration: 2000,
             description: "Computing collaboration potential"
         }
@@ -96,6 +99,30 @@ export default function FindCollabPage() {
         };
     }, [loading, searchMode]);
 
+    useEffect(() => {
+        const fetchScrapedCompanies = async () => {
+            if (searchMode !== "company") return;
+            const API = process.env.NEXT_PUBLIC_API_URL;
+            const token = sessionStorage.getItem("access_token");
+            if (!token) return;
+
+            try {
+                const res = await fetch(`${API}/api/find_company/all`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                if (!res.ok) throw new Error("Failed to fetch scraped companies");
+                const data = await res.json();
+                setScrapedCompanies(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error("Error fetching scraped companies:", err);
+            }
+        };
+
+        fetchScrapedCompanies();
+    }, [searchMode]);
+
     const handleTraitClick = (trait: string) => {
         if (!selectedTraits.includes(trait)) {
             const newTraits = [...selectedTraits, trait];
@@ -124,10 +151,10 @@ export default function FindCollabPage() {
         if (!text) return "";
 
         return text
-            .replace(/\*\*/g, "")          
-            .replace(/#+/g, "")          
-            .replace(/^\-+\s*/gm, "")    
-            .replace(/\s+/g, " ")        
+            .replace(/\*\*/g, "")
+            .replace(/#+/g, "")
+            .replace(/^\-+\s*/gm, "")
+            .replace(/\s+/g, " ")
             .trim();
     };
 
@@ -177,12 +204,116 @@ export default function FindCollabPage() {
         return "#ef4444"; // red
     };
 
+    const indexOfLast = currentPage * companiesPerPage;
+    const indexOfFirst = indexOfLast - companiesPerPage;
+    const currentCompanies = scrapedCompanies.slice(indexOfFirst, indexOfLast);
+
+    const totalPages = Math.ceil(scrapedCompanies.length / companiesPerPage);
+
+    // Generate page numbers for pagination (limit to 10 visible pages)
+    const getVisiblePages = () => {
+        const maxVisiblePages = 10;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        // Adjust start page if we're near the end
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        const pages = [];
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
+
+    const renderPagination = () => {
+        if (totalPages <= 1) return null;
+
+        const visiblePages = getVisiblePages();
+
+        return (
+            <div className="flex justify-center items-center mt-8 space-x-2">
+                {/* Previous Button */}
+                <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((prev) => prev - 1)}
+                    className={`flex items-center px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ${currentPage === 1
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-[#B11016] border-2 border-gray-300 hover:border-[#B11016] hover:bg-[#B11016] hover:text-white"
+                        }`}
+                >
+                    <FaChevronLeft className="w-3 h-3 mr-2" />
+                    Previous
+                </button>
+
+                {/* First page if not visible */}
+                {visiblePages[0] > 1 && (
+                    <>
+                        <button
+                            onClick={() => setCurrentPage(1)}
+                            className="px-4 py-2 rounded-xl font-semibold text-sm bg-white border-2 border-gray-300 text-gray-700 hover:border-[#B11016] hover:bg-[#B11016] hover:text-white transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                        >
+                            1
+                        </button>
+                        {visiblePages[0] > 2 && (
+                            <span className="px-2 py-2 text-gray-400 font-medium">...</span>
+                        )}
+                    </>
+                )}
+
+                {/* Page Numbers */}
+                {visiblePages.map((page) => (
+                    <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ${currentPage === page
+                                ? "bg-gradient-to-r from-[#B11016] to-[#8f0d12] text-white border-2 border-[#B11016] shadow-lg"
+                                : "bg-white border-2 border-gray-300 text-gray-700 hover:border-[#B11016] hover:bg-[#B11016] hover:text-white"
+                            }`}
+                    >
+                        {page}
+                    </button>
+                ))}
+
+                {/* Last page if not visible */}
+                {visiblePages[visiblePages.length - 1] < totalPages && (
+                    <>
+                        {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
+                            <span className="px-2 py-2 text-gray-400 font-medium">...</span>
+                        )}
+                        <button
+                            onClick={() => setCurrentPage(totalPages)}
+                            className="px-4 py-2 rounded-xl font-semibold text-sm bg-white border-2 border-gray-300 text-gray-700 hover:border-[#B11016] hover:bg-[#B11016] hover:text-white transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                        >
+                            {totalPages}
+                        </button>
+                    </>
+                )}
+
+                {/* Next Button */}
+                <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                    className={`flex items-center px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ${currentPage === totalPages
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-[#B11016] border-2 border-gray-300 hover:border-[#B11016] hover:bg-[#B11016] hover:text-white"
+                        }`}
+                >
+                    Next
+                    <FaChevronRight className="w-3 h-3 ml-2" />
+                </button>
+            </div>
+        );
+    };
+
     return (
         <ProtectedRoute allowedRoles={["employee", "admin"]}>
             <div className="flex">
                 <Sidebar />
 
-                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex-1 flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8">
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex-1 flex-col items-center px-4 sm:px-[5%] lg:px-[10%] py-4 sm:py-8 overflow-y-auto">
                     {/* Back Button and Title */}
                     <div className="relative flex items-center w-full mt-2 mb-4">
                         <button
@@ -257,7 +388,7 @@ export default function FindCollabPage() {
                                 type="text"
                                 placeholder={
                                     searchMode === "company"
-                                        ? "Enter company name..."
+                                        ? "Enter company name and click ➤"
                                         : "Select a trait and click ➤"
                                 }
                                 className="flex-1 outline-none text-gray-700 placeholder-gray-400"
@@ -307,6 +438,18 @@ export default function FindCollabPage() {
                                     </span>
                                 ))}
                             </div>
+                        )}
+                    </div>
+                    {/* Search Instructions */}
+                    <div className="text-center mt-2 mb-2">
+                        {searchMode === "company" ? (
+                            <p className="text-xs text-gray-500 italic">
+                                💡 Enter a company name and click <span className="font-bold text-[#B11016]">➤</span> to search.
+                            </p>
+                        ) : (
+                            <p className="text-xs text-gray-500 italic">
+                                💡 Select traits or type one, then click <span className="font-bold text-[#B11016]">➤</span> to find matches.
+                            </p>
                         )}
                     </div>
 
@@ -362,7 +505,7 @@ export default function FindCollabPage() {
 
                                     {/* Progress Bar */}
                                     <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                        <div 
+                                        <div
                                             className="h-full bg-gradient-to-r from-[#B11016] to-[#8f0d12] rounded-full transition-all duration-300 ease-out"
                                             style={{ width: `${loadingProgress}%` }}
                                         />
@@ -376,23 +519,21 @@ export default function FindCollabPage() {
                                 {/* Mini steps preview */}
                                 <div className="flex justify-between">
                                     {loadingSteps.map((step, index) => (
-                                        <div 
+                                        <div
                                             key={index}
-                                            className={`flex flex-col items-center space-y-1 ${
-                                                index === loadingStep 
-                                                    ? 'text-[#B11016]' 
-                                                    : index < loadingStep 
-                                                        ? 'text-green-600' 
-                                                        : 'text-gray-400'
-                                            }`}
+                                            className={`flex flex-col items-center space-y-1 ${index === loadingStep
+                                                ? 'text-[#B11016]'
+                                                : index < loadingStep
+                                                    ? 'text-green-600'
+                                                    : 'text-gray-400'
+                                                }`}
                                         >
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                                                index === loadingStep
-                                                    ? 'bg-[#B11016] text-white animate-pulse'
-                                                    : index < loadingStep
-                                                        ? 'bg-green-500 text-white'
-                                                        : 'bg-gray-200 text-gray-500'
-                                            }`}>
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${index === loadingStep
+                                                ? 'bg-[#B11016] text-white animate-pulse'
+                                                : index < loadingStep
+                                                    ? 'bg-green-500 text-white'
+                                                    : 'bg-gray-200 text-gray-500'
+                                                }`}>
                                                 {index < loadingStep ? (
                                                     <FaCheckCircle className="w-3 h-3" />
                                                 ) : (
@@ -418,9 +559,9 @@ export default function FindCollabPage() {
                         </div>
                     )}
 
-                    {/* Enhanced Company Cards */}
+                    {/* Company Cards */}
                     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
-                        {!loading && !error && results.length > 0 && (
+                        {!loading && !error && results.length > 0 && searchMode === "traits" && (
                             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                                 <div className="flex items-center space-x-3 mb-4">
                                     <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
@@ -428,13 +569,15 @@ export default function FindCollabPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-bold text-gray-900">Companies Found</h3>
-                                        <p className="text-sm text-gray-600">{results.length} potential collaborators discovered</p>
+                                        <p className="text-sm text-gray-600">
+                                            {results.length} potential collaborators discovered
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {results.map((company, index) => {
+                        {searchMode === "traits" && results.map((company, index) => {
                             const credibility = company.credibility_score || 0;
                             const referential = company.referential_score || 0;
                             const compliance = company.compliance_score || 0;
@@ -444,7 +587,7 @@ export default function FindCollabPage() {
                             return (
                                 <div
                                     key={index}
-                                    className={`bg-white shadow-lg hover:shadow-xl rounded-2xl overflow-hidden transition-all duration-300 transform hover:scale-[1.02] border-2 ${synergyLevel.borderColor}`}
+                                    className={`bg-white shadow-lg hover:shadow-xl rounded-2xl overflow-hidden transition-all duration-300 transform hover:scale-[1.01] border-2 ${synergyLevel.borderColor}`}
                                 >
                                     {/* Header with company name and synergy badge */}
                                     <div className={`${synergyLevel.bgColor} px-6 py-4 border-b`}>
@@ -481,7 +624,7 @@ export default function FindCollabPage() {
 
                                                 {/* Score breakdown */}
                                                 <div className="grid grid-cols-3 gap-4 mb-6">
-                                                    <div className="text-center">
+                                                    <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                                                         <div className="text-lg font-bold text-emerald-600">
                                                             {Math.round(credibility * 100)}%
                                                         </div>
@@ -490,7 +633,7 @@ export default function FindCollabPage() {
                                                             Credibility
                                                         </div>
                                                     </div>
-                                                    <div className="text-center">
+                                                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                                                         <div className="text-lg font-bold text-blue-600">
                                                             {Math.round(referential * 100)}%
                                                         </div>
@@ -499,7 +642,7 @@ export default function FindCollabPage() {
                                                             Referential
                                                         </div>
                                                     </div>
-                                                    <div className="text-center">
+                                                    <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-200">
                                                         <div className="text-lg font-bold text-purple-600">
                                                             {Math.round(compliance * 100)}%
                                                         </div>
@@ -511,7 +654,7 @@ export default function FindCollabPage() {
                                                 </div>
 
                                                 <button
-                                                    className="w-full bg-gradient-to-r from-[#B11016] to-[#8f0d12] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#8f0d12] hover:to-[#B11016] transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                                                    className="w-full bg-gradient-to-r from-[#B11016] to-[#8f0d12] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#8f0d12] hover:to-[#B11016] transition-all duration-200 transform hover:scale-102 shadow-lg hover:shadow-xl"
                                                     onClick={() => handleCheckProjects(company.company_name)}
                                                 >
                                                     VIEW DETAILED ANALYSIS
@@ -528,7 +671,7 @@ export default function FindCollabPage() {
                                                         {overallSynergy}%
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div className="w-24 h-24 mb-3">
                                                     <CircularProgressbar
                                                         value={overallSynergy}
@@ -551,6 +694,150 @@ export default function FindCollabPage() {
                                 </div>
                             );
                         })}
+
+                        {searchMode === "company" && (
+                            <div className="w-full max-w-5xl mx-auto mt-6">
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center shadow-sm mb-4">
+                                    <p className="text-blue-800 font-medium">
+                                        📊 Already searched companies — synergy reports ready for viewing:
+                                    </p>
+                                </div>
+
+                                {/* Single column layout for company cards */}
+                                <div className="flex flex-col gap-6">
+                                    {currentCompanies.length > 0 ? (
+                                        currentCompanies.map((company, index) => {
+                                            const credibility = company.credibility_score || 0;
+                                            const referential = company.referential_score || 0;
+                                            const compliance = company.compliance_score || 0;
+                                            const overallSynergy = Math.round(((credibility + referential + compliance) / 3) * 100);
+                                            const synergyLevel = getSynergyLevel(overallSynergy);
+
+                                            return (
+                                                <div
+                                                    key={index}
+                                                    className={`bg-white shadow-lg hover:shadow-xl rounded-2xl overflow-hidden transition-all duration-300 transform hover:scale-[1.01] border-2 ${synergyLevel.borderColor}`}
+                                                >
+                                                    {/* Header with company name and synergy badge */}
+                                                    <div className={`${synergyLevel.bgColor} px-6 py-4 border-b`}>
+                                                        <div className="flex justify-between items-start">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center space-x-3 mb-2">
+                                                                    <div className="w-10 h-10 bg-gradient-to-r from-[#B11016] to-[#8f0d12] rounded-xl flex items-center justify-center">
+                                                                        <FaBuilding className="w-5 h-5 text-white" />
+                                                                    </div>
+                                                                    <h2 className="text-xl font-bold text-gray-900">
+                                                                        {company.company_name}
+                                                                    </h2>
+                                                                </div>
+                                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${synergyLevel.color} ${synergyLevel.bgColor} border ${synergyLevel.borderColor}`}>
+                                                                    <FaArrowUp className="w-3 h-3 mr-1" />
+                                                                    {synergyLevel.label} Match
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="p-6">
+                                                        <div className="flex justify-between items-start space-x-6">
+                                                            {/* Company info */}
+                                                            <div className="flex-1">
+                                                                <div className="mb-6">
+                                                                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                                                        Project Description
+                                                                    </h4>
+                                                                    <p className="text-gray-700 leading-relaxed">
+                                                                        {parseReasoningText(company.project_description1 || "No description available for this company.")}
+                                                                    </p>
+                                                                </div>
+
+                                                                {/* Score breakdown */}
+                                                                <div className="grid grid-cols-3 gap-4 mb-6">
+                                                                    <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                                                                        <div className="text-lg font-bold text-emerald-600">
+                                                                            {Math.round(credibility * 100)}%
+                                                                        </div>
+                                                                        <div className="text-xs text-gray-500 flex items-center justify-center mt-1">
+                                                                            <FaCheckCircle className="w-3 h-3 mr-1" />
+                                                                            Credibility
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                                                        <div className="text-lg font-bold text-blue-600">
+                                                                            {Math.round(referential * 100)}%
+                                                                        </div>
+                                                                        <div className="text-xs text-gray-500 flex items-center justify-center mt-1">
+                                                                            <FaUsers className="w-3 h-3 mr-1" />
+                                                                            Referential
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                                                        <div className="text-lg font-bold text-purple-600">
+                                                                            {Math.round(compliance * 100)}%
+                                                                        </div>
+                                                                        <div className="text-xs text-gray-500 flex items-center justify-center mt-1">
+                                                                            <FaChartLine className="w-3 h-3 mr-1" />
+                                                                            Compliance
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <button
+                                                                    className="w-full bg-gradient-to-r from-[#B11016] to-[#8f0d12] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#8f0d12] hover:to-[#B11016] transition-all duration-200 transform hover:scale-102 shadow-lg hover:shadow-xl"
+                                                                    onClick={() => handleCheckProjects(company.company_name)}
+                                                                >
+                                                                    VIEW DETAILED ANALYSIS
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Synergy Score Display */}
+                                                            <div className="flex flex-col items-center min-w-[140px]">
+                                                                <div className="text-center mb-3">
+                                                                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                                                        Overall Synergy
+                                                                    </h4>
+                                                                    <div className={`text-2xl font-bold ${synergyLevel.color}`}>
+                                                                        {overallSynergy}%
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="w-24 h-24 mb-3">
+                                                                    <CircularProgressbar
+                                                                        value={overallSynergy}
+                                                                        text=""
+                                                                        styles={buildStyles({
+                                                                            pathColor: getProgressColor(overallSynergy),
+                                                                            trailColor: "#e5e7eb",
+                                                                            strokeLinecap: "round"
+                                                                        })}
+                                                                        strokeWidth={12}
+                                                                    />
+                                                                </div>
+
+                                                                <div className={`px-3 py-1 rounded-full text-xs font-medium ${synergyLevel.color} ${synergyLevel.bgColor} border ${synergyLevel.borderColor}`}>
+                                                                    {synergyLevel.label}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <FaBuilding className="w-8 h-8 text-gray-400" />
+                                            </div>
+                                            <p className="text-gray-500 text-lg font-medium">No previously searched companies yet.</p>
+                                            <p className="text-gray-400 text-sm mt-1">Start by searching for a company above.</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Pagination */}
+                                {renderPagination()}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
