@@ -305,9 +305,52 @@ def company_webscraper(company_name: str) -> List[Dict[str, str]]:
     
     return results
 
+def get_google_credentials() -> List[Dict[str, str]]:
+    """
+    Get list of Google API credentials (API keys and Search Engine IDs) from environment variables
+    
+    Returns:
+        List of dicts with 'api_key' and 'cx' (Search Engine ID)
+    """
+    credentials = []
+    
+    # Helper function to get values with fallback
+    def get_env_var(base_name, index=None):
+        if index is not None:
+            return os.environ.get(f'{base_name}_{index}') or os.environ.get(base_name) if index == 1 else None
+        return os.environ.get(base_name)
+    
+    # First check for single credential set for backward compatibility
+    if 'GOOGLE_API_KEY' in os.environ and 'GOOGLE_SEARCH_ENGINE_ID' in os.environ:
+        credentials.append({
+            'api_key': os.environ['GOOGLE_API_KEY'],
+            'cx': os.environ['GOOGLE_SEARCH_ENGINE_ID']
+        })
+    
+    # Then check for numbered credentials (GOOGLE_API_KEY_1, GOOGLE_SEARCH_ENGINE_ID_1, etc.)
+    i = 1
+    while True:
+        api_key = get_env_var('GOOGLE_API_KEY', i)
+        cx = get_env_var('GOOGLE_SEARCH_ENGINE_ID', i)
+        
+        if not api_key or not cx:
+            if i == 1 and not credentials:
+                # Only warn if we don't have any credentials at all
+                print("Warning: No Google API credentials found in environment variables")
+            break
+            
+        # Add the credential set if both key and cx are present
+        credentials.append({
+            'api_key': api_key,
+            'cx': cx
+        })
+        i += 1
+    
+    return credentials
+
 def google_custom_search(query: str, num_results: int = 10, start_index: int = 1) -> List[Dict[str, Any]]:
     """
-    Perform a search using Google Custom Search JSON API
+    Perform a search using Google Custom Search JSON API with API key and Search Engine ID rotation
     
     Args:
         query: Search query string
@@ -317,34 +360,80 @@ def google_custom_search(query: str, num_results: int = 10, start_index: int = 1
     Returns:
         List of search result items
     """
-    # Get API configuration from environment variables
-    api_key = os.getenv('GOOGLE_API_KEY')
-    search_engine_id = os.getenv('GOOGLE_SEARCH_ENGINE_ID')
+    credentials = get_google_credentials()
     
-    if not api_key or not search_engine_id:
-        print("Error: Missing Google API configuration. Please set GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID environment variables.")
+    if not credentials:
+        print("Error: No Google API credentials found in environment variables")
         return []
-        
+    
+    print("\n=== Google Custom Search API ===")
+    print(f"Query: {query}")
+    print(f"Available credentials: {len(credentials)} sets")
+    for i, cred in enumerate(credentials, 1):
+        print(f"  Set {i}: Key ...{cred['api_key'][-4:]} with CX ...{cred['cx'][-4:]}")
+    
     base_url = "https://www.googleapis.com/customsearch/v1"
     params = {
         'q': query,
-        'key': api_key,
-        'cx': search_engine_id,
         'num': min(num_results, 10),  # Max 10 results per request
         'start': start_index
     }
     
-    try:
-        response = requests.get(base_url, params=params)
-        response.raise_for_status()
-        data = response.json()
-        return data.get('items', [])
-    except requests.exceptions.RequestException as e:
-        print(f"Error performing Google Custom Search: {e}")
-        if hasattr(e, 'response') and e.response is not None:
-            print(f"Response status: {e.response.status_code}")
-            print(f"Response body: {e.response.text}")
-        return []
+    last_error = None
+    
+    for cred_idx, creds in enumerate(credentials, 1):
+        try:
+            params.update({
+                'key': creds['api_key'],
+                'cx': creds['cx']
+            })
+            
+            print(f"\n[Attempt {cred_idx}/{len(credentials)}] Using API key ...{creds['api_key'][-4:]} with Search Engine ID ...{creds['cx'][-4:]}")
+            
+            response = requests.get(base_url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            # Log successful usage
+            print(f"✓ Success with API key ...{creds['api_key'][-4:]} (CX: ...{creds['cx'][-4:]})")
+            if 'searchInformation' in data:
+                print(f"   Search time: {data['searchInformation'].get('searchTime', 'N/A')}s")
+                print(f"   Total results: {data['searchInformation'].get('totalResults', 'N/A')}")
+            
+            # If we get here, the request was successful
+            return data.get('items', [])
+            
+        except requests.exceptions.HTTPError as e:
+            status_code = getattr(e.response, 'status_code', None)
+            error_msg = getattr(e.response, 'text', '').lower()
+            
+            if status_code == 429 or (status_code == 403 and 'quota' in error_msg):
+                print(f"✗ Quota exceeded for API key ...{creds['api_key'][-4:]} (CX: ...{creds['cx'][-4:]})")
+                print(f"   Status: {status_code}, Error: {error_msg[:200]}")
+                if cred_idx < len(credentials):
+                    print("   Trying next credential set...")
+                last_error = e
+                continue
+                
+            print(f"✗ HTTP Error with API key ...{creds['api_key'][-4:]} (CX: ...{creds['cx'][-4:]})")
+            print(f"   Status: {status_code}, Error: {error_msg[:200]}")
+            last_error = e
+            continue
+            
+        except requests.exceptions.RequestException as e:
+            print(f"✗ Request failed with API key ...{creds['api_key'][-4:]} (CX: ...{creds['cx'][-4:]})")
+            print(f"   Error: {str(e)}")
+            last_error = e
+            continue
+    
+    # If we get here, all API keys were exhausted
+    print("All API keys exhausted or encountered errors")
+    if last_error:
+        if hasattr(last_error, 'response') and last_error.response is not None:
+            print(f"Last error status: {last_error.response.status_code}")
+            print(f"Response: {last_error.response.text[:500]}")
+    
+    return []
 
 def company_traits_webscraper(company_traits: str) -> List[Dict[str, str]]:
     """
