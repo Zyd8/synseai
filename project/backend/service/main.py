@@ -21,8 +21,8 @@ def company_scoring_scrape(company):
             elif pages['criteria'] == 'referential':
                 referential_score = synseai_llm.get_company_score(pages, 'referential')
                 referential_scores.append(referential_score)
-            elif pages['criteria'] == 'compliance':
-                compliance_score = synseai_llm.get_company_score(pages, 'compliance')
+            elif pages['criteria'] == 'ESG_alignment':
+                compliance_score = synseai_llm.get_company_score(pages, 'ESG_alignment')
                 compliance_scores.append(compliance_score)
 
         # Calculate average scores only if we have scores
@@ -33,7 +33,7 @@ def company_scoring_scrape(company):
         # Only get reasonings if we have scores for that criteria
         credibility_reasoning = synseai_llm.company_score_reasoning('credibility') if credibility_scores else 'No credibility data available'
         referential_reasoning = synseai_llm.company_score_reasoning('referential') if referential_scores else 'No referential data available'
-        compliance_reasoning = synseai_llm.company_score_reasoning('compliance') if compliance_scores else 'No compliance data available'
+        compliance_reasoning = synseai_llm.company_score_reasoning('ESG_alignment') if compliance_scores else 'No compliance data available'
 
         return {
             'credibility_score': credibility_score,
@@ -112,8 +112,8 @@ def company_name_webscraper(company_name):
             elif pages['criteria'] == 'referential':
                 referential_score = synseai_llm.get_company_score(pages, 'referential')
                 referential_scores.append(referential_score)
-            elif pages['criteria'] == 'compliance':
-                compliance_score = synseai_llm.get_company_score(pages, 'compliance')
+            elif pages['criteria'] == 'ESG_alignment':
+                compliance_score = synseai_llm.get_company_score(pages, 'ESG_alignment')
                 compliance_scores.append(compliance_score)
 
         # Calculate average scores only if we have scores
@@ -124,7 +124,7 @@ def company_name_webscraper(company_name):
         # Only get reasonings if we have scores for that criteria
         credibility_reasoning = synseai_llm.company_score_reasoning('credibility') if credibility_scores else 'No credibility data available'
         referential_reasoning = synseai_llm.company_score_reasoning('referential') if referential_scores else 'No referential data available'
-        compliance_reasoning = synseai_llm.company_score_reasoning('compliance') if compliance_scores else 'No compliance data available'
+        compliance_reasoning = synseai_llm.company_score_reasoning('ESG_alignment') if compliance_scores else 'No compliance data available'
 
         scraped_pages = company_project_reccomender(company_name)
         project_reccomendations = synseai_llm.project_recommendation(scraped_pages)

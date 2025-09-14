@@ -12,8 +12,8 @@ criteria:
   referential:
     - What are the partners of
 
-  compliance:
-    - What are the compliance papers of
+  ESG_alignment:
+    - What is the ESG of
 
 project_recommendation:
   context:
@@ -119,6 +119,16 @@ prompts:
 
   criteria_reasoning_prompt: |
     Based on the following information, explain why the {criteria} score of {score} was given for {company}:
+    
+    Context:
+    {context}
+    
+    Provide specific examples from the context that support this score.
+    Focus on the most relevant aspects that influenced the scoring.
+    Be concise but thorough in your reasoning.
+  
+  ESG_alignment_reasoning_prompt: |
+    Based on the following information, explain why the ESG alignment score of {score} was given for {company} based on the BPI ESG context and {company} ESG. Give specific points to where the company aligns with BPI's ESG values:
     
     Context:
     {context}

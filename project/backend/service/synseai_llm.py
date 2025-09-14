@@ -44,6 +44,20 @@ class SynseaiLLM:
         except Exception as e:
             print(f"Warning: Could not load BPI context: {str(e)}")
             return ""
+            
+    def _load_bpi_esg_context(self):
+        """Load BPI ESG context from the text file."""
+        try:
+            import os
+            # Get the directory where this file is located
+            dir_path = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(dir_path, 'BPI_ESG.txt')
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except Exception as e:
+            print(f"Warning: Could not load BPI ESG context: {str(e)}")
+            return ""
 
     def _openai_chat(self, input, temperature=0.7):
         """
@@ -120,14 +134,22 @@ class SynseaiLLM:
         if not page:
             return 0.0
 
-        formatted_context = "\n".join([
+        # Prepare the base context
+        base_context = "\n".join([
             f"Title: {page.get('title', 'No title')}",
             f"URL: {page.get('url', 'No URL')}",
             f"Term: {page.get('term', 'N/A')}",
             "",
             page.get('content', 'No content'),
-            "\n" + ("=" * 50) + "\n"
         ])
+        
+        # Add BPI ESG context if we're scoring compliance
+        if criteria.lower() == 'ESG_alignment':
+            bpi_esg_context = self._load_bpi_esg_context()
+            if bpi_esg_context:
+                base_context = f"BPI ESG Context:\n{bpi_esg_context}\n\n{base_context}"
+        
+        formatted_context = f"{base_context}\n{'=' * 50}\n"
 
         # Get the scoring prompt from config and format it
         prompt_template = self.prompts.get('scoring_prompt', '')
@@ -155,8 +177,14 @@ class SynseaiLLM:
                 print(f"Warning: Could not parse score from: '{score_text}'. Using default score of 0.5")
                 score = 0.5
 
-            # Get the reasoning prompt from config and format it with both score and context
-            reasoning_prompt = self.prompts.get('criteria_reasoning_prompt', '').format(
+            # Get the appropriate reasoning prompt based on criteria
+            if criteria.lower() == 'esg_alignment':
+                prompt_key = 'ESG_alignment_reasoning_prompt'
+            else:
+                prompt_key = 'criteria_reasoning_prompt'
+                
+            # Format the selected prompt with score and context
+            reasoning_prompt = self.prompts.get(prompt_key, '').format(
                 criteria=criteria,
                 score=score,
                 company=self.company,
@@ -178,7 +206,7 @@ class SynseaiLLM:
                 self.credibility_reasonings.append(reason_text)
             elif criteria == 'referential':
                 self.referential_reasonings.append(reason_text)
-            elif criteria == 'compliance':
+            elif criteria == 'ESG_alignment':
                 self.compliance_reasonings.append(reason_text)
 
             return max(0.0, min(1.0, score))
@@ -196,10 +224,10 @@ class SynseaiLLM:
             reasonings = self.referential_reasonings
             if not reasonings:
                 return 'No referential reasonings available.'
-        elif criteria == 'compliance':
+        elif criteria == 'ESG_alignment':
             reasonings = self.compliance_reasonings
             if not reasonings:
-                return 'No compliance reasonings available.'
+                return 'No ESG alignment reasonings available.'
         else:
             return "Invalid criteria"
 
