@@ -137,22 +137,42 @@ class SynseaiLLM:
             formatted_context=formatted_context
         )
         try:
+            # First get the score
             score_response = self._openai_chat(
                 input=prompt,
                 temperature=0.0,
             )
             score_text = score_response.strip()
-            score = float(re.search(r'[0-9]*\.?[0-9]+', score_text).group())
+            
+            # Parse the score
+            score_match = re.search(r'0\.\d|1\.0', score_text)
+            if not score_match:
+                score_match = re.search(r'\b(?:0|0?\.[0-9]|1\.0?)\b', score_text)
+            
+            if score_match:
+                score = float(score_match.group())
+            else:
+                print(f"Warning: Could not parse score from: '{score_text}'. Using default score of 0.5")
+                score = 0.5
 
-            # Get the reasoning prompt from config and format it
+            # Get the reasoning prompt from config and format it with both score and context
             reasoning_prompt = self.prompts.get('criteria_reasoning_prompt', '').format(
-                criteria=criteria
+                criteria=criteria,
+                score=score,
+                company=self.company,
+                context=formatted_context
             )
-            reason_response = self._openai_chat(
-                input=reasoning_prompt,
-                temperature=0.7,
-            )
-            reason_text = reason_response.strip()
+            
+            if not reasoning_prompt:
+                print("Warning: No reasoning prompt found in config")
+                reason_text = f"Scored {score} for {criteria} - No reasoning prompt configured"
+            else:
+                reason_response = self._openai_chat(
+                    input=reasoning_prompt,
+                    temperature=0.7,
+                )
+                reason_text = reason_response.strip()
+                print(f"Generated reasoning for {criteria} score {score}:", reason_text[:200] + "..." if len(reason_text) > 200 else reason_text)
 
             if criteria == 'credibility':
                 self.credibility_reasonings.append(reason_text)
@@ -169,18 +189,32 @@ class SynseaiLLM:
 
     def company_score_reasoning(self, criteria):
         if criteria == 'credibility':
-            reasonings = '\n'.join(self.credibility_reasonings) if self.credibility_reasonings else 'No credibility reasonings available.'
+            reasonings = self.credibility_reasonings
+            if not reasonings:
+                return 'No credibility reasonings available.'
         elif criteria == 'referential':
-            reasonings = '\n'.join(self.referential_reasonings) if self.referential_reasonings else 'No referential reasonings available.'
+            reasonings = self.referential_reasonings
+            if not reasonings:
+                return 'No referential reasonings available.'
         elif criteria == 'compliance':
-            reasonings = '\n'.join(self.compliance_reasonings) if self.compliance_reasonings else 'No compliance reasonings available.'
+            reasonings = self.compliance_reasonings
+            if not reasonings:
+                return 'No compliance reasonings available.'
         else:
             return "Invalid criteria"
 
-        # Get the summary prompt from config and format it
+        # Join all reasonings with separators
+        reasonings_text = '\n\n---\n\n'.join(reasonings)
+        
+        # Get the summary prompt from config and format it with the reasonings
         summary_prompt = self.prompts.get('summary_criteria_reasoning_prompt', '').format(
-            criteria=criteria
+            criteria=criteria,
+            reasonings=reasonings_text
         )
+        
+        if not summary_prompt:
+            return "Error: Summary prompt not found in config"
+            
         reason_response = self._openai_chat(
             input=summary_prompt,
             temperature=0.5,
