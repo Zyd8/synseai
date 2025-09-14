@@ -19,5 +19,80 @@ project_recommendation:
   context:
     - What is the company {company_name}?
   
-  objective:
-    - what future projects can you reccomend between BPI and the company named {company_name}?
+prompts:
+  project_recommendation_prompt: |
+    You are an expert in creating strategic banking partnerships. 
+
+    TASK: Create THREE detailed project recommendations for collaboration between BPI (Bank of the Philippine Islands) and {company}.
+
+    IMPORTANT REQUIREMENTS:
+    - Focus ONLY on collaboration between BPI and {company}
+    - Do NOT mention any other banks or financial institutions
+    - Each recommendation MUST include BOTH a title and a detailed description
+    - Descriptions should be comprehensive and specific
+
+    CONTEXT:
+    About BPI (Bank of the Philippine Islands):
+    {bpi_context}
+
+    About {company}:
+    {company_context}
+
+    For EACH recommendation, you MUST include:
+    1. A clear, specific title (max 10 words)
+    2. A detailed description (at least 3-5 sentences) covering:
+    - How BPI and {company} will collaborate
+    - Specific contributions from each company
+    - Project goals and benefits
+    - Implementation approach
+    - Expected outcomes
+
+    RESPONSE FORMAT - YOU MUST FOLLOW THIS EXACT FORMAT:
+
+    TITLE 1: [Concise project title]
+    DESCRIPTION 1: [Detailed description with specific details about the collaboration between BPI and {company}]
+
+    TITLE 2: [Concise project title]
+    DESCRIPTION 2: [Detailed description with specific details about the collaboration between BPI and {company}]
+
+    TITLE 3: [Concise project title]
+    DESCRIPTION 3: [Detailed description with specific details about the collaboration between BPI and {company}]
+
+    REMEMBER:
+    - Be specific and concrete in your descriptions
+    - Focus on mutual benefits for both BPI and {company}
+    - Include implementation details
+    - Each recommendation should be distinct and valuable
+
+  scoring_prompt: |
+    Analyze the following information about {company} and provide a {criteria} score from 0.0 to 1.0.
+
+    Context:
+    {formatted_context}
+
+    Return ONLY a number between 0.0 and 1.0, where:
+    - 0.0 = Very poor
+    - 0.5 = Neutral
+    - 1.0 = Excellent
+
+  criteria_reasoning_prompt: |
+    Why did you give this score, based on the {criteria} criteria?
+
+  summary_criteria_reasoning_prompt: |
+    Summarize the reasonings in cohesive bullet points based on the {criteria} criteria. 
+    Answer directly, no unnecessary introductions. 
+    Strictly Do not mention any score.
+
+  company_extraction_prompt: |
+    Extract ONLY the company/organization names from the text below.
+
+    RULES:
+    - Output company names ONLY
+    - One name per line
+    - No numbers, no bullets, no explanations
+    - Do not include "Here are" or any intro/conclusion
+    - Keep official suffixes like Inc., Corp., Ltd., PLC, etc.
+    - Ignore statistics, locations, money, or any descriptive text
+
+    TEXT:
+    {context}
