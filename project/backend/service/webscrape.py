@@ -1,11 +1,16 @@
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse, urljoin
-from googlesearch import search
+import os
+import json
 import time
 import random
 import yaml
-import os
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse, urljoin
+from typing import List, Dict, Any, Optional, Union, Tuple
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 # Set up headers to mimic a browser
 HEADERS = {
@@ -129,8 +134,8 @@ def extract_clean_text(soup):
         print(f"Error extracting text: {str(e)}")
         return "[Content not available: Error processing content]"
 
-def company_project_reccomender(company_name):
-    """Scrape project recommendation context for a company"""
+def company_project_reccomender(company_name: str) -> Dict[str, List[Dict[str, str]]]:
+    """Scrape project recommendation context for a company using Google Custom Search API"""
     config = get_configuration()
     if not config:
         return {"error": "Configuration not found"}
@@ -148,142 +153,150 @@ def company_project_reccomender(company_name):
         return {"error": "No project recommendation context queries found in config"}
     
     results = []
-    valid_results = 0
     
     for query in context_queries:
-        search_results = search(
-            query,
-            num_results=search_settings.get('num_results'),  
-            lang="en",
-            sleep_interval=search_settings.get('min_delay'),
-            timeout=search_settings.get('timeout')
-        )
-        
-        search_results = list(search_results)
-        if not search_results:
-            continue
-            
-        for result_url in search_results:
-
-            if valid_results >= search_settings.get('target_num_results', 1):
-                break
-            
-            url = ensure_url_scheme(result_url)
+        try:
+            # Add delay to avoid rate limiting
             search_random_delay(
-                search_settings.get('min_delay'),
-                search_settings.get('max_delay')
+                search_settings.get('min_delay', 1),
+                search_settings.get('max_delay', 5)
             )
             
-            try:
-                response = fetch_url(
-                    url,
-                    search_settings.get('timeout')
-                )
-                if response is None:  
-                    print("NO RESPONSE, SKIPPED")
-                    continue
-                    
-                soup = BeautifulSoup(response.content, 'html.parser')
-
-                if not is_text_valid(soup):
-                    print("INVALID TEXT, SKIPPED")
-                    continue
-                
-                text = extract_clean_text(soup)
-                
-                results.append({
-                    'query': query,
-                    'url': url,
-                    'content': text
-                })
-                valid_results += 1
-                
-            except Exception as e:
-                print(f"Error processing {url}: {str(e)}")
-                continue  
-    
-    return {
-        'context': results
-    }
-
-def company_webscraper(company_name):
-    config = get_configuration()
-    search_settings = config.get('search_settings', {})
-    results = []
-    
-    # Get configuration values with defaults
-    num_results = search_settings.get('num_results', 5)
-    target_results_per_term = search_settings.get('target_num_results', 2)
-    
-    # Track valid results per criteria and term
-    criteria_results = {}
-    
-    # First pass: collect all search results for each term
-    search_links = {}
-    for criteria_name, terms in config.get("criteria", {}).items():
-        criteria_results[criteria_name] = {}
-        for term in terms:
-            criteria_results[criteria_name][term] = 0
-            try:
-                # Get more results than we need as fallback
-                links = search(
-                    f"{term} {company_name}",
-                    num_results=num_results,
-                    advanced=True
-                )
-                search_links[(criteria_name, term)] = list(links)
-            except Exception as e:
-                print(f"Error searching for {company_name} {term}: {str(e)}")
-                search_links[(criteria_name, term)] = []
-    
-    # Second pass: process links until we have enough valid results for each term
-    for criteria_name, terms in config.get("criteria", {}).items():
-        for term in terms:
-            links = search_links.get((criteria_name, term), [])
+            # Get search results
+            search_items = google_custom_search(
+                query=query,
+                num_results=search_settings.get('num_results', 3)
+            )
             
-            for result in links:
-                # Stop if we have enough valid results for this term
-                if criteria_results[criteria_name][term] >= target_results_per_term:
-                    break
-                    
+            if not search_items:
+                print(f"No results for query: {query}")
+                continue
+                
+            for item in search_items:
                 try:
-                    url = ensure_url_scheme(result.url)
-                    
-                    search_random_delay(
-                        search_settings.get('min_delay', 1),
-                        search_settings.get('max_delay', 3)
-                    )
-                    
+                    url = ensure_url_scheme(item.get('link', ''))
+                    if not url:
+                        continue
+                        
                     response = fetch_url(url, search_settings.get('timeout', 10))
                     if response is None:
-                        print(f"NO RESPONSE FOR {url}, SKIPPED")
+                        print(f"No response from {url}")
                         continue
                         
                     response.encoding = response.apparent_encoding
                     soup = BeautifulSoup(response.text, 'html.parser')
                     
                     if not is_text_valid(soup):
-                        print(f"INVALID TEXT AT {url}, SKIPPED")
+                        print(f"Invalid text content from {url}")
                         continue
-                    
+                        
                     clean_text = extract_clean_text(soup)
-                    title = soup.title.string.strip() if soup.title else "No title found"
                     
-                    # Only add if we still need more results for this term
-                    if criteria_results[criteria_name][term] < target_results_per_term:
-                        page_data = {
+                    results.append({
+                        'query': query,
+                        'url': url,
+                        'title': item.get('title', ''),
+                        'content': clean_text
+                    })
+                    
+                    # Check if we have enough results for this query
+                    if len([r for r in results if r['query'] == query]) >= search_settings.get('target_num_results', 1):
+                        break
+                        
+                except Exception as e:
+                    print(f"Error processing {url}: {str(e)}")
+                    continue
+                    
+        except Exception as e:
+            print(f"Error searching for '{query}': {str(e)}")
+            continue
+    
+    return {
+        'context': results
+    }
+
+def company_webscraper(company_name: str) -> List[Dict[str, str]]:
+    """Scrape company information using Google Custom Search API"""
+    config = get_configuration()
+    if not config:
+        print("Error: Configuration not found")
+        return []
+        
+    search_settings = config.get('search_settings', {})
+    results = []
+    target_results_per_term = search_settings.get('target_num_results', 2)
+    
+    # Track valid results per criteria and term
+    criteria_results = {}
+    
+    # Process each criteria and term
+    for criteria_name, terms in config.get("criteria", {}).items():
+        criteria_results[criteria_name] = {term: 0 for term in terms}
+        
+        for term in terms:
+            query = f"{term} {company_name}"
+            
+            try:
+                # Add delay to avoid rate limiting
+                search_random_delay(
+                    search_settings.get('min_delay', 1),
+                    search_settings.get('max_delay', 5)
+                )
+                
+                # Get search results
+                search_items = google_custom_search(
+                    query=query,
+                    num_results=search_settings.get('num_results', 5)
+                )
+                
+                if not search_items:
+                    print(f"No results for query: {query}")
+                    continue
+                    
+                # Process each search result
+                for item in search_items:
+                    if criteria_results[criteria_name][term] >= target_results_per_term:
+                        break
+                        
+                    try:
+                        url = ensure_url_scheme(item.get('link', ''))
+                        if not url:
+                            continue
+                            
+                        response = fetch_url(url, search_settings.get('timeout', 10))
+                        if response is None:
+                            print(f"No response from {url}")
+                            continue
+                            
+                        response.encoding = response.apparent_encoding
+                        soup = BeautifulSoup(response.text, 'html.parser')
+                        
+                        if not is_text_valid(soup):
+                            print(f"Invalid text content from {url}")
+                            continue
+                            
+                        clean_text = extract_clean_text(soup)
+                        title = item.get('title', 'No title found')
+                        
+                        results.append({
                             'title': title,
                             'url': url,
                             'criteria': criteria_name,
                             'term': term,
-                            'content': clean_text
-                        }
-                        results.append(page_data)
+                            'content': clean_text,
+                            'snippet': item.get('snippet', '')
+                        })
+                        
                         criteria_results[criteria_name][term] += 1
                         print(f"ADDED result for {criteria_name} - {term}: {url}")
-                    
-                except Exception as e:
-                    print(f"Error processing {url}: {str(e)}")
+                        
+                    except Exception as e:
+                        print(f"Error processing {url}: {str(e)}")
+                        continue
+                        
+            except Exception as e:
+                print(f"Error searching for '{query}': {str(e)}")
+                continue
     
     # Log final results count
     for criteria_name, terms in criteria_results.items():
@@ -292,58 +305,120 @@ def company_webscraper(company_name):
     
     return results
 
-def company_traits_webscraper(company_traits):
+def google_custom_search(query: str, num_results: int = 10, start_index: int = 1) -> List[Dict[str, Any]]:
+    """
+    Perform a search using Google Custom Search JSON API
+    
+    Args:
+        query: Search query string
+        num_results: Number of results to return (max 10 per request)
+        start_index: Start index for pagination (1-based)
+        
+    Returns:
+        List of search result items
+    """
+    # Get API configuration from environment variables
+    api_key = os.getenv('GOOGLE_API_KEY')
+    search_engine_id = os.getenv('GOOGLE_SEARCH_ENGINE_ID')
+    
+    if not api_key or not search_engine_id:
+        print("Error: Missing Google API configuration. Please set GOOGLE_API_KEY and GOOGLE_SEARCH_ENGINE_ID environment variables.")
+        return []
+        
+    base_url = "https://www.googleapis.com/customsearch/v1"
+    params = {
+        'q': query,
+        'key': api_key,
+        'cx': search_engine_id,
+        'num': min(num_results, 10),  # Max 10 results per request
+        'start': start_index
+    }
+    
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        return data.get('items', [])
+    except requests.exceptions.RequestException as e:
+        print(f"Error performing Google Custom Search: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response status: {e.response.status_code}")
+            print(f"Response body: {e.response.text}")
+        return []
+
+def company_traits_webscraper(company_traits: str) -> List[Dict[str, str]]:
+    """
+    Search for company information using Google Custom Search API
+    
+    Args:
+        company_traits: Search query for company traits
+        
+    Returns:
+        List of dictionaries containing scraped content from search results
+    """
     config = get_configuration()
+    if not config:
+        print("Error: Configuration not found")
+        return []
+        
     search_settings = config.get('search_settings', {})
     results = []
-    valid_results = 0
-
-    links = search(
-        f"{company_traits} Companies",
-        num_results=search_settings.get('num_results'),
-        advanced=True
-    )
-
-    for result in links:
-        try:
-            url = ensure_url_scheme(result.url)
-
-            if valid_results >= search_settings.get('target_num_results', 1):
-                break
-
-            search_random_delay(
-                search_settings.get('min_delay'),
-                search_settings.get('max_delay')
-            )
-
-            response = fetch_url(
-                url,
-                search_settings.get('timeout')
-            )
-            
-            if response is None:
-                print("NO RESPONSE, SKIPPED")
-                continue
-
-            response.encoding = response.apparent_encoding
-                        
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            if not is_text_valid(soup):
-                print("INVALID TEXT, SKIPPED")
-                continue
-            
-            clean_text = extract_clean_text(soup)
-
-            page_data = {
-                'content': clean_text
-            }
-            results.append(page_data)
-            valid_results += 1
-        
-        except Exception as e:
-            print(f"Error processing {url}: {str(e)}")
-
-    return results
-            
+    query = f"{company_traits} Companies"
     
+    try:
+        # Add delay to avoid rate limiting
+        search_random_delay(
+            search_settings.get('min_delay', 1),
+            search_settings.get('max_delay', 5)
+        )
+        
+        # Get search results
+        search_items = google_custom_search(
+            query=query,
+            num_results=search_settings.get('num_results', 5)
+        )
+        
+        if not search_items:
+            print("No search results returned from Google Custom Search")
+            return results
+            
+        # Process each search result
+        for item in search_items:
+            try:
+                url = ensure_url_scheme(item.get('link', ''))
+                if not url:
+                    continue
+                    
+                response = fetch_url(url, search_settings.get('timeout', 10))
+                if response is None:
+                    print(f"No response from {url}")
+                    continue
+                    
+                response.encoding = response.apparent_encoding
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                if not is_text_valid(soup):
+                    print(f"Invalid text content from {url}")
+                    continue
+                    
+                clean_text = extract_clean_text(soup)
+                
+                results.append({
+                    'url': url,
+                    'title': item.get('title', ''),
+                    'snippet': item.get('snippet', ''),
+                    'content': clean_text
+                })
+                
+                # Check if we have enough results
+                if len(results) >= search_settings.get('target_num_results', 3):
+                    break
+                    
+            except Exception as e:
+                print(f"Error processing {url}: {str(e)}")
+                continue
+                
+    except Exception as e:
+        print(f"Error in company_traits_webscraper: {str(e)}")
+    
+    return results
