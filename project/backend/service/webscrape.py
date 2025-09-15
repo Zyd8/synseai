@@ -317,7 +317,12 @@ def get_google_credentials() -> List[Dict[str, str]]:
     # Helper function to get values with fallback
     def get_env_var(base_name, index=None):
         if index is not None:
-            return os.environ.get(f'{base_name}_{index}') or os.environ.get(base_name) if index == 1 else None
+            # First try the indexed version (e.g., GOOGLE_API_KEY_1)
+            value = os.environ.get(f'{base_name}_{index}')
+            # If not found and it's the first index, try the non-indexed version as fallback
+            if value is None and index == 1:
+                value = os.environ.get(base_name)
+            return value
         return os.environ.get(base_name)
     
     # First check for single credential set for backward compatibility

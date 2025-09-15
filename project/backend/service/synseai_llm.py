@@ -200,7 +200,7 @@ class SynseaiLLM:
                     temperature=0.7,
                 )
                 reason_text = reason_response.strip()
-                print(f"Generated reasoning for {criteria} score {score}:", reason_text[:200] + "..." if len(reason_text) > 200 else reason_text)
+                #print(f"Generated reasoning for {criteria} score {score}:", reason_text[:200] + "..." if len(reason_text) > 200 else reason_text)
 
             if criteria == 'credibility':
                 self.credibility_reasonings.append(reason_text)
