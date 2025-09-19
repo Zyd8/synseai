@@ -1,4 +1,6 @@
 import re
+import yaml
+from pathlib import Path
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
@@ -16,6 +18,18 @@ class SynseaiLLM:
         self.company = company
         self.project_contexts = []
         self.client = OpenAI()
+        self._load_prompts()
+        
+    def _load_prompts(self):
+        """Load prompts from config.yaml"""
+        try:
+            config_path = Path(__file__).parent / 'config.yaml'
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f)
+            self.prompts = config.get('prompts', {})
+        except Exception as e:
+            print(f"Error loading prompts from config: {str(e)}")
+            self.prompts = {}
 
     def _load_bpi_context(self):
         """Load BPI context from the text file."""
@@ -29,6 +43,20 @@ class SynseaiLLM:
                 return f.read()
         except Exception as e:
             print(f"Warning: Could not load BPI context: {str(e)}")
+            return ""
+            
+    def _load_bpi_esg_context(self):
+        """Load BPI ESG context from the text file."""
+        try:
+            import os
+            # Get the directory where this file is located
+            dir_path = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(dir_path, 'BPI_ESG.txt')
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except Exception as e:
+            print(f"Warning: Could not load BPI ESG context: {str(e)}")
             return ""
 
     def _openai_chat(self, input, temperature=0.7):
@@ -52,50 +80,13 @@ class SynseaiLLM:
 
         bpi_context = self._load_bpi_context()
 
-        prompt = f"""
-        You are an expert in creating strategic banking partnerships. 
-
-        TASK: Create THREE detailed project recommendations for collaboration between BPI (Bank of the Philippine Islands) and {self.company}.
-
-        IMPORTANT REQUIREMENTS:
-        - Focus ONLY on collaboration between BPI and {self.company}
-        - Do NOT mention any other banks or financial institutions
-        - Each recommendation MUST include BOTH a title and a detailed description
-        - Descriptions should be comprehensive and specific
-
-        CONTEXT:
-        About BPI (Bank of the Philippine Islands):
-        {bpi_context}
-
-        About {self.company}:
-        {page.get('context', 'No context')}
-
-        For EACH recommendation, you MUST include:
-        1. A clear, specific title (max 10 words)
-        2. A detailed description (at least 3-5 sentences) covering:
-        - How BPI and {self.company} will collaborate
-        - Specific contributions from each company
-        - Project goals and benefits
-        - Implementation approach
-        - Expected outcomes
-
-        RESPONSE FORMAT - YOU MUST FOLLOW THIS EXACT FORMAT:
-
-        TITLE 1: [Concise project title]
-        DESCRIPTION 1: [Detailed description with specific details about the collaboration between BPI and {self.company}]
-
-        TITLE 2: [Concise project title]
-        DESCRIPTION 2: [Detailed description with specific details about the collaboration between BPI and {self.company}]
-
-        TITLE 3: [Concise project title]
-        DESCRIPTION 3: [Detailed description with specific details about the collaboration between BPI and {self.company}]
-
-        REMEMBER:
-        - Be specific and concrete in your descriptions
-        - Focus on mutual benefits for both BPI and {self.company}
-        - Include implementation details
-        - Each recommendation should be distinct and valuable
-        """
+        # Get the project recommendation prompt from config and format it
+        prompt_template = self.prompts.get('project_recommendation_prompt', '')
+        prompt = prompt_template.format(
+            company=self.company,
+            bpi_context=bpi_context,
+            company_context=page.get('context', 'No context')
+        )
 
         try:
             response = self._openai_chat(
@@ -143,47 +134,79 @@ class SynseaiLLM:
         if not page:
             return 0.0
 
-        formatted_context = "\n".join([
+        # Prepare the base context
+        base_context = "\n".join([
             f"Title: {page.get('title', 'No title')}",
             f"URL: {page.get('url', 'No URL')}",
             f"Term: {page.get('term', 'N/A')}",
             "",
             page.get('content', 'No content'),
-            "\n" + ("=" * 50) + "\n"
         ])
+        
+        # Add BPI ESG context if we're scoring compliance
+        if criteria.lower() == 'ESG_alignment':
+            bpi_esg_context = self._load_bpi_esg_context()
+            if bpi_esg_context:
+                base_context = f"BPI ESG Context:\n{bpi_esg_context}\n\n{base_context}"
+        
+        formatted_context = f"{base_context}\n{'=' * 50}\n"
 
-        prompt = f"""
-
-        Analyze the following information about {self.company} and provide a {criteria} score from 0.0 to 1.0.
-
-        Context:
-        {formatted_context}
-
-        Return ONLY a number between 0.0 and 1.0, where:
-        - 0.0 = Very poor
-        - 0.5 = Neutral
-        - 1.0 = Excellent
-
-        """
+        # Get the scoring prompt from config and format it
+        prompt_template = self.prompts.get('scoring_prompt', '')
+        prompt = prompt_template.format(
+            company=self.company,
+            criteria=criteria,
+            formatted_context=formatted_context
+        )
         try:
+            # First get the score
             score_response = self._openai_chat(
                 input=prompt,
                 temperature=0.0,
             )
             score_text = score_response.strip()
-            score = float(re.search(r'[0-9]*\.?[0-9]+', score_text).group())
+            
+            # Parse the score
+            score_match = re.search(r'0\.\d|1\.0', score_text)
+            if not score_match:
+                score_match = re.search(r'\b(?:0|0?\.[0-9]|1\.0?)\b', score_text)
+            
+            if score_match:
+                score = float(score_match.group())
+            else:
+                print(f"Warning: Could not parse score from: '{score_text}'. Using default score of 0.5")
+                score = 0.5
 
-            reason_response = self._openai_chat(
-                input=f'Why did you give this score, based on the {criteria} criteria?',
-                temperature=0.7,
+            # Get the appropriate reasoning prompt based on criteria
+            if criteria.lower() == 'esg_alignment':
+                prompt_key = 'ESG_alignment_reasoning_prompt'
+            else:
+                prompt_key = 'criteria_reasoning_prompt'
+                
+            # Format the selected prompt with score and context
+            reasoning_prompt = self.prompts.get(prompt_key, '').format(
+                criteria=criteria,
+                score=score,
+                company=self.company,
+                context=formatted_context
             )
-            reason_text = reason_response.strip()
+            
+            if not reasoning_prompt:
+                print("Warning: No reasoning prompt found in config")
+                reason_text = f"Scored {score} for {criteria} - No reasoning prompt configured"
+            else:
+                reason_response = self._openai_chat(
+                    input=reasoning_prompt,
+                    temperature=0.7,
+                )
+                reason_text = reason_response.strip()
+                #print(f"Generated reasoning for {criteria} score {score}:", reason_text[:200] + "..." if len(reason_text) > 200 else reason_text)
 
             if criteria == 'credibility':
                 self.credibility_reasonings.append(reason_text)
             elif criteria == 'referential':
                 self.referential_reasonings.append(reason_text)
-            elif criteria == 'compliance':
+            elif criteria == 'ESG_alignment':
                 self.compliance_reasonings.append(reason_text)
 
             return max(0.0, min(1.0, score))
@@ -194,42 +217,54 @@ class SynseaiLLM:
 
     def company_score_reasoning(self, criteria):
         if criteria == 'credibility':
-            reasonings = '\n'.join(self.credibility_reasonings) if self.credibility_reasonings else 'No credibility reasonings available.'
+            reasonings = self.credibility_reasonings
+            if not reasonings:
+                return 'No credibility reasonings available.'
         elif criteria == 'referential':
-            reasonings = '\n'.join(self.referential_reasonings) if self.referential_reasonings else 'No referential reasonings available.'
-        elif criteria == 'compliance':
-            reasonings = '\n'.join(self.compliance_reasonings) if self.compliance_reasonings else 'No compliance reasonings available.'
+            reasonings = self.referential_reasonings
+            if not reasonings:
+                return 'No referential reasonings available.'
+        elif criteria == 'ESG_alignment':
+            reasonings = self.compliance_reasonings
+            if not reasonings:
+                return 'No ESG alignment reasonings available.'
         else:
             return "Invalid criteria"
 
+        # Join all reasonings with separators
+        reasonings_text = '\n\n---\n\n'.join(reasonings)
+        
+        # Get the summary prompt from config and format it with the reasonings
+        summary_prompt = self.prompts.get('summary_criteria_reasoning_prompt', '').format(
+            criteria=criteria,
+            reasonings=reasonings_text
+        )
+        
+        if not summary_prompt:
+            return "Error: Summary prompt not found in config"
+            
         reason_response = self._openai_chat(
-            input=f'Summarize the reasonings in cohesive bullet points based on the {criteria} criteria. Answer directly, no unnecessary introductions. Strictly Do not mention any score.',
+            input=summary_prompt,
             temperature=0.5,
         )
         return reason_response.strip()
 
-    @staticmethod
-    def get_company_names(pages):
+    @classmethod
+    def get_company_names(cls, pages):
         try:
             context = ' '.join([page.get('content', '') for page in pages])
 
             if not context:
                 return []
 
-            extract_prompt = f"""
-            Extract ONLY the company/organization names from the text below.
-
-            RULES:
-            - Output company names ONLY
-            - One name per line
-            - No numbers, no bullets, no explanations
-            - Do not include "Here are" or any intro/conclusion
-            - Keep official suffixes like Inc., Corp., Ltd., PLC, etc.
-            - Ignore statistics, locations, money, or any descriptive text
-
-            TEXT:
-            {context}
-"""
+            # Load prompts from config
+            config_path = Path(__file__).parent / 'config.yaml'
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f)
+            
+            # Get the company extraction prompt and format it
+            extract_prompt_template = config.get('prompts', {}).get('company_extraction_prompt', '')
+            extract_prompt = extract_prompt_template.format(context=context)
 
             # Since this method is static, we need to instantiate openai outside or create a helper.
             # For consistency, we can instantiate openai here as well.
@@ -240,31 +275,6 @@ class SynseaiLLM:
                 temperature=0.3,
             )
             raw_names = response.output[0].content[0].text
-
-            # clean_prompt = f"""
-            # Clean the following list of potential company names.
-
-            # RULES:
-            # - Remove any numbers, bullets, or list markers (e.g., "1. ", "- ", "• ")
-            # - Remove any introductory text (e.g., "Here are the companies:")
-            # - Remove any explanations or additional text after the company name
-            # - Keep only one company name per line
-            # - Remove any empty lines
-            # - Return only the cleaned company names, one per line
-            # - Remove INTRODUCTIONS, CONCLUSIONS, and AFTERWORDS
-
-            # INPUT:
-            # {raw_names}
-
-            # OUTPUT (cleaned company names, one per line):
-            # """
-
-            # clean_response = client.responses.create(
-            #     model="gpt-4.1",
-            #     input=clean_prompt,
-            #     temperature=0.3,
-            # )
-            # cleaned_text = clean_response.output[0].content[0].text
 
             company_names = []
             for line in raw_names.split('\n'):

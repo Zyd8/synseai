@@ -12,12 +12,152 @@ criteria:
   referential:
     - What are the partners of
 
-  compliance:
-    - What are the compliance papers of
+  ESG_alignment:
+    - What is the ESG of
 
 project_recommendation:
   context:
     - What is the company {company_name}?
   
-  objective:
-    - what future projects can you reccomend between BPI and the company named {company_name}?
+prompts:
+  project_recommendation_prompt: |
+    You are an expert in creating strategic banking partnerships. 
+
+    TASK: Create THREE detailed project recommendations for collaboration between BPI (Bank of the Philippine Islands) and {company}.
+
+    IMPORTANT REQUIREMENTS:
+    - Focus ONLY on collaboration between BPI and {company}
+    - Do NOT mention any other banks or financial institutions
+    - Each recommendation MUST include BOTH a title and a detailed description
+    - Descriptions should be comprehensive and specific
+
+    CONTEXT:
+    About BPI (Bank of the Philippine Islands):
+    {bpi_context}
+
+    About {company}:
+    {company_context}
+
+    For EACH recommendation, you MUST include:
+    1. A clear, specific title (max 10 words)
+    2. A detailed description (at least 3-5 sentences) covering:
+    - How BPI and {company} will collaborate
+    - Specific contributions from each company
+    - Project goals and benefits
+    - Implementation approach
+    - Expected outcomes
+
+    RESPONSE FORMAT - YOU MUST FOLLOW THIS EXACT FORMAT:
+
+    TITLE 1: [Concise project title]
+    DESCRIPTION 1: [Detailed description with specific details about the collaboration between BPI and {company}]
+
+    TITLE 2: [Concise project title]
+    DESCRIPTION 2: [Detailed description with specific details about the collaboration between BPI and {company}]
+
+    TITLE 3: [Concise project title]
+    DESCRIPTION 3: [Detailed description with specific details about the collaboration between BPI and {company}]
+
+    REMEMBER:
+    - Be specific and concrete in your descriptions
+    - Focus on mutual benefits for both BPI and {company}
+    - Include implementation details
+    - Each recommendation should be distinct and valuable
+
+  scoring_prompt: |
+    Analyze the following information about {company} and provide a detailed {criteria} score from 0.0 to 1.0.
+    
+    CONTEXT:
+    {formatted_context}
+    
+    SCORING RUBRIC:
+    
+    0.0 - 0.2 (Very Poor):
+    - No evidence of {criteria} found
+    - Information directly contradicts {criteria}
+    - Multiple red flags or negative indicators present
+    
+    0.3 - 0.4 (Below Average):
+    - Minimal evidence of {criteria}
+    - More negative than positive indicators
+    - Lacks specific examples or evidence
+    
+    0.5 (Neutral/Mixed):
+    - Equal positive and negative indicators
+    - Evidence is vague or inconclusive
+    - Some potential but unverified claims
+    
+    0.6 - 0.7 (Satisfactory):
+    - More positive than negative indicators
+    - Some specific examples provided
+    - Meets basic expectations for {criteria}
+    
+    0.8 - 0.9 (Very Good):
+    - Strong evidence of {criteria}
+    - Multiple specific examples and details
+    - Exceeds basic expectations
+    
+    1.0 (Excellent):
+    - Exceptional evidence of {criteria}
+    - Comprehensive, verifiable examples
+    - Sets a benchmark for excellence
+    
+    SCORING CONSIDERATIONS:
+    1. Evidence Quality: Primary sources > Secondary sources > Unverified claims
+    2. Recency: More recent evidence carries more weight
+    3. Source Reliability: Established sources > Unverified sources
+    4. Specificity: Specific examples > General statements
+    5. Consistency: Multiple consistent data points > Single data point
+    
+    INSTRUCTIONS:
+    1. Carefully analyze the context against the {criteria}
+    2. Consider both positive and negative indicators
+    3. Weigh the evidence using the considerations above
+    4. Provide a precise score between 0.0 and 1.0 with one decimal place
+    
+    IMPORTANT: Return ONLY the numeric score between 0.0 and 1.0, nothing else.
+
+  criteria_reasoning_prompt: |
+    Based on the following information, explain why the {criteria} score of {score} was given for {company}:
+    
+    Context:
+    {context}
+    
+    Provide specific examples from the context that support this score.
+    Focus on the most relevant aspects that influenced the scoring.
+    Be concise but thorough in your reasoning.
+  
+  ESG_alignment_reasoning_prompt: |
+    Based on the following information, explain why the ESG alignment score of {score} was given for {company} based on the BPI ESG context and {company} ESG. Give specific points to where the company aligns with BPI's ESG values:
+    
+    Context:
+    {context}
+    
+    Provide specific examples from the context that support this score.
+    Focus on the most relevant aspects that influenced the scoring.
+    Be concise but thorough in your reasoning.
+
+  summary_criteria_reasoning_prompt: |
+    Summarize the following {criteria} reasonings in cohesive bullet points:
+    
+    {reasonings}
+
+    - No introductions and conclusions
+    - Focus on key points and specific examples
+    - Keep it concise but informative
+    - Do not include any scores
+    - Maintain the original meaning while making it more readable
+
+  company_extraction_prompt: |
+    Extract ONLY the company/organization names from the text below.
+
+    RULES:
+    - Output company names ONLY
+    - One name per line
+    - No numbers, no bullets, no explanations
+    - Do not include "Here are" or any intro/conclusion
+    - Keep official suffixes like Inc., Corp., Ltd., PLC, etc.
+    - Ignore statistics, locations, money, or any descriptive text
+
+    TEXT:
+    {context}

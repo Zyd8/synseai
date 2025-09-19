@@ -92,21 +92,34 @@ def find_company_by_name():
         
         scoring_data =  company_scoring_scrape(company_name)
         project_data = company_project_recommendation_scrape(company_name)
+        
+        # Initialize project data with empty values
+        project_fields = {
+            'project_title1': '', 'project_description1': '',
+            'project_title2': '', 'project_description2': '',
+            'project_title3': '', 'project_description3': ''
+        }
+        
+        # Update with actual project data if available and no error
+        if not project_data.get('error'):
+            project_fields.update({
+                'project_title1': project_data.get('title1', ''),
+                'project_description1': project_data.get('description1', ''),
+                'project_title2': project_data.get('title2', ''),
+                'project_description2': project_data.get('description2', ''),
+                'project_title3': project_data.get('title3', ''),
+                'project_description3': project_data.get('description3', '')
+            })
 
         company_name_scrape = CompanyNameScrape(
             company_name=company_name,
-            credibility_score=scoring_data['credibility_score'],
-            referential_score=scoring_data['referential_score'],
-            compliance_score=scoring_data['compliance_score'],
-            credibility_reasoning=scoring_data['credibility_reasoning'],
-            referential_reasoning=scoring_data['referential_reasoning'],
-            compliance_reasoning=scoring_data['compliance_reasoning'],
-            project_title1=project_data['title1'],
-            project_description1=project_data['description1'],
-            project_title2=project_data['title2'],
-            project_description2=project_data['description2'],
-            project_title3=project_data['title3'],
-            project_description3=project_data['description3']
+            credibility_score=scoring_data.get('credibility_score', 0),
+            referential_score=scoring_data.get('referential_score', 0),
+            compliance_score=scoring_data.get('compliance_score', 0),
+            credibility_reasoning=scoring_data.get('credibility_reasoning', ''),
+            referential_reasoning=scoring_data.get('referential_reasoning', ''),
+            compliance_reasoning=scoring_data.get('compliance_reasoning', ''),
+            **project_fields
         )
 
         db.session.add(company_name_scrape)
